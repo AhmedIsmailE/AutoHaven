@@ -16,7 +16,8 @@ namespace AutoHaven.Models
         public int Power { get; set; }
         public int Doors { get; set; }
         public enum Transmission { Manual = 0, Automatic = 1 }
-
+        public Transmission trans { get; set; } = Transmission.Manual;
+        public FuelType fuel { get; set; } = FuelType.Fuel;
         public List<CarListingModel> CarListings { get; set; }
     }
 }

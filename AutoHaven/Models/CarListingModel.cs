@@ -24,11 +24,12 @@ namespace AutoHaven.Models
         public bool IsFeatured { get; set; }
         public int Discount { get; set; }
         public string Color { get; set; }
-        public enum State { Sold = 0, Rented = 1, Unavaliable = 2 }
+        public enum State { Available = 0, Unavaliable = 1, Rented = 2, Sold = 3 }
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-
+        public State state { get; set; } = State.Available;
+        public ListingType listingType { get; set; } = ListingType.ForSelling;
         public CarModel Car { get; set; }
         public UserModel User { get; set; }
         public List<CarImageModel> CarImages { get; set; }
