@@ -16,6 +16,7 @@ namespace AutoHaven.Models
         [Required, MaxLength(255)]
         public string Password { get; set; }
         [Required, MaxLength(255)]
+        [Compare(nameof(Password))] // Added to compare between password and confirm password
         public string ConfirmPassword { get; set; }
 
         [MaxLength(100)]
@@ -41,6 +42,8 @@ namespace AutoHaven.Models
 
         public enum Role { Customer = 0, Provider = 1, Admin = 2 }
 
+        // For Saving Role in Database
+        public Role role { get; set; } = Role.Customer;
         public List<FavouriteModel> Favourites { get; set; } = new();
         public List<ReviewModel> Reviews { get; set; } = new();
         public List<CarListingModel> CarListings { get; set; } = new();
