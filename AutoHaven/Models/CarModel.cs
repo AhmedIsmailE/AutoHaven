@@ -18,6 +18,6 @@ namespace AutoHaven.Models
         public enum Transmission { Manual = 0, Automatic = 1 }
         public Transmission trans { get; set; } = Transmission.Manual;
         public FuelType fuel { get; set; } = FuelType.Fuel;
-        public List<CarListingModel> CarListings { get; set; }
+        public virtual List<CarListingModel> CarListings { get; set; }
     }
 }
