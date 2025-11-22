@@ -30,10 +30,10 @@ namespace AutoHaven.Models
         public DateTime UpdatedAt { get; set; }
         public State state { get; set; } = State.Available;
         public ListingType listingType { get; set; } = ListingType.ForSelling;
-        public CarModel Car { get; set; }
-        public UserModel User { get; set; }
-        public List<CarImageModel> CarImages { get; set; }
-        public List<ReviewModel> Reviews { get; set; }
-        public List<FavouriteModel> Favourites { get; set; }
+        public virtual CarModel Car { get; set; }
+        public virtual ApplicationUser User { get; set; }
+        public virtual List<CarImageModel> CarImages { get; set; }
+        public virtual List<ReviewModel> Reviews { get; set; }
+        public virtual List<FavouriteModel> Favourites { get; set; }
     }
 }

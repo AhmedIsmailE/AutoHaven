@@ -1,14 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 namespace AutoHaven.Models
 {
-    public class ProjectDbContext : DbContext
+    public class ProjectDbContext : IdentityDbContext<ApplicationUser>
     {
         public ProjectDbContext(DbContextOptions<ProjectDbContext> options)
             : base(options)
         {
         }
 
-        public DbSet<UserModel> Users { get; set; }
         public DbSet<CarModel> Cars { get; set; }
         public DbSet<CarListingModel> CarListings { get; set; }
         public DbSet<CarImageModel> CarImages { get; set; }

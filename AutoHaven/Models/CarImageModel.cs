@@ -14,6 +14,6 @@ namespace AutoHaven.Models
         public string AltText { get; set; }
         public bool IsPrimary { get; set; }
 
-        public CarListingModel CarListing { get; set; }
+        public virtual CarListingModel CarListing { get; set; }
     }
 }

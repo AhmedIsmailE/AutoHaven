@@ -15,8 +15,8 @@ namespace AutoHaven.Models
         public int ListingId { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public virtual ApplicationUser User { get; set; }
 
-        public UserModel User { get; set; }
-        public CarListingModel CarListing { get; set; }
+        public virtual CarListingModel CarListing { get; set; }
     }
 }

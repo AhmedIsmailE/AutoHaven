@@ -1,4 +1,5 @@
 using AutoHaven.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +10,7 @@ builder.Services.AddDbContext<ProjectDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("connection"));
 });
-
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ProjectDbContext>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -24,6 +25,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseAuthentication();
 
 app.UseAuthorization();
 
