@@ -1,28 +1,35 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
+using System;
+using System.Collections.Generic;
 
 namespace AutoHaven.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-        public string? CompanyName { get; set; }
+        // ✅ Define the enum
+        public enum RoleEnum
+        {
+            Customer = 0,
+            Provider = 1,
+            Admin = 2
+        }
 
-        [MaxLength(150)]
-        public string? Street { get; set; }
+        public int UserId { get; set; }
+        public string Name { get; set; }
+        public string CompanyName { get; set; }
+        public string Street { get; set; }
+        public string City { get; set; }
+        public string State { get; set; }
 
-        [MaxLength(100)]
-        public string? City { get; set; }
+        public string Role { get; set; } = "Customer"; // Customer, Provider, Admin
 
-        [MaxLength(100)]
-        public string? State { get; set; }
-        public enum RoleEnum { Customer = 0, Provider = 1, Admin = 2 }
-        public RoleEnum Role { get; set; } = RoleEnum.Customer;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        public virtual List<FavouriteModel> Favourites { get; set; }
-        public virtual List<ReviewModel> Reviews { get; set; }
-        public virtual List<CarListingModel> CarListings { get; set; }
-        public virtual List<UserSubscriptionModel> UserSubscriptions { get; set; }
+        // Navigation Properties
+        public List<CarListingModel> CarListings { get; set; } = new();
+        public List<FavouriteModel> Favourites { get; set; } = new();
+        public List<ReviewModel> Reviews { get; set; } = new();
+        public List<UserSubscriptionModel> UserSubscriptions { get; set; } = new();
     }
 }

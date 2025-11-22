@@ -5,28 +5,34 @@ namespace AutoHaven.ViewModel
 {
     public class RegisterUserViewModel
     {
-        [Required]
-        
+        [Required(ErrorMessage = "Username is required")]
+        [StringLength(100, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 100 characters")]
         public string UserName { get; set; }
 
-        [Required, EmailAddress]
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
         public string Email { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Password is required")]
         [DataType(DataType.Password)]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters")]
         public string Password { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Please confirm your password")]
         [DataType(DataType.Password)]
-        [Compare("Password")]
+        [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; }
 
-        [Phone]
-        [Required]
+        [Required(ErrorMessage = "Phone number is required")]
+        [Phone(ErrorMessage = "Invalid phone number")]
         public string PhoneNumber { get; set; }
-        [Required]
+
+        [Required(ErrorMessage = "Please select a role")]
+        [Display(Name = "Account Type")]
         public ApplicationUser.RoleEnum Role { get; set; } = ApplicationUser.RoleEnum.Customer;
 
-        // OPTIONAL: CreatedAt and UpdatedAt handled automatically in IdentityUser child
+        [StringLength(100)]
+        [Display(Name = "Full Name")]
+        public string Name { get; set; }
     }
 }
