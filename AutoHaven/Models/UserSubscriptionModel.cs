@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using static AutoHaven.Models.UserModel;
 namespace AutoHaven.Models
 {
     public class UserSubscriptionModel
@@ -22,7 +21,7 @@ namespace AutoHaven.Models
         public enum Status {Inactive = 0 ,Active = 1, Cancelled = 2, Expired = 3 }
         public Status status { get; set; } = Status.Inactive;
         public BillingCycle billingcycle { get; set; } = BillingCycle.Inactive;
-        public UserModel User { get; set; }
-        public SubscriptionPlanModel SubscriptionPlan { get; set; }
+        public virtual ApplicationUser User { get; set; }
+        public virtual SubscriptionPlanModel SubscriptionPlan { get; set; }
     }
 }
