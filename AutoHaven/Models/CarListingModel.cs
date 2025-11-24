@@ -36,5 +36,6 @@ namespace AutoHaven.Models
         public List<CarImageModel> CarImages { get; set; }
         public List<ReviewModel> Reviews { get; set; }
         public List<FavouriteModel> Favourites { get; set; }
+        //iojdasomdkaomdaw
     }
 }
