@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AutoHaven</title>
+
+    <!-- Tailwind + Fonts -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#00BFFF",
+                "background-light": "#f6f6f8",
+                "background-dark": "#0A192F",
+                "surface-light": "#FFFFFF",
+                "surface-dark": "#101622",
+                "text-light-primary": "#0A192F",
+                "text-dark-primary": "#E6E8EB",
+                "text-light-secondary": "#333B49",
+                "text-dark-secondary": "#a0aec0",
+                "border-light": "#E6E8EB",
+                "border-dark": "#333B49",
+                "charcoal": "#333B49",
+                "navy": "#0A192F",
+                "silver": "#E6E8EB"
+              },
+              fontFamily: {
+                "display": ["Manrope", "sans-serif"]
+              },
+              borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+          },
+        }
+    </script>
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24
+        }
+    </style>
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark text-text-light-primary dark:text-text-dark-primary">
+    <div class="relative flex min-h-screen w-full flex-col group/design-root">
+        <div class="flex h-full w-full grow">
+
+            <!-- Sidebar -->
+            @Html.Partial("_SidebarPartialView")
+            <!-- Main Content -->
+            <main class="flex flex-1 flex-col">
+
+                <!-- Navbar -->
+                @Html.Partial("_HeaderPartialView")
+    
+                <!-- Content Placeholder -->
+                <div class="p-10 flex-1">
+                    @RenderBody()
+                </div>
+
+                <!-- Footer -->
+                @Html.Partial("_FooterPartialView")
+            </main>
+        </div>
+    </div>
+
+    @* Section for Scripts *@
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
