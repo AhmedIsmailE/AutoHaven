@@ -1,0 +1,557 @@
+﻿@model AutoHaven.ViewModel.CreateCarListingViewModel
+
+@{
+    ViewBag.Title = "List Your Vehicle on AutoHaven";
+    Layout = "~/Views/Shared/Layout.cshtml";
+}
+
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+        
+        <!-- Main Content with Sidebar -->
+        <div class="flex flex-1">
+            <!-- Sidebar -->
+            <div class="hidden lg:block w-64 border-r border-gray-200 dark:border-gray-700">
+                @Html.Partial("~/Views/Shared/SidebarPartialView.cshtml")
+            </div>
+
+            <!-- Main Content -->
+            <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                
+                <!-- Header -->
+                <div class="flex min-w-72 flex-col gap-3 p-4 mb-8">
+                    <p class="text-[#0d121b] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">
+                        List your vehicle on AutoHaven
+                    </p>
+                    <p class="text-[#4c669a] dark:text-gray-400 text-base font-normal leading-normal">
+                        Follow the steps below to create your listing and reach thousands of potential buyers and renters.
+                    </p>
+                </div>
+
+                <!-- Step Progress Indicator -->
+                <div class="flex flex-wrap gap-2 p-4 border-b border-gray-200 dark:border-gray-700 mb-8">
+                    <span class="text-primary text-base font-bold leading-normal">1. Vehicle Details</span>
+                    <span class="text-[#4c669a] dark:text-gray-500 text-base font-medium leading-normal">/</span>
+                    <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">2. Media & Description</span>
+                    <span class="text-[#4c669a] dark:text-gray-500 text-base font-medium leading-normal">/</span>
+                    <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">3. Pricing & Location</span>
+                    <span class="text-[#4c669a] dark:text-gray-500 text-base font-medium leading-normal">/</span>
+                    <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">4. Review & Publish</span>
+                </div>
+
+                <!-- Form -->
+                @using (Html.BeginForm("Create", "CarListing", FormMethod.Post, 
+                    new { @class = "bg-white dark:bg-background-dark dark:border dark:border-gray-700 rounded-xl shadow-sm p-6 md:p-8", 
+                          enctype = "multipart/form-data", 
+                          id = "carListingForm" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <!-- Alert Messages -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                            <p class="text-red-800 dark:text-red-300 font-semibold mb-2">Please correct the following errors:</p>
+                            <ul class="text-red-700 dark:text-red-400 text-sm space-y-1">
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>• @error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <div class="space-y-6">
+
+                        <!-- ========== STEP 1: VEHICLE DETAILS ========== -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <button type="button" class="step-header w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-step="1">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white font-bold">1</span>
+                                    <div class="text-left">
+                                        <h3 class="text-xl font-bold text-[#0d121b] dark:text-white">Vehicle Details</h3>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Make, model, year, and specifications</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined step-icon text-[#4c669a] dark:text-gray-400 transition-transform">expand_more</span>
+                            </button>
+
+                            <div class="step-content p-6 space-y-6 border-t border-gray-200 dark:border-gray-700">
+                                
+                                <!-- Listing Type -->
+                                <div>
+                                    <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-2">Listing Type</h4>
+                                    <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-4">Select whether you want to sell or rent your vehicle.</p>
+                                    <div class="flex w-full sm:w-2/3 md:w-1/2">
+                                        <div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-[#e7ebf3] dark:bg-gray-800 p-1">
+                                            <label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-white dark:has-[:checked]:bg-gray-700 has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-[#0d121b] dark:has-[:checked]:text-white text-[#4c669a] dark:text-gray-400 text-sm font-medium leading-normal">
+                                                <span class="truncate">For Sale</span>
+                                                @Html.RadioButtonFor(m => m.ListingType, AutoHaven.Models.CarListingModel.ListingType.ForSelling, new { @class = "invisible w-0" })
+                                            </label>
+                                            <label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-white dark:has-[:checked]:bg-gray-700 has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-[#0d121b] dark:has-[:checked]:text-white text-[#4c669a] dark:text-gray-400 text-sm font-medium leading-normal">
+                                                <span class="truncate">For Rent</span>
+                                                @Html.RadioButtonFor(m => m.ListingType, AutoHaven.Models.CarListingModel.ListingType.ForRenting, new { @class = "invisible w-0" })
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Vehicle Information -->
+                                <div>
+                                    <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-4">Vehicle Information</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Make <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.Manufacturer, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", placeholder = "e.g., Toyota" })
+                                            @Html.ValidationMessageFor(m => m.Manufacturer, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Model <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.Model, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", placeholder = "e.g., Camry" })
+                                            @Html.ValidationMessageFor(m => m.Model, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Year <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.ModelYear, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", type = "number", placeholder = "e.g., 2023" })
+                                            @Html.ValidationMessageFor(m => m.ModelYear, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">Body Style</p>
+                                            @Html.TextBoxFor(m => m.BodyStyle, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", placeholder = "e.g., Sedan, SUV, Truck" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Color <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.Color, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", placeholder = "e.g., Black, White, Red" })
+                                            @Html.ValidationMessageFor(m => m.Color, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Transmission <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.DropDownListFor(m => m.Transmission,
+                                                new SelectList(Enum.GetValues(typeof(AutoHaven.Models.CarModel.Transmission))
+                                                    .Cast<AutoHaven.Models.CarModel.Transmission>()
+                                                    .Select(x => new { value = (int)x, text = x.ToString() }), "value", "text"),
+                                                "-- Select Transmission --",
+                                                new { @class = "form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 px-[15px] text-base font-normal leading-normal" })
+                                            @Html.ValidationMessageFor(m => m.Transmission, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Fuel Type <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.DropDownListFor(m => m.Fuel,
+                                                new SelectList(Enum.GetValues(typeof(AutoHaven.Models.CarModel.FuelType))
+                                                    .Cast<AutoHaven.Models.CarModel.FuelType>()
+                                                    .Select(x => new { value = (int)x, text = x.ToString() }), "value", "text"),
+                                                "-- Select Fuel Type --",
+                                                new { @class = "form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 px-[15px] text-base font-normal leading-normal" })
+                                            @Html.ValidationMessageFor(m => m.Fuel, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Power (HP) <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.Power, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", type = "number", placeholder = "e.g., 200" })
+                                            @Html.ValidationMessageFor(m => m.Power, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <label class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Number of Doors <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.Doors, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", type = "number", placeholder = "e.g., 4" })
+                                            @Html.ValidationMessageFor(m => m.Doors, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========== STEP 2: MEDIA & DESCRIPTION ========== -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <button type="button" class="step-header w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-step="2">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-white font-bold">2</span>
+                                    <div class="text-left">
+                                        <h3 class="text-xl font-bold text-[#0d121b] dark:text-white">Media & Description</h3>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Upload images and describe your vehicle</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined step-icon text-[#4c669a] dark:text-gray-400 transition-transform">expand_more</span>
+                            </button>
+
+                            <div class="step-content hidden p-6 space-y-6 border-t border-gray-200 dark:border-gray-700">
+                                
+                                <!-- Image Upload -->
+                                <div>
+                                    <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-2">Vehicle Images</h4>
+                                    <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-4">Upload up to 7 images. Drag and drop or click to select.</p>
+                                    
+                                    <!-- Drag Drop Zone -->
+                                    <div id="dropZone" class="border-2 border-dashed border-[#cfd7e7] dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-primary dark:hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors">
+                                        <input type="file" id="imageInput" name="imageFiles" multiple accept="image/*" class="hidden">
+                                        
+                                        <span class="material-symbols-outlined text-4xl text-[#4c669a] dark:text-gray-400 mb-2 block">cloud_upload</span>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold mb-1">Drag images here or click to select</p>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Supported formats: JPG, PNG, GIF, WebP, etc.</p>
+                                        <p class="text-xs text-[#4c669a] dark:text-gray-500 mt-2">Maximum 7 images</p>
+                                    </div>
+
+                                    <!-- Image List -->
+                                    <div id="imageList" class="mt-6 space-y-3">
+                                        <!-- Images will be added here by JavaScript -->
+                                    </div>
+
+                                    <!-- Hidden input to store image files -->
+                                    <input type="hidden" id="imageFilesHidden" name="imageFiles">
+                                </div>
+
+                                <!-- Description -->
+                                <div>
+                                    <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-2">Description</h4>
+                                    <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-4">Provide detailed information about your vehicle's condition, features, and history.</p>
+                                    @Html.TextAreaFor(m => m.Description, new { @class = "form-textarea flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", rows = "6", placeholder = "e.g., Excellent condition, well-maintained, no accidents, full service history..." })
+                                    @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-red-500 text-sm mt-1" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========== STEP 3: PRICING & LOCATION ========== -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <button type="button" class="step-header w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-step="3">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-white font-bold">3</span>
+                                    <div class="text-left">
+                                        <h3 class="text-xl font-bold text-[#0d121b] dark:text-white">Pricing & Location</h3>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Set your price and location</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined step-icon text-[#4c669a] dark:text-gray-400 transition-transform">expand_more</span>
+                            </button>
+
+                            <div class="step-content hidden p-6 space-y-6 border-t border-gray-200 dark:border-gray-700">
+                                
+                                <!-- Pricing -->
+                                <div>
+                                    <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-4">Pricing</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        
+                                        <!-- Sale Price -->
+                                        <label id="newPriceLabel" class="flex flex-col">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Sale Price <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.NewPrice, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", type = "number", step = "0.01", placeholder = "0.00" })
+                                            @Html.ValidationMessageFor(m => m.NewPrice, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+
+                                        <!-- Rental Price -->
+                                        <label id="rentPriceLabel" class="flex flex-col hidden">
+                                            <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                Rental Price (Per Day) <span class="text-red-500">*</span>
+                                            </p>
+                                            @Html.TextBoxFor(m => m.RentPrice, new { @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal", type = "number", step = "0.01", placeholder = "0.00" })
+                                            @Html.ValidationMessageFor(m => m.RentPrice, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========== STEP 4: REVIEW & PUBLISH ========== -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <button type="button" class="step-header w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-step="4">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-white font-bold">4</span>
+                                    <div class="text-left">
+                                        <h3 class="text-xl font-bold text-[#0d121b] dark:text-white">Review & Publish</h3>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Review your listing before publishing</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined step-icon text-[#4c669a] dark:text-gray-400 transition-transform">expand_more</span>
+                            </button>
+
+                            <div class="step-content hidden p-6 space-y-6 border-t border-gray-200 dark:border-gray-700">
+                                
+                                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                                    <p class="text-blue-800 dark:text-blue-300 text-sm">
+                                        <strong>Review Summary:</strong> Please review all the information you've provided below before publishing your listing.
+                                    </p>
+                                </div>
+
+                                <!-- Review Summary -->
+                                <div id="reviewSummary" class="space-y-4">
+                                    <!-- Summary will be populated by JavaScript -->
+                                </div>
+
+                                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                    <p class="text-yellow-800 dark:text-yellow-300 text-sm">
+                                        <strong>Note:</strong> Your listing will be published immediately after submission and will be visible to all users.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <a href="@Url.Action("Index", "CarListing")" class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-transparent text-[#4c669a] dark:text-gray-400 gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-6 hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <span class="truncate">Cancel</span>
+                        </a>
+                        <button type="submit" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] gap-2">
+                            <span class="truncate">Publish Listing</span>
+                            <span class="material-symbols-outlined">check_circle</span>
+                        </button>
+                    </div>
+                }
+            </main>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropZone = document.getElementById('dropZone');
+            const imageInput = document.getElementById('imageInput');
+            const imageList = document.getElementById('imageList');
+            const listingTypeRadios = document.querySelectorAll('input[name="ListingType"]');
+            const newPriceLabel = document.getElementById('newPriceLabel');
+            const rentPriceLabel = document.getElementById('rentPriceLabel');
+            const stepHeaders = document.querySelectorAll('.step-header');
+            let uploadedFiles = [];
+
+            // ===== DRAG & DROP FUNCTIONALITY =====
+            dropZone.addEventListener('click', () => imageInput.click());
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('border-primary', 'bg-blue-50', 'dark:bg-blue-900/10');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('border-primary', 'bg-blue-50', 'dark:bg-blue-900/10');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('border-primary', 'bg-blue-50', 'dark:bg-blue-900/10');
+                const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                handleFiles(files);
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                handleFiles(Array.from(e.target.files));
+            });
+
+            function handleFiles(files) {
+                // Max 7 images
+                const availableSlots = 7 - uploadedFiles.length;
+                const filesToAdd = files.slice(0, availableSlots);
+
+                if (filesToAdd.length < files.length) {
+                    alert(`You can only upload a maximum of 7 images. ${7 - uploadedFiles.length} slot(s) remaining.`);
+                }
+
+                uploadedFiles = [...uploadedFiles, ...filesToAdd];
+                renderImageList();
+                updateHiddenInput();
+            }
+
+            function renderImageList() {
+                imageList.innerHTML = '';
+
+                if (uploadedFiles.length === 0) {
+                    imageList.innerHTML = '<p class="text-[#4c669a] dark:text-gray-400 text-sm">No images uploaded yet</p>';
+                    return;
+                }
+
+                uploadedFiles.forEach((file, index) => {
+                    const imageItem = document.createElement('div');
+                    imageItem.className = 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700';
+                    imageItem.innerHTML = `
+                                            <div class="flex items-center gap-3 flex-1">
+                                                <span class="material-symbols-outlined text-primary">image</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-[#0d121b] dark:text-white font-medium truncate">${file.name}</p>
+                                                    <p class="text-sm text-[#4c669a] dark:text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </div>
+                                                ${index === 0 ? '<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded">Primary</span>' : ''}
+                                            </div>
+                                            <button type="button" class="delete-btn ml-2 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold leading-normal tracking-[0.015em]" data-index="${index}">
+                                                <span class="material-symbols-outlined text-lg">delete</span>
+                                            </button>
+                                        `;
+
+                    imageItem.querySelector('.delete-btn').addEventListener('click', () => {
+                        uploadedFiles.splice(index, 1);
+                        renderImageList();
+                        updateHiddenInput();
+                    });
+
+                    imageList.appendChild(imageItem);
+                });
+            }
+
+            function updateHiddenInput() {
+                const dataTransfer = new DataTransfer();
+                uploadedFiles.forEach(file => dataTransfer.items.add(file));
+                imageInput.files = dataTransfer.files;
+            }
+
+            // ===== LISTING TYPE TOGGLE =====
+            listingTypeRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const isForSale = radio.value === '1'; // ForSelling = 1
+                    if (isForSale) {
+                        newPriceLabel.classList.remove('hidden');
+                        rentPriceLabel.classList.add('hidden');
+                    } else {
+                        newPriceLabel.classList.add('hidden');
+                        rentPriceLabel.classList.remove('hidden');
+                    }
+                });
+            });
+
+            // Trigger initial state
+            const checkedRadio = document.querySelector('input[name="ListingType"]:checked');
+            if (checkedRadio) {
+                checkedRadio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            // ===== ACCORDION FUNCTIONALITY =====
+            stepHeaders.forEach(header => {
+                header.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const step = header.dataset.step;
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('.step-icon');
+
+                    // Close other sections
+                    document.querySelectorAll('.step-content').forEach(el => {
+                        if (el !== content) {
+                            el.classList.add('hidden');
+                        }
+                    });
+
+                    document.querySelectorAll('.step-icon').forEach(el => {
+                        if (el !== icon) {
+                            el.style.transform = 'rotate(0deg)';
+                        }
+                    });
+
+                    // Toggle current section
+                    content.classList.toggle('hidden');
+                    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+                });
+            });
+
+            // ===== REVIEW SUMMARY =====
+            document.querySelector('form').addEventListener('submit', function (e) {
+                // Note: Usually you don't need a submit listener to update HTML if the form submits to the server immediately,
+                // but if this is for a "Preview" step before final submit, this logic is fine.
+                const reviewSummary = document.getElementById('reviewSummary');
+                const manufacturer = document.querySelector('input[name="Manufacturer"]').value;
+                const model = document.querySelector('input[name="Model"]').value;
+                const year = document.querySelector('input[name="ModelYear"]').value;
+                const color = document.querySelector('input[name="Color"]').value;
+
+                // Safety checks for selects in case they are null
+                const transSelect = document.querySelector('select[name="Transmission"]');
+                const transmission = transSelect ? transSelect.options[transSelect.selectedIndex].text : '';
+
+                const fuelSelect = document.querySelector('select[name="Fuel"]');
+                const fuel = fuelSelect ? fuelSelect.options[fuelSelect.selectedIndex].text : '';
+
+                const power = document.querySelector('input[name="Power"]').value;
+                const doors = document.querySelector('input[name="Doors"]').value;
+
+                // Safety check for radio
+                const radioChecked = document.querySelector('input[name="ListingType"]:checked');
+                const listingType = radioChecked ? radioChecked.parentElement.textContent.trim() : '';
+
+                const newPrice = document.querySelector('input[name="NewPrice"]').value;
+                const rentPrice = document.querySelector('input[name="RentPrice"]').value;
+                const description = document.querySelector('textarea[name="Description"]').value;
+                const imageCount = uploadedFiles.length;
+
+                if (reviewSummary) {
+                    reviewSummary.innerHTML = `
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Make</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${manufacturer}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Model</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${model}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Year</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${year}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Color</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${color}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Transmission</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${transmission}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Fuel Type</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${fuel}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Power</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${power} HP</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Doors</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${doors}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Listing Type</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${listingType}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">${listingType.includes('Sale') ? 'Sale Price' : 'Daily Rental Price'}</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">$${listingType.includes('Sale') ? newPrice : rentPrice}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg col-span-2">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Images Uploaded</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${imageCount} / 7</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-2">Description</p>
+                                    <p class="text-[#0d121b] dark:text-white">${description}</p>
+                                </div>
+                            `;
+                }
+            });
+        });
+    </script>
+}
