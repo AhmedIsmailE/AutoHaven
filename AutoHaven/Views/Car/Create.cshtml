@@ -1,4 +1,4 @@
-﻿@model AutoHaven.ViewModels.CreateCarListingViewModel
+﻿@model AutoHaven.ViewModel.CreateCarListingViewModel
 
 @{
     ViewBag.Title = "List Your Vehicle on AutoHaven";
@@ -331,7 +331,7 @@
 
 @section Scripts {
     <script src="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"></script>
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const dropZone = document.getElementById('dropZone');
@@ -392,18 +392,18 @@
                     const imageItem = document.createElement('div');
                     imageItem.className = 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700';
                     imageItem.innerHTML = `
-                        <div class="flex items-center gap-3 flex-1">
-                            <span class="material-symbols-outlined text-primary">image</span>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-[#0d121b] dark:text-white font-medium truncate">${file.name}</p>
-                                <p class="text-sm text-[#4c669a] dark:text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                            </div>
-                            ${index === 0 ? '<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded">Primary</span>' : ''}
-                        </div>
-                        <button type="button" class="delete-btn ml-2 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold leading-normal tracking-[0.015em]" data-index="${index}">
-                            <span class="material-symbols-outlined text-lg">delete</span>
-                        </button>
-                    `;
+                                            <div class="flex items-center gap-3 flex-1">
+                                                <span class="material-symbols-outlined text-primary">image</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-[#0d121b] dark:text-white font-medium truncate">${file.name}</p>
+                                                    <p class="text-sm text-[#4c669a] dark:text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </div>
+                                                ${index === 0 ? '<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded">Primary</span>' : ''}
+                                            </div>
+                                            <button type="button" class="delete-btn ml-2 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold leading-normal tracking-[0.015em]" data-index="${index}">
+                                                <span class="material-symbols-outlined text-lg">delete</span>
+                                            </button>
+                                        `;
 
                     imageItem.querySelector('.delete-btn').addEventListener('click', () => {
                         uploadedFiles.splice(index, 1);
@@ -416,7 +416,6 @@
             }
 
             function updateHiddenInput() {
-                // Create a DataTransfer object to store files
                 const dataTransfer = new DataTransfer();
                 uploadedFiles.forEach(file => dataTransfer.items.add(file));
                 imageInput.files = dataTransfer.files;
@@ -471,71 +470,88 @@
 
             // ===== REVIEW SUMMARY =====
             document.querySelector('form').addEventListener('submit', function (e) {
+                // Note: Usually you don't need a submit listener to update HTML if the form submits to the server immediately,
+                // but if this is for a "Preview" step before final submit, this logic is fine.
                 const reviewSummary = document.getElementById('reviewSummary');
                 const manufacturer = document.querySelector('input[name="Manufacturer"]').value;
                 const model = document.querySelector('input[name="Model"]').value;
                 const year = document.querySelector('input[name="ModelYear"]').value;
                 const color = document.querySelector('input[name="Color"]').value;
-                const transmission = document.querySelector('select[name="Transmission"]').options[document.querySelector('select[name="Transmission"]').selectedIndex].text;
-                const fuel = document.querySelector('select[name="Fuel"]').options[document.querySelector('select[name="Fuel"]').selectedIndex].text;
+
+                // Safety checks for selects in case they are null
+                const transSelect = document.querySelector('select[name="Transmission"]');
+                const transmission = transSelect ? transSelect.options[transSelect.selectedIndex].text : '';
+
+                const fuelSelect = document.querySelector('select[name="Fuel"]');
+                const fuel = fuelSelect ? fuelSelect.options[fuelSelect.selectedIndex].text : '';
+
                 const power = document.querySelector('input[name="Power"]').value;
                 const doors = document.querySelector('input[name="Doors"]').value;
-                const listingType = document.querySelector('input[name="ListingType"]:checked').parentElement.textContent.trim();
+
+                // Safety check for radio
+                const radioChecked = document.querySelector('input[name="ListingType"]:checked');
+                const listingType = radioChecked ? radioChecked.parentElement.textContent.trim() : '';
+
                 const newPrice = document.querySelector('input[name="NewPrice"]').value;
                 const rentPrice = document.querySelector('input[name="RentPrice"]').value;
                 const description = document.querySelector('textarea[name="Description"]').value;
                 const imageCount = uploadedFiles.length;
 
-                reviewSummary.innerHTML = `
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Make</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${manufacturer}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Model</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${model}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Year</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${year}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Color</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${color}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Transmission</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${transmission}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Fuel Type</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${fuel}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Power</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${power} HP</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Doors</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${doors}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Listing Type</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${listingType}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">${listingType === 'For Sale' ? 'Sale Price' : 'Daily Rental Price'}</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">$${listingType === 'For Sale' ? newPrice : rentPrice}</p>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg col-span-2">
-                            <p class="text-sm text-[#4c669a] dark:text-gray-400">Images Uploaded</p>
-                            <p class="text-[#0d121b] dark:text-white font-semibold">${imageCount} / 7</p>
-                        </div>
-                    </div>
-                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-2">Description</p>
-                        <p class="text-[#0d121b] dark:text-white">${description}</p>
-                    </div>
-                `;
+                if (reviewSummary) {
+                    reviewSummary.innerHTML = `
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Make</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${manufacturer}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Model</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${model}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Year</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${year}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Color</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${color}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Transmission</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${transmission}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Fuel Type</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${fuel}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Power</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${power} HP</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Doors</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${doors}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Listing Type</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${listingType}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">${listingType.includes('Sale') ? 'Sale Price' : 'Daily Rental Price'}</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">$${listingType.includes('Sale') ? newPrice : rentPrice}</p>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg col-span-2">
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Images Uploaded</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">${imageCount} / 7</p>
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-2">Description</p>
+                                    <p class="text-[#0d121b] dark:text-white">${description}</p>
+                                </div>
+                            `;
+                }
             });
+        });
+    </script>
+}

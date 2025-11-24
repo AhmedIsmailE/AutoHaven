@@ -1,5 +1,6 @@
 ﻿using AutoHaven.IRepository;
 using AutoHaven.Models;
+using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -127,7 +128,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== POST: Create Listing ====================
-        [Authorize]
+        //[Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles)
@@ -192,8 +193,13 @@ namespace AutoHaven.Controllers
                 };
 
                 // Insert listing with images
-                var filesToUpload = imageFiles?.Where(f => f.Length > 0).ToList();
-                _carListingRepo.Insert(listing, filesToUpload);
+                var validImages = imageFiles?
+                .Where(f => f != null && f.Length > 0)
+                .Take(7)
+                .ToList() ?? new List<IFormFile>();
+
+                _carListingRepo.Insert(listing, validImages);
+
 
                 TempData["Success"] = "Listing created successfully!";
                 return RedirectToAction(nameof(Details), new { id = listing.ListingId });
