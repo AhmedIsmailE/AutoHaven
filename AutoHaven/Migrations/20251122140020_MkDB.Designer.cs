@@ -4,6 +4,7 @@ using AutoHaven.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoHaven.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251122140020_MkDB")]
+    partial class MkDB
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,25 +27,19 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("AutoHaven.Models.ApplicationUser", b =>
                 {
-<<<<<<< HEAD
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-=======
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
                     b.Property<string>("City")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("CompanyName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -65,12 +62,6 @@ namespace AutoHaven.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
-<<<<<<< HEAD
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-=======
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -95,10 +86,12 @@ namespace AutoHaven.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("State")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Street")
+                        .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
@@ -109,6 +102,7 @@ namespace AutoHaven.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
+                        .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
@@ -172,12 +166,6 @@ namespace AutoHaven.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-<<<<<<< HEAD
-                    b.Property<int>("CurrentState")
-                        .HasColumnType("int");
-
-=======
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -197,27 +185,18 @@ namespace AutoHaven.Migrations
                     b.Property<decimal>("RentPrice")
                         .HasColumnType("decimal(18,2)");
 
-<<<<<<< HEAD
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-=======
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-<<<<<<< HEAD
-=======
                     b.Property<int>("listingType")
                         .HasColumnType("int");
 
                     b.Property<int>("state")
                         .HasColumnType("int");
 
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.HasKey("ListingId");
 
                     b.HasIndex("CarId");
@@ -239,15 +218,6 @@ namespace AutoHaven.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-<<<<<<< HEAD
-                    b.Property<int>("CurrentFuel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CurrentTransmission")
-                        .HasColumnType("int");
-
-=======
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.Property<int>("Doors")
                         .HasColumnType("int");
 
@@ -265,15 +235,12 @@ namespace AutoHaven.Migrations
                     b.Property<int>("Power")
                         .HasColumnType("int");
 
-<<<<<<< HEAD
-=======
                     b.Property<int>("fuel")
                         .HasColumnType("int");
 
                     b.Property<int>("trans")
                         .HasColumnType("int");
 
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.HasKey("CarId");
 
                     b.ToTable("Cars");
@@ -290,17 +257,10 @@ namespace AutoHaven.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-<<<<<<< HEAD
-                    b.Property<int?>("ListingId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("UserId")
-=======
                     b.Property<int>("ListingId")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                         .HasColumnType("int");
 
                     b.HasKey("FavouriteId");
@@ -380,8 +340,6 @@ namespace AutoHaven.Migrations
                     b.ToTable("SubscriptionPlans");
                 });
 
-<<<<<<< HEAD
-=======
             modelBuilder.Entity("AutoHaven.Models.UserModel", b =>
                 {
                     b.Property<int>("UserId")
@@ -454,7 +412,6 @@ namespace AutoHaven.Migrations
                     b.ToTable("Users");
                 });
 
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
             modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
                     b.Property<int>("UserSubscriptionId")
@@ -463,15 +420,6 @@ namespace AutoHaven.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserSubscriptionId"));
 
-<<<<<<< HEAD
-                    b.Property<int>("CurrentBillingCycle")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CurrentStatus")
-                        .HasColumnType("int");
-
-=======
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
@@ -484,15 +432,12 @@ namespace AutoHaven.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-<<<<<<< HEAD
-=======
                     b.Property<int>("billingcycle")
                         .HasColumnType("int");
 
                     b.Property<int>("status")
                         .HasColumnType("int");
 
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                     b.HasKey("UserSubscriptionId");
 
                     b.HasIndex("SubscriptionPlanId");
@@ -502,20 +447,10 @@ namespace AutoHaven.Migrations
                     b.ToTable("UserSubscriptions");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -539,11 +474,7 @@ namespace AutoHaven.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -557,14 +488,9 @@ namespace AutoHaven.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-<<<<<<< HEAD
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-=======
                     b.Property<string>("RoleId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.HasKey("Id");
 
@@ -573,11 +499,7 @@ namespace AutoHaven.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -591,14 +513,9 @@ namespace AutoHaven.Migrations
                     b.Property<string>("ClaimValue")
                         .HasColumnType("nvarchar(max)");
 
-<<<<<<< HEAD
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-=======
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.HasKey("Id");
 
@@ -607,11 +524,7 @@ namespace AutoHaven.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -622,14 +535,9 @@ namespace AutoHaven.Migrations
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
 
-<<<<<<< HEAD
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-=======
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -638,15 +546,6 @@ namespace AutoHaven.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
@@ -654,7 +553,6 @@ namespace AutoHaven.Migrations
 
                     b.Property<string>("RoleId")
                         .HasColumnType("nvarchar(450)");
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.HasKey("UserId", "RoleId");
 
@@ -663,17 +561,10 @@ namespace AutoHaven.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
-                {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.Property<string>("LoginProvider")
                         .HasColumnType("nvarchar(450)");
@@ -708,11 +599,7 @@ namespace AutoHaven.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-<<<<<<< HEAD
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
-=======
                     b.HasOne("AutoHaven.Models.UserModel", "User")
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                         .WithMany("CarListings")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -728,13 +615,6 @@ namespace AutoHaven.Migrations
                     b.HasOne("AutoHaven.Models.CarListingModel", "CarListing")
                         .WithMany("Favourites")
                         .HasForeignKey("ListingId")
-<<<<<<< HEAD
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
-                        .WithMany("Favourites")
-                        .HasForeignKey("UserId");
-=======
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -743,7 +623,6 @@ namespace AutoHaven.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                     b.Navigation("CarListing");
 
@@ -755,17 +634,10 @@ namespace AutoHaven.Migrations
                     b.HasOne("AutoHaven.Models.CarListingModel", "CarListing")
                         .WithMany("Reviews")
                         .HasForeignKey("ListingId")
-<<<<<<< HEAD
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
-=======
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AutoHaven.Models.UserModel", "User")
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                         .WithMany("Reviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -784,11 +656,7 @@ namespace AutoHaven.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-<<<<<<< HEAD
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
-=======
                     b.HasOne("AutoHaven.Models.UserModel", "User")
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                         .WithMany("UserSubscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -799,26 +667,16 @@ namespace AutoHaven.Migrations
                     b.Navigation("User");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                 {
                     b.HasOne("AutoHaven.Models.ApplicationUser", null)
                         .WithMany()
@@ -827,11 +685,7 @@ namespace AutoHaven.Migrations
                         .IsRequired();
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                 {
                     b.HasOne("AutoHaven.Models.ApplicationUser", null)
                         .WithMany()
@@ -840,15 +694,9 @@ namespace AutoHaven.Migrations
                         .IsRequired();
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -861,11 +709,7 @@ namespace AutoHaven.Migrations
                         .IsRequired();
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
-=======
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
                 {
                     b.HasOne("AutoHaven.Models.ApplicationUser", null)
                         .WithMany()
@@ -874,20 +718,6 @@ namespace AutoHaven.Migrations
                         .IsRequired();
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("AutoHaven.Models.ApplicationUser", b =>
-                {
-                    b.Navigation("CarListings");
-
-                    b.Navigation("Favourites");
-
-                    b.Navigation("Reviews");
-
-                    b.Navigation("UserSubscriptions");
-                });
-
-=======
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
             modelBuilder.Entity("AutoHaven.Models.CarListingModel", b =>
                 {
                     b.Navigation("CarImages");
@@ -906,8 +736,6 @@ namespace AutoHaven.Migrations
                 {
                     b.Navigation("UserSubscriptions");
                 });
-<<<<<<< HEAD
-=======
 
             modelBuilder.Entity("AutoHaven.Models.UserModel", b =>
                 {
@@ -919,7 +747,6 @@ namespace AutoHaven.Migrations
 
                     b.Navigation("UserSubscriptions");
                 });
->>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 #pragma warning restore 612, 618
         }
     }

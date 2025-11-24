@@ -121,8 +121,13 @@ namespace AutoHaven.Repository
             cr.IsFeatured = car.IsFeatured;
             cr.Discount = car.Discount;
             cr.Color = car.Color;
+<<<<<<< HEAD
             cr.Type = car.Type;
             cr.CurrentState = car.CurrentState;
+=======
+            cr.listingType = car.listingType;
+            cr.state = car.state;
+>>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
             cr.UpdatedAt = DateTime.UtcNow;
             using (var tx = projectDbcontext.Database.BeginTransaction())
             {

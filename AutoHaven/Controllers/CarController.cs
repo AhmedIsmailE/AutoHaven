@@ -1,6 +1,9 @@
 ﻿using AutoHaven.IRepository;
 using AutoHaven.Models;
+<<<<<<< HEAD
 using AutoHaven.ViewModel;
+=======
+>>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -128,7 +131,11 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== POST: Create Listing ====================
+<<<<<<< HEAD
         //[Authorize]
+=======
+        [Authorize]
+>>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles)
@@ -193,6 +200,7 @@ namespace AutoHaven.Controllers
                 };
 
                 // Insert listing with images
+<<<<<<< HEAD
                 var validImages = imageFiles?
                 .Where(f => f != null && f.Length > 0)
                 .Take(7)
@@ -200,6 +208,10 @@ namespace AutoHaven.Controllers
 
                 _carListingRepo.Insert(listing, validImages);
 
+=======
+                var filesToUpload = imageFiles?.Where(f => f.Length > 0).ToList();
+                _carListingRepo.Insert(listing, filesToUpload);
+>>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
                 TempData["Success"] = "Listing created successfully!";
                 return RedirectToAction(nameof(Details), new { id = listing.ListingId });

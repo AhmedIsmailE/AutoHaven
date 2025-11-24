@@ -97,7 +97,11 @@ namespace AutoHaven.Repository
                     us.UserId == userId &&
                     us.StartDate <= now &&
                     us.EndDate >= now &&
+<<<<<<< HEAD
                     us.CurrentStatus == UserSubscriptionModel.Status.Active);
+=======
+                    us.Status == UserSubscriptionModel.Status.Active);
+>>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
         }
 
         public void Insert(UserSubscriptionModel subscription)
@@ -121,8 +125,13 @@ namespace AutoHaven.Repository
             existing.SubscriptionPlanId = subscription.SubscriptionPlanId;
             existing.StartDate = subscription.StartDate;
             existing.EndDate = subscription.EndDate;
+<<<<<<< HEAD
             existing.CurrentStatus = subscription.CurrentStatus;  // ✅ CHANGED: .status to .Status
             existing.CurrentBillingCycle = subscription.CurrentBillingCycle;  // ✅ CHANGED: .billingcycle to .BillingCycle
+=======
+            existing.Status = subscription.Status;  // ✅ CHANGED: .status to .Status
+            existing.BillingCycle = subscription.BillingCycle;  // ✅ CHANGED: .billingcycle to .BillingCycle
+>>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
 
             _projectDbContext.SaveChanges();
         }

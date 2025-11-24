@@ -31,8 +31,14 @@ namespace AutoHaven.ViewModel
         [Display(Name = "Account Type")]
         public ApplicationUser.RoleEnum Role { get; set; } = ApplicationUser.RoleEnum.Customer;
 
+<<<<<<< HEAD
         //[StringLength(100)]
         //[Display(Name = "Full Name")]
         //public string Name { get; set; }
+=======
+        [StringLength(100)]
+        [Display(Name = "Full Name")]
+        public string Name { get; set; }
+>>>>>>> 5d3eb87504c0b7f615a3a91f6a8bc6860a2ccccd
     }
 }
