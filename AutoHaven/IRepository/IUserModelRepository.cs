@@ -4,12 +4,12 @@ namespace AutoHaven.IRepository
 {
     public interface IUserModelRepository
     {
-        public List<UserModel> Get();
+        public List<ApplicationUser> Get();
 
-        public UserModel GetById(int id);
-        public UserModel GetByEmail(string email);
-        public void Insert(UserModel user);
+        public ApplicationUser GetById(int id);
+        public ApplicationUser GetByEmail(string email);
+        public void Insert(ApplicationUser user);
         public void Delete(int id);
-        public void Update(UserModel user);
+        public void Update(ApplicationUser user);
     }
 }
