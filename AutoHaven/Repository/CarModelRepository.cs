@@ -42,8 +42,8 @@ namespace AutoHaven.Repository
             cr.BodyStyle = car.BodyStyle;
             cr.Power = car.Power;
             cr.Doors = car.Doors;
-            cr.fuel = car.fuel;
-            cr.trans = car.trans;
+            cr.CurrentFuel = car.CurrentFuel;
+            cr.CurrentTransmission = car.CurrentTransmission;
             projectDbcontext.SaveChanges();
         }
     }

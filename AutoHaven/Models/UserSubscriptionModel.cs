@@ -1,6 +1,8 @@
-﻿using System;
+﻿
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 namespace AutoHaven.Models
 {
     public class UserSubscriptionModel
@@ -17,11 +19,15 @@ namespace AutoHaven.Models
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
-        public enum BillingCycle {Inactive = 0 ,Monthly = 1, QuarterYearl = 2, HalfYear = 3, Yearly = 4 }
-        public enum Status {Inactive = 0 ,Active = 1, Cancelled = 2, Expired = 3 }
-        public Status status { get; set; } = Status.Inactive;
-        public BillingCycle billingcycle { get; set; } = BillingCycle.Inactive;
-        public virtual ApplicationUser User { get; set; }
-        public virtual SubscriptionPlanModel SubscriptionPlan { get; set; }
+       
+        public enum BillingCycle { Monthly = 0, HalfYear = 1, Yearly = 2 }
+        public enum Status { Active = 0, Cancelled = 1, Expired = 2 }
+
+       // ADDED THESE PROPERTIES
+        public BillingCycle CurrentBillingCycle { get; set; }
+        public Status CurrentStatus { get; set; }
+
+        public ApplicationUser User { get; set; } = null!;
+        public SubscriptionPlanModel SubscriptionPlan { get; set; } = null!;
     }
 }

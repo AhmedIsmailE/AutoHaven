@@ -9,10 +9,10 @@ namespace AutoHaven.Models
         public int FavouriteId { get; set; }
 
         [ForeignKey("User")]
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
         [ForeignKey("CarListing")]
-        public int ListingId { get; set; }
+        public int? ListingId { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public virtual ApplicationUser User { get; set; }

@@ -13,11 +13,12 @@ namespace AutoHaven.Models
         public int ModelYear { get; set; }
         public string BodyStyle { get; set; }
         public enum FuelType { Fuel = 0, Electric = 1, Diesel = 2, Hybrid = 3 }
+        public FuelType CurrentFuel { get; set; }
         public int Power { get; set; }
         public int Doors { get; set; }
         public enum Transmission { Manual = 0, Automatic = 1 }
-        public Transmission trans { get; set; } = Transmission.Manual;
-        public FuelType fuel { get; set; } = FuelType.Fuel;
-        public virtual List<CarListingModel> CarListings { get; set; }
+        public Transmission CurrentTransmission { get; set; }
+
+        public List<CarListingModel> CarListings { get; set; }
     }
 }

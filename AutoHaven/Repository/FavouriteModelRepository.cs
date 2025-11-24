@@ -1,6 +1,92 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿//using AutoHaven.IRepository;
+//using AutoHaven.Models;
+//using Microsoft.EntityFrameworkCore;
+
+//namespace AutoHaven.Repository
+//{
+//    public class FavouriteRepository : IFavouriteModelRepository
+//    {
+//        private readonly ProjectDbContext _projectDbContext;
+
+//        public FavouriteRepository(ProjectDbContext projectDbContext)
+//        {
+//            _projectDbContext = projectDbContext;
+//        }
+
+//        // ==================== Get All Favourites ====================
+//        public List<FavouriteModel> Get()
+//        {
+//            return _projectDbContext.Favourites
+//                .Include(f => f.User)
+//                .Include(f => f.CarListing)
+//                    .ThenInclude(cl => cl.Car)
+//                .Include(f => f.CarListing.CarImages)
+//                .AsNoTracking()
+//                .ToList();
+//        }
+
+//        // ==================== Get Favourite by ID ====================
+//        public FavouriteModel GetById(int id)
+//        {
+//            return _projectDbContext.Favourites
+//                .Include(f => f.User)
+//                .Include(f => f.CarListing)
+//                .FirstOrDefault(f => f.FavouriteId == id);
+//        }
+
+//        // ==================== Insert Favourite ====================
+//        public void Insert(FavouriteModel favourite)  // ✅ ADD THIS
+//        {
+//            if (favourite == null) throw new ArgumentNullException(nameof(favourite));
+
+//            // Check if already exists
+//            var existing = _projectDbContext.Favourites
+//                .FirstOrDefault(f => f.UserId == favourite.UserId && f.ListingId == favourite.ListingId);
+
+//            if (existing != null)
+//                throw new InvalidOperationException("This listing is already in your favorites.");
+
+//            favourite.CreatedAt = DateTime.UtcNow;
+//            _projectDbContext.Favourites.Add(favourite);
+//            _projectDbContext.SaveChanges();
+//        }
+
+//        // ==================== Update Favourite ====================
+//        public void Update(FavouriteModel favourite)
+//        {
+//            if (favourite == null) throw new ArgumentNullException(nameof(favourite));
+
+//            var existing = GetById(favourite.FavouriteId);
+//            if (existing == null) throw new InvalidOperationException($"Favourite with ID {favourite.FavouriteId} not found.");
+
+//            _projectDbContext.SaveChanges();
+//        }
+
+//        // ==================== Delete Favourite ====================
+//        public void Delete(int id)
+//        {
+//            var favourite = GetById(id);
+//            if (favourite != null)
+//            {
+//                _projectDbContext.Favourites.Remove(favourite);
+//                _projectDbContext.SaveChanges();
+//            }
+//        }
+
+//        // ==================== Delete by User and Listing ====================
+//        public void DeleteByUserAndListing(int userId, int listingId)  // ✅ ADD THIS
+//        {
+//            var favourite = _projectDbContext.Favourites
+//                .FirstOrDefault(f => f.UserId == userId && f.ListingId == listingId);
+
+//            if (favourite != null)
+//            {
+//                _projectDbContext.Favourites.Remove(favourite);
+//                _projectDbContext.SaveChanges();
+//            }
+//        }
+//    }
+//}
 using AutoHaven.IRepository;
 using AutoHaven.Models;
 using Microsoft.EntityFrameworkCore;
@@ -9,82 +95,128 @@ namespace AutoHaven.Repository
 {
     public class FavouriteRepository : IFavouriteModelRepository
     {
-        ProjectDbContext projectDbcontext;
-        public FavouriteRepository(ProjectDbContext _projectDbcontext)
-        {
-            projectDbcontext = _projectDbcontext;
-        }
+        private readonly ProjectDbContext _projectDbContext;
 
-        // --- queries ---
+        public FavouriteRepository(ProjectDbContext projectDbContext)
+        {
+            _projectDbContext = projectDbContext;
+        }
 
         public List<FavouriteModel> Get()
         {
-            List<FavouriteModel> fav = projectDbcontext.Favourites.AsNoTracking().ToList();
-            return fav;
+            return _projectDbContext.Favourites
+                .Include(f => f.User)
+                .Include(f => f.CarListing)
+                    .ThenInclude(cl => cl.Car)
+                .Include(f => f.CarListing.CarImages)
+                .AsNoTracking()
+                .ToList();
         }
 
         public FavouriteModel GetById(int id)
         {
-            FavouriteModel fav = projectDbcontext.Favourites.FirstOrDefault(s => s.FavouriteId == id);
-            return fav;
+            return _projectDbContext.Favourites
+                .Include(f => f.User)
+                .Include(f => f.CarListing)
+                .FirstOrDefault(f => f.FavouriteId == id);
         }
 
-        public List<FavouriteModel> GetByUserId(int userId)
-        {
-            List<FavouriteModel> fav = projectDbcontext.Favourites.AsNoTracking().Where(r => r.UserId == userId).OrderByDescending(r => r.CreatedAt).ToList();
-            return fav;
-        }
-
+        // ✅ ADD THIS
         public List<FavouriteModel> GetByListingId(int listingId)
         {
-            List<FavouriteModel> fav = projectDbcontext.Favourites.AsNoTracking().Where(r => r.ListingId == listingId).OrderByDescending(r => r.CreatedAt).ToList();
-            return fav;
+            return _projectDbContext.Favourites
+                .Include(f => f.User)
+                .Include(f => f.CarListing)
+                .Where(f => f.ListingId == listingId)
+                .AsNoTracking()
+                .ToList();
         }
 
-
-        public void Insert(int listingId, int userId)
+        // ✅ ADD THIS
+        public List<FavouriteModel> GetByUserId(int userId)
         {
-            // prevent duplicates
-            var exists = projectDbcontext.Favourites.Any(f => f.ListingId == listingId && f.UserId == userId);
-            if (exists) return; // already present, treat as success
-
-            var fav = new FavouriteModel
-            {
-                ListingId = listingId,
-                UserId = userId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            projectDbcontext.Favourites.Add(fav);
-            projectDbcontext.SaveChanges();
+            return _projectDbContext.Favourites
+                .Include(f => f.CarListing)
+                    .ThenInclude(cl => cl.Car)
+                .Include(f => f.CarListing.CarImages)
+                .Where(f => f.UserId == userId)
+                .OrderByDescending(f => f.CreatedAt)
+                .AsNoTracking()
+                .ToList();
         }
 
-        public bool RemoveFavourite(int listingId, int userId)
+        public void Insert(FavouriteModel favourite)
         {
-            var fav = projectDbcontext.Favourites.FirstOrDefault(f => f.ListingId == listingId && f.UserId == userId);
-            if (fav == null) return false;
+            if (favourite == null) throw new ArgumentNullException(nameof(favourite));
 
-            projectDbcontext.Favourites.Remove(fav);
-            projectDbcontext.SaveChanges();
-            return true;
+            var existing = _projectDbContext.Favourites
+                .FirstOrDefault(f => f.UserId == favourite.UserId && f.ListingId == favourite.ListingId);
+
+            if (existing != null)
+                throw new InvalidOperationException("This listing is already in your favorites.");
+
+            favourite.CreatedAt = DateTime.UtcNow;
+            _projectDbContext.Favourites.Add(favourite);
+            _projectDbContext.SaveChanges();
+        }
+
+        public void Update(FavouriteModel favourite)
+        {
+            if (favourite == null) throw new ArgumentNullException(nameof(favourite));
+
+            var existing = GetById(favourite.FavouriteId);
+            if (existing == null) throw new InvalidOperationException($"Favourite with ID {favourite.FavouriteId} not found.");
+
+            _projectDbContext.SaveChanges();
         }
 
         public void Delete(int id)
         {
-            var fav = projectDbcontext.Favourites.Find(id);
-            if (fav == null) return;
-
-            projectDbcontext.Favourites.Remove(fav);
-            projectDbcontext.SaveChanges();
+            var favourite = GetById(id);
+            if (favourite != null)
+            {
+                _projectDbContext.Favourites.Remove(favourite);
+                _projectDbContext.SaveChanges();
+            }
         }
-        public bool Exists(int listingId, int userId)
+
+        public void DeleteByUserAndListing(int userId, int listingId)
         {
-            return projectDbcontext.Favourites.Any(f => f.ListingId == listingId && f.UserId == userId);
+            var favourite = _projectDbContext.Favourites
+                .FirstOrDefault(f => f.UserId == userId && f.ListingId == listingId);
+
+            if (favourite != null)
+            {
+                _projectDbContext.Favourites.Remove(favourite);
+                _projectDbContext.SaveChanges();
+            }
         }
 
+        // ✅ ADD THIS
         public int CountForListing(int listingId)
         {
-            return projectDbcontext.Favourites.Count(f => f.ListingId == listingId);
+            return _projectDbContext.Favourites
+                .Count(f => f.ListingId == listingId);
+        }
+
+        // ✅ ADD THIS
+        public bool Exists(int userId, int listingId)
+        {
+            return _projectDbContext.Favourites
+                .Any(f => f.UserId == userId && f.ListingId == listingId);
+        }
+
+        // ✅ ADD THIS
+        public void RemoveFavourite(int userId, int listingId)
+        {
+            var favourite = _projectDbContext.Favourites
+                .FirstOrDefault(f => f.UserId == userId && f.ListingId == listingId);
+
+            if (favourite != null)
+            {
+                _projectDbContext.Favourites.Remove(favourite);
+                _projectDbContext.SaveChanges();
+            }
         }
     }
 }

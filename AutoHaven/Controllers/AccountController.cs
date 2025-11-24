@@ -12,19 +12,25 @@ namespace AutoHaven.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ProjectDbContext _projectDbContext;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            ProjectDbContext projectDbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _projectDbContext = projectDbContext;
         }
+
+        // ==================== GET: Register ====================
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Register(RegisterUserViewModel userViewModel)
         {
@@ -38,7 +44,7 @@ namespace AutoHaven.Controllers
                 applicationUser.Role = userViewModel.Role;
                 applicationUser.CreatedAt = DateTime.Now;
                 applicationUser.UpdatedAt = DateTime.Now;
-              //  applicationUser.PasswordHash=userViewModel.Password;  
+                //  applicationUser.PasswordHash=userViewModel.Password;  
                 IdentityResult result = await _userManager.CreateAsync(applicationUser, userViewModel.Password);
                 if (result.Succeeded)
                 {
@@ -82,23 +88,23 @@ namespace AutoHaven.Controllers
                         List<Claim> claims = new List<Claim>
                             {
                                 new Claim("Role", user.Role.ToString())
-                                
+
                             };
 
                         await _signInManager.SignInWithClaimsAsync(user, isPersistent: loginUserViewModel.RememberMe, claims); // Create Cookies
 
 
-                        return RedirectToAction("Index"); 
+                        return RedirectToAction("Index");
                     }
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid Credentials");
-                return RedirectToAction("Login");
+                return View(loginUserViewModel);
             }
 
-            
+
             ModelState.AddModelError(string.Empty, "Invalid Credentials");
-            return RedirectToAction("Login");
+            return View(loginUserViewModel);
         }
         public async Task<IActionResult> Logout()
         {
@@ -110,10 +116,12 @@ namespace AutoHaven.Controllers
         {
             return View();
         }
-        [Authorize] 
+        [Authorize]
+        [HttpGet]
+
         public IActionResult About()
         {
-           return View();
+            return View();
         }
         //[Authorize]
         //public IActionResult Index()
@@ -135,3 +143,10 @@ namespace AutoHaven.Controllers
 
     }
 }
+
+
+
+
+
+
+
