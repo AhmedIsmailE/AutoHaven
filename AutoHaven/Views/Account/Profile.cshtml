@@ -1,0 +1,187 @@
+﻿@model AutoHaven.ViewModel.ProfileViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "My Profile";
+    var editMode = (Context.Request.Query["edit"] == "1");
+
+    var avatarSrc = string.IsNullOrWhiteSpace(Model?.AvatarUrl)
+        ? "images/Default/default.jpg"
+        : Model.AvatarUrl;
+}
+
+<div class="max-w-6xl mx-auto py-6">
+    <div asp-validation-summary="All" class="text-red-600"></div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+        <div class="flex items-center gap-6">
+            <div class="relative">
+                <img id="avatarPreview" src="@avatarSrc" alt="avatar" class="w-28 h-28 rounded-full object-cover border-2 shadow" />
+
+                @if (editMode)
+                {
+                    <label for="avatarInput"
+                           class="absolute right-0 bottom-0 bg-primary text-white p-2 rounded-full cursor-pointer"
+                           title="Change avatar">
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                             viewBox="0 0 24 24" stroke="white" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+                        </svg>
+                    </label>
+                }
+            </div>
+
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold">@(!string.IsNullOrWhiteSpace(Model?.Name) ? Model.Name : Model?.UserName)</h1>
+                <p class="text-sm text-gray-500">@Model?.Email</p>
+                <p class="text-sm text-gray-500">Joined @Model?.CreatedAt.ToString("MMM d, yyyy")</p>
+                <p class="text-sm text-gray-500">Role: <strong>@Model?.Role</strong></p>
+            </div>
+
+            <div class="ml-auto">
+                @if (!editMode)
+                {
+                    <a href="@Url.Action("Edit", "Account", new { edit = 1 })" class="px-4 py-2 bg-primary text-white rounded-lg">Edit Profile</a>
+                }
+            </div>
+        </div>
+
+        @if (!editMode)
+        {
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                    <h3 class="font-semibold mb-2">Personal Information</h3>
+                    <dl class="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+                        <div><dt class="font-medium inline">Name:</dt> <dd class="inline ml-2">@Model?.Name</dd></div>
+                        <div><dt class="font-medium inline">Username:</dt> <dd class="inline ml-2">@Model?.UserName</dd></div>
+                        <div><dt class="font-medium inline">Email:</dt> <dd class="inline ml-2">@Model?.Email</dd></div>
+                        <div><dt class="font-medium inline">Phone:</dt> <dd class="inline ml-2">@Model?.PhoneNumber</dd></div>
+                        <div><dt class="font-medium inline">Company:</dt> <dd class="inline ml-2">@Model?.CompanyName</dd></div>
+                        <div class="mt-3"><dt class="font-medium inline">Registered:</dt> <dd class="inline ml-2">@Model?.CreatedAt.ToString("f")</dd></div>
+                    </dl>
+                </div>
+
+                <div class="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                    <h3 class="font-semibold mb-2">Address</h3>
+                    <dl class="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+                        <div><dt class="font-medium inline">Street:</dt> <dd class="inline ml-2">@Model?.Street</dd></div>
+                        <div><dt class="font-medium inline">City:</dt> <dd class="inline ml-2">@Model?.City</dd></div>
+                        <div><dt class="font-medium inline">State:</dt> <dd class="inline ml-2">@Model?.State</dd></div>
+                    </dl>
+                </div>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="mt-4 p-3 bg-green-100 text-green-700 rounded">@TempData["Success"]</div>
+            }
+        }
+        else
+        {
+            <div class="mt-6">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data" class="space-y-4">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Id" />
+                    <h3 class="text-lg font-semibold mt-4">Personal Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium">Name</label>
+                            <input asp-for="Name" class="form-input mt-1 w-full rounded border p-2" />
+                            <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Username (cannot change)</label>
+                            <input asp-for="UserName" class="form-input mt-1 w-full rounded border p-2 bg-gray-100" disabled />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Email</label>
+                            <input asp-for="Email" class="form-input mt-1 w-full rounded border p-2" />
+                            <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Phone Number</label>
+                            <input asp-for="PhoneNumber" class="form-input mt-1 w-full rounded border p-2" />
+                            <span asp-validation-for="PhoneNumber" class="text-red-600 text-sm"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Company Name</label>
+                            <input asp-for="CompanyName" class="form-input mt-1 w-full rounded border p-2" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">Role (cannot change)</label>
+                            <input value="@Model?.Role" class="form-input mt-1 w-full rounded border p-2 bg-gray-100" disabled />
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-semibold mt-4">Address</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium">Street</label>
+                            <input asp-for="Street" class="form-input mt-1 w-full rounded border p-2" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">City</label>
+                            <input asp-for="City" class="form-input mt-1 w-full rounded border p-2" />
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium">State</label>
+                            <input asp-for="State" class="form-input mt-1 w-full rounded border p-2" />
+                        </div>
+                    </div>
+
+                    <!-- avatar upload + functional reset button -->
+                    <div class="flex items-center gap-4 mt-4">
+                        <input id="avatarInput" type="file" name="avatar" accept="image/*" class="hidden" />
+
+                        <div class="ml-auto flex gap-2">
+                            <button type="submit" class="px-4 py-2 bg-primary text-white rounded">Save</button>
+
+                            <!-- FIXED Reset button (no nested form) -->
+                            <button
+                                type="submit"
+                                formaction="@Url.Action("ResetAvatar", "Account")"
+                                formmethod="post"
+                                class="px-4 py-2 border rounded bg-white hover:bg-gray-50">
+                                Reset Avatar
+                            </button>
+
+                            <a href="@Url.Action("Profile", "Account")" class="px-4 py-2 border rounded">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        (function () {
+            const avatarInput = document.getElementById('avatarInput');
+            const avatarPreview = document.getElementById('avatarPreview');
+
+            if (!avatarPreview) return;
+
+            if (avatarInput) {
+                avatarInput.addEventListener('change', function () {
+                    const file = this.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = e => avatarPreview.src = e.target.result;
+                    reader.readAsDataURL(file);
+                });
+
+                avatarPreview.style.cursor = 'pointer';
+                avatarPreview.addEventListener('click', () => avatarInput.click());
+            }
+        })();
+    </script>
+}
