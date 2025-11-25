@@ -1,10 +1,14 @@
-﻿<header class="sticky top-0 z-50 w-full border-b border-gray-200/50 dark:border-gray-800/50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+﻿@using AutoHaven.Models
+@inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUser> UserManager
+
+<header class="sticky top-0 z-50 w-full border-b border-gray-200/50 dark:border-gray-800/50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
     <div class="container mx-auto px-4">
         <div class="flex items-center justify-between whitespace-nowrap h-16">
+
             <div class="flex items-center gap-8">
                 <div class="flex items-center gap-3 text-primary dark:text-white">
                     <div class="size-6">
-                        <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                             <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
                         </svg>
                     </div>
@@ -17,20 +21,58 @@
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Account" asp-action="About">About Us</a>
                 </nav>
             </div>
+
+            @* --- Auth area: Dashboard / Login / Signup / Avatar (if authenticated) --- *@
+            @{
+                // Is user authenticated?
+                var isAuthenticated = User?.Identity?.IsAuthenticated == true;
+
+                // Attempt to get the ApplicationUser and its AvatarUrl (if any)
+                string? avatarUrl = null;
+                if (isAuthenticated)
+                {
+                    try
+                    {
+                        var appUser = UserManager.GetUserAsync(User).GetAwaiter().GetResult();
+                        if (appUser != null)
+                        {
+                            var prop = appUser.GetType().GetProperty("AvatarUrl");
+                            if (prop != null)
+                                avatarUrl = prop.GetValue(appUser) as string;
+                        }
+                    }
+                    catch
+                    {
+                        // if anything goes wrong, leave avatarUrl null and fallback will be used
+                    }
+                }
+
+                // Developer-provided fallback (local path you uploaded)
+                var fallback = "images/Default/default.jpg";
+
+                // Only use fallback when user is authenticated and there is no AvatarUrl set.
+                if (isAuthenticated && string.IsNullOrWhiteSpace(avatarUrl))
+                {
+                    avatarUrl = fallback;
+                }
+            }
+
             <div class="flex flex-1 justify-end items-center gap-4">
                 <div class="hidden sm:flex items-center gap-2">
-                    @if(User.Identities.Any(identity => identity.IsAuthenticated))
+                    @if (isAuthenticated)
                     {
-                        <button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
+                        <a href="/Dashboard" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
                             <span class="truncate">Dashboard</span>
-                        </button>
+                        </a>
+
                         <form method="post" asp-controller="Account" asp-action="Logout" class="inline">
                             <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-br from-primary to-blue-900 text-white text-sm font-bold shadow-sm hover:shadow-lg transition-shadow">
                                 <span class="truncate">Log Out</span>
                             </button>
                         </form>
                     }
-                    else{
+                    else
+                    {
                         <a href="/Account/Login" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
                             <span class="truncate">Log In</span>
                         </a>
@@ -38,11 +80,16 @@
                             <span class="truncate">Sign Up</span>
                         </a>
                     }
+                </div>
 
-                </div>
-                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User profile picture"
-                     style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDLaKXqfdOSmZsfGEDMFh_fgpncAQJJKAcbIDAS2LXZTqaJUsb5quHHkL-9xEUo9OB6nlRis0ntH_dUb_a3ug22illzWtyq3cPPf87mcbcXcCVr4AAwKLDXQvcHK-8UuJC1VB6DZXOIXKCMYaLWd7k9u1lGoiZTj5bcFLqdYeXPzBOr-hY8VMgGp2rBisH8eE8BH0B4Nxz5wEwjRo6DR6Mf9iNeR-IM2U5zohOBCF6SdqJsK2wT7mv5rutvGU38rJCUJ0T77gBroQ");'>
-                </div>
+                @* Avatar area: only render if authenticated *@
+                @if (isAuthenticated && !string.IsNullOrWhiteSpace(avatarUrl))
+                {
+                    <a href="@Url.Action("Profile", "Account")" title="View profile" class="ml-2">
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 w-10 h-10 border shadow-sm"
+                             style="background-image: url('@avatarUrl');"></div>
+                    </a>
+                }
             </div>
         </div>
     </div>

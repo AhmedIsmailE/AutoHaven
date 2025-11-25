@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoHaven.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20251124142430_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251125175336_DB")]
+    partial class DB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,6 +35,9 @@ namespace AutoHaven.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("City")
                         .HasMaxLength(100)
