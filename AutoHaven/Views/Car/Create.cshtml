@@ -2,18 +2,17 @@
 
 @{
     ViewBag.Title = "List Your Vehicle on AutoHaven";
-    Layout = "~/Views/Shared/Layout.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
     <div class="layout-container flex h-full grow flex-col">
         
+
+    <div class="layout-container flex h-full grow flex-col">
         <!-- Main Content with Sidebar -->
         <div class="flex flex-1">
-            <!-- Sidebar -->
-            <div class="hidden lg:block w-64 border-r border-gray-200 dark:border-gray-700">
-                @Html.Partial("~/Views/Shared/SidebarPartialView.cshtml")
-            </div>
+
 
             <!-- Main Content -->
             <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -41,6 +40,7 @@
 
                 <!-- Form -->
                 @using (Html.BeginForm("Create", "CarListing", FormMethod.Post, 
+                @using (Html.BeginForm("Create", "Car", FormMethod.Post, 
                     new { @class = "bg-white dark:bg-background-dark dark:border dark:border-gray-700 rounded-xl shadow-sm p-6 md:p-8", 
                           enctype = "multipart/form-data", 
                           id = "carListingForm" }))
@@ -89,11 +89,11 @@
                                         <div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-[#e7ebf3] dark:bg-gray-800 p-1">
                                             <label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-white dark:has-[:checked]:bg-gray-700 has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-[#0d121b] dark:has-[:checked]:text-white text-[#4c669a] dark:text-gray-400 text-sm font-medium leading-normal">
                                                 <span class="truncate">For Sale</span>
-                                                @Html.RadioButtonFor(m => m.ListingType, AutoHaven.Models.CarListingModel.ListingType.ForSelling, new { @class = "invisible w-0" })
+                                                @Html.RadioButtonFor(m => m.ListingType, 0, new { @class = "invisible w-0", id = "forSale" })
                                             </label>
                                             <label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-lg px-2 has-[:checked]:bg-white dark:has-[:checked]:bg-gray-700 has-[:checked]:shadow-[0_0_4px_rgba(0,0,0,0.1)] has-[:checked]:text-[#0d121b] dark:has-[:checked]:text-white text-[#4c669a] dark:text-gray-400 text-sm font-medium leading-normal">
                                                 <span class="truncate">For Rent</span>
-                                                @Html.RadioButtonFor(m => m.ListingType, AutoHaven.Models.CarListingModel.ListingType.ForRenting, new { @class = "invisible w-0" })
+                                                @Html.RadioButtonFor(m => m.ListingType, 1, new { @class = "invisible w-0", id = "forRent" })
                                             </label>
                                         </div>
                                     </div>
@@ -315,7 +315,7 @@
 
                     <!-- Action Buttons -->
                     <div class="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                        <a href="@Url.Action("Index", "CarListing")" class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-transparent text-[#4c669a] dark:text-gray-400 gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-6 hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <a href="@Url.Action("Index", "Car")" class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-transparent text-[#4c669a] dark:text-gray-400 gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-6 hover:bg-gray-100 dark:hover:bg-gray-800">
                             <span class="truncate">Cancel</span>
                         </a>
                         <button type="submit" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] gap-2">
@@ -327,6 +327,8 @@
             </main>
         </div>
     </div>
+
+   
 </div>
 
 @section Scripts {
@@ -421,10 +423,11 @@
                 imageInput.files = dataTransfer.files;
             }
 
-            // ===== LISTING TYPE TOGGLE =====
+            // ===== LISTING TYPE TOGGLE - FIXED =====
             listingTypeRadios.forEach(radio => {
                 radio.addEventListener('change', () => {
-                    const isForSale = radio.value === '1'; // ForSelling = 1
+                    const isForSale = radio.value === '0'; // 0 = ForSelling
+                    console.log('Listing Type Selected:', radio.value, 'Is For Sale:', isForSale);
                     if (isForSale) {
                         newPriceLabel.classList.remove('hidden');
                         rentPriceLabel.classList.add('hidden');
@@ -441,7 +444,7 @@
                 checkedRadio.dispatchEvent(new Event('change', { bubbles: true }));
             }
 
-            // ===== ACCORDION FUNCTIONALITY =====
+            // ===== ACCORDION FUNCTIONALITY - NO JUMPING =====
             stepHeaders.forEach(header => {
                 header.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -470,8 +473,6 @@
 
             // ===== REVIEW SUMMARY =====
             document.querySelector('form').addEventListener('submit', function (e) {
-                // Note: Usually you don't need a submit listener to update HTML if the form submits to the server immediately,
-                // but if this is for a "Preview" step before final submit, this logic is fine.
                 const reviewSummary = document.getElementById('reviewSummary');
                 const manufacturer = document.querySelector('input[name="Manufacturer"]').value;
                 const model = document.querySelector('input[name="Model"]').value;
@@ -490,7 +491,7 @@
 
                 // Safety check for radio
                 const radioChecked = document.querySelector('input[name="ListingType"]:checked');
-                const listingType = radioChecked ? radioChecked.parentElement.textContent.trim() : '';
+                const listingType = radioChecked && radioChecked.value === '0' ? 'For Sale' : 'For Rent';
 
                 const newPrice = document.querySelector('input[name="NewPrice"]').value;
                 const rentPrice = document.querySelector('input[name="RentPrice"]').value;
@@ -537,8 +538,8 @@
                                         <p class="text-[#0d121b] dark:text-white font-semibold">${listingType}</p>
                                     </div>
                                     <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">${listingType.includes('Sale') ? 'Sale Price' : 'Daily Rental Price'}</p>
-                                        <p class="text-[#0d121b] dark:text-white font-semibold">$${listingType.includes('Sale') ? newPrice : rentPrice}</p>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">${listingType === 'For Sale' ? 'Sale Price' : 'Daily Rental Price'}</p>
+                                        <p class="text-[#0d121b] dark:text-white font-semibold">$${listingType === 'For Sale' ? newPrice : rentPrice}</p>
                                     </div>
                                     <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg col-span-2">
                                         <p class="text-sm text-[#4c669a] dark:text-gray-400">Images Uploaded</p>
@@ -547,7 +548,7 @@
                                 </div>
                                 <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                                     <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-2">Description</p>
-                                    <p class="text-[#0d121b] dark:text-white">${description}</p>
+                                    <p class="text-[#0d121b] dark:text-white">${description || 'No description provided'}</p>
                                 </div>
                             `;
                 }

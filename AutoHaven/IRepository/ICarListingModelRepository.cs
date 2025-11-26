@@ -9,5 +9,6 @@ namespace AutoHaven.IRepository
         public void Insert(CarListingModel car, IEnumerable<IFormFile>? images = null);
         public void Delete(int id);
         public void Update(CarListingModel car, int[] imageIdsToKeep, IEnumerable<IFormFile>? newImages = null);
+        void IncrementViews(int listingId);
     }
 }

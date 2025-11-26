@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace AutoHaven.Controllers
 {
-    public class CarListingController : Controller
+    public class CarController : Controller
     {
         private readonly ICarListingModelRepository _carListingRepo;
         private readonly ICarModelRepository _carRepo;
@@ -15,7 +15,7 @@ namespace AutoHaven.Controllers
         private readonly IReviewModelRepository _reviewRepo;
         private readonly IFavouriteModelRepository _favouriteRepo;
 
-        public CarListingController(
+        public  CarController (
             ICarListingModelRepository carListingRepo,
             ICarModelRepository carRepo,
             IUserSubscriptionModelRepository userSubscriptionRepo,
@@ -31,53 +31,164 @@ namespace AutoHaven.Controllers
 
         // ==================== GET: Browse All Listings ====================
         [HttpGet]
-        public IActionResult Index(string searchTerm = "", int listingType = -1, string sortBy = "newest")
+        public IActionResult Index(string searchTerm = "", int? minPrice = null, int? maxPrice = null,
+        int? selectedYear = null, int? transmission = null, int? fuel = null,
+        int listingType = 0, string sortBy = "newest", int page = 1)
         {
             try
             {
-                var listings = _carListingRepo.Get();
+                const int pageSize = 12;
 
-                // Filter by listing type
-                if (listingType >= 0)
+                // Get all listings first
+                var allListings = _carListingRepo.Get().ToList();
+
+                // If no listings exist, return empty with defaults
+                if (!allListings.Any())
                 {
-                    listings = listings
-                        .Where(cl => (int)cl.Type == listingType)
-                        .ToList();
+                    ViewBag.SearchTerm = searchTerm;
+                    ViewBag.MinPrice = minPrice;
+                    ViewBag.MaxPrice = maxPrice;
+                    ViewBag.SelectedYear = selectedYear;
+                    ViewBag.Transmission = transmission;
+                    ViewBag.Fuel = fuel;
+                    ViewBag.ListingType = listingType;
+                    ViewBag.SortBy = sortBy;
+                    ViewBag.CurrentPage = page;
+                    ViewBag.TotalPages = 1;
+                    ViewBag.TotalCount = 0;
+                    ViewBag.Makes = new List<string>();
+                    ViewBag.Years = new List<int>();
+                    ViewBag.Transmissions = Enum.GetValues(typeof(CarModel.Transmission)).Cast<CarModel.Transmission>().ToList();
+                    ViewBag.Fuels = Enum.GetValues(typeof(CarModel.FuelType)).Cast<CarModel.FuelType>().ToList();
+
+                    return View(new List<CarListingModel>());
                 }
 
-                // Search by manufacturer, model, or description
+                var query = allListings.AsQueryable();
+
+                // Search filter
                 if (!string.IsNullOrEmpty(searchTerm))
                 {
-                    listings = listings
-                        .Where(cl =>
+                    query = query.Where(cl =>
                             cl.Car.Manufacturer.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                             cl.Car.Model.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                            (cl.Description != null && cl.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
-                        .ToList();
+                        (cl.Description != null && cl.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    ).AsQueryable();
                 }
 
-                // Sort
-                listings = sortBy switch
+                // Listing Type filter
+                if (listingType == 1)
+                    query = query.Where(cl => cl.Type == CarListingModel.ListingType.ForSelling).AsQueryable();
+                else if (listingType == 2)
+                    query = query.Where(cl => cl.Type == CarListingModel.ListingType.ForRenting).AsQueryable();
+
+                // Price filter
+                if (minPrice.HasValue)
                 {
-                    "price_asc" => listings
-                        .OrderBy(cl => cl.Type == CarListingModel.ListingType.ForSelling ? cl.NewPrice : cl.RentPrice)
-                        .ToList(),
-                    "price_desc" => listings
-                        .OrderByDescending(cl => cl.Type == CarListingModel.ListingType.ForSelling ? cl.NewPrice : cl.RentPrice)
-                        .ToList(),
-                    "oldest" => listings.OrderBy(cl => cl.CreatedAt).ToList(),
-                    _ => listings.OrderByDescending(cl => cl.CreatedAt).ToList()
+                    query = query.Where(cl =>
+                        (cl.Type == CarListingModel.ListingType.ForSelling && cl.NewPrice >= minPrice) ||
+                        (cl.Type == CarListingModel.ListingType.ForRenting && cl.RentPrice >= minPrice)
+                    ).AsQueryable();
+                }
+
+                if (maxPrice.HasValue)
+                {
+                    query = query.Where(cl =>
+                        (cl.Type == CarListingModel.ListingType.ForSelling && cl.NewPrice <= maxPrice) ||
+                        (cl.Type == CarListingModel.ListingType.ForRenting && cl.RentPrice <= maxPrice)
+                    ).AsQueryable();
+                }
+
+                // Year filter
+                if (selectedYear.HasValue)
+                    query = query.Where(cl => cl.Car.ModelYear == selectedYear).AsQueryable();
+
+                // Transmission filter
+                if (transmission.HasValue)
+                    query = query.Where(cl => (int)cl.Car.CurrentTransmission == transmission).AsQueryable();
+
+                // Fuel type filter
+                if (fuel.HasValue)
+                    query = query.Where(cl => (int)cl.Car.CurrentFuel == fuel).AsQueryable();
+
+                // Sorting
+                var listings = sortBy switch
+                {
+                    "price_asc" => query.OrderBy(cl =>
+                        cl.Type == CarListingModel.ListingType.ForSelling ? cl.NewPrice : cl.RentPrice).ToList(),
+                    "price_desc" => query.OrderByDescending(cl =>
+                        cl.Type == CarListingModel.ListingType.ForSelling ? cl.NewPrice : cl.RentPrice).ToList(),
+                    "highest_rated" => query.OrderByDescending(cl =>
+                        _reviewRepo.Get().Where(r => r.ListingId == cl.ListingId).Average(r => (double?)r.Rating) ?? 0).ToList(),
+                    "most_viewed" => query.OrderByDescending(cl => cl.Views).ToList(),
+                    _ => query.OrderByDescending(cl => cl.CreatedAt).ToList()
                 };
 
+                // Pagination
+                int totalCount = listings.Count();
+                int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                var paginatedListings = listings.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                // Get filter options for dropdowns
+                var makes = allListings.Where(cl => cl.Car != null && !string.IsNullOrEmpty(cl.Car.Manufacturer))
+                    .Select(cl => cl.Car.Manufacturer)
+                    .Distinct()
+                    .OrderBy(m => m)
+                    .ToList();
+
+                var years = allListings.Where(cl => cl.Car != null)
+                    .Select(cl => cl.Car.ModelYear)
+                    .Distinct()
+                    .OrderByDescending(y => y)
+                    .ToList();
+
+                var transmissions = Enum.GetValues(typeof(CarModel.Transmission))
+                    .Cast<CarModel.Transmission>()
+                    .ToList();
+
+                var fuels = Enum.GetValues(typeof(CarModel.FuelType))
+                    .Cast<CarModel.FuelType>()
+                    .ToList();
+
+                // ViewBag assignments
                 ViewBag.SearchTerm = searchTerm;
+                ViewBag.MinPrice = minPrice;
+                ViewBag.MaxPrice = maxPrice;
+                ViewBag.SelectedYear = selectedYear;
+                ViewBag.Transmission = transmission;
+                ViewBag.Fuel = fuel;
                 ViewBag.ListingType = listingType;
                 ViewBag.SortBy = sortBy;
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.TotalCount = totalCount;
+                ViewBag.Makes = makes ?? new List<string>();
+                ViewBag.Years = years ?? new List<int>();
+                ViewBag.Transmissions = transmissions ?? new List<CarModel.Transmission>();
+                ViewBag.Fuels = fuels ?? new List<CarModel.FuelType>();
 
-                return View(listings);
+                return View(paginatedListings);
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine("INDEX ERROR: " + ex.ToString());
                 ViewBag.Error = $"Error loading listings: {ex.Message}";
+                ViewBag.SearchTerm = searchTerm;
+                ViewBag.MinPrice = minPrice;
+                ViewBag.MaxPrice = maxPrice;
+                ViewBag.SelectedYear = selectedYear;
+                ViewBag.Transmission = transmission;
+                ViewBag.Fuel = fuel;
+                ViewBag.ListingType = listingType;
+                ViewBag.SortBy = sortBy;
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = 1;
+                ViewBag.TotalCount = 0;
+                ViewBag.Makes = new List<string>();
+                ViewBag.Years = new List<int>();
+                ViewBag.Transmissions = Enum.GetValues(typeof(CarModel.Transmission)).Cast<CarModel.Transmission>().ToList();
+                ViewBag.Fuels = Enum.GetValues(typeof(CarModel.FuelType)).Cast<CarModel.FuelType>().ToList();
+
                 return View(new List<CarListingModel>());
             }
         }
@@ -94,6 +205,10 @@ namespace AutoHaven.Controllers
                 var listing = _carListingRepo.GetById(id.Value);
                 if (listing == null)
                     return NotFound("Listing not found.");
+
+
+                // ✅ INCREMENT VIEW COUNT
+                _carListingRepo.IncrementViews(id.Value);
 
                 // Get reviews for this listing
                 var reviews = _reviewRepo.GetByListingId(id.Value);
@@ -114,8 +229,17 @@ namespace AutoHaven.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.Error = $"Error loading listing: {ex.Message}";
-                return NotFound();
+                // 🔍 SHOW THE REAL ERROR
+                string errorMessage = ex.InnerException?.InnerException?.Message
+                    ?? ex.InnerException?.Message
+                    ?? ex.Message;
+
+                ModelState.AddModelError("", $"Error creating listing: {errorMessage}");
+
+                // Also log it
+                System.Diagnostics.Debug.WriteLine("FULL ERROR: " + ex.ToString());
+
+                return View("Error");
             }
         }
 
@@ -128,7 +252,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== POST: Create Listing ====================
-        //[Authorize]
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles)

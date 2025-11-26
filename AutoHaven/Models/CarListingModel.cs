@@ -15,6 +15,8 @@ namespace AutoHaven.Models
         [ForeignKey("User")]
         public int UserId { get; set; }
 
+        public int Views { get; set; } = 0;
+
         public enum ListingType { ForRenting = 0, ForSelling = 1 }
         public ListingType Type { get; set; }
         public decimal RentPrice { get; set; }

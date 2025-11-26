@@ -180,6 +180,26 @@ namespace AutoHaven.Repository
                     throw;
                 }
             }
+
+        }
+        // ✅ NEW METHOD: Increment views when user visits listing
+        public void IncrementViews(int listingId)
+        {
+            try
+            {
+                var listing = projectDbcontext.CarListings.FirstOrDefault(cl => cl.ListingId == listingId);
+                if (listing != null)
+                {
+                    listing.Views++;
+                    listing.UpdatedAt = DateTime.UtcNow;
+                    projectDbcontext.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error incrementing views: {ex.Message}");
+                
+            }
         }
     }
 }
