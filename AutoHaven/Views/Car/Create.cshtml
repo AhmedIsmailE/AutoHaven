@@ -38,8 +38,7 @@
                     <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">4. Review & Publish</span>
                 </div>
 
-                <!-- Form -->
-                @using (Html.BeginForm("Create", "CarListing", FormMethod.Post, 
+                <!-- Form -->      
                 @using (Html.BeginForm("Create", "Car", FormMethod.Post, 
                     new { @class = "bg-white dark:bg-background-dark dark:border dark:border-gray-700 rounded-xl shadow-sm p-6 md:p-8", 
                           enctype = "multipart/form-data", 
