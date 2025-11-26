@@ -6,12 +6,13 @@
 }
 
 <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
-    
+    <div class="layout-container flex h-full grow flex-col">
+        
 
     <div class="layout-container flex h-full grow flex-col">
         <!-- Main Content with Sidebar -->
         <div class="flex flex-1">
-          
+
 
             <!-- Main Content -->
             <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -38,6 +39,7 @@
                 </div>
 
                 <!-- Form -->
+                @using (Html.BeginForm("Create", "CarListing", FormMethod.Post, 
                 @using (Html.BeginForm("Create", "Car", FormMethod.Post, 
                     new { @class = "bg-white dark:bg-background-dark dark:border dark:border-gray-700 rounded-xl shadow-sm p-6 md:p-8", 
                           enctype = "multipart/form-data", 
@@ -367,6 +369,7 @@
             });
 
             function handleFiles(files) {
+                // Max 7 images
                 const availableSlots = 7 - uploadedFiles.length;
                 const filesToAdd = files.slice(0, availableSlots);
 
@@ -391,18 +394,18 @@
                     const imageItem = document.createElement('div');
                     imageItem.className = 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700';
                     imageItem.innerHTML = `
-                                <div class="flex items-center gap-3 flex-1">
-                                    <span class="material-symbols-outlined text-primary">image</span>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-[#0d121b] dark:text-white font-medium truncate">${file.name}</p>
-                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                                    </div>
-                                    ${index === 0 ? '<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded">Primary</span>' : ''}
-                                </div>
-                                <button type="button" class="delete-btn ml-2 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold leading-normal tracking-[0.015em]" data-index="${index}">
-                                    <span class="material-symbols-outlined text-lg">delete</span>
-                                </button>
-                            `;
+                                            <div class="flex items-center gap-3 flex-1">
+                                                <span class="material-symbols-outlined text-primary">image</span>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-[#0d121b] dark:text-white font-medium truncate">${file.name}</p>
+                                                    <p class="text-sm text-[#4c669a] dark:text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </div>
+                                                ${index === 0 ? '<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded">Primary</span>' : ''}
+                                            </div>
+                                            <button type="button" class="delete-btn ml-2 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold leading-normal tracking-[0.015em]" data-index="${index}">
+                                                <span class="material-symbols-outlined text-lg">delete</span>
+                                            </button>
+                                        `;
 
                     imageItem.querySelector('.delete-btn').addEventListener('click', () => {
                         uploadedFiles.splice(index, 1);
@@ -435,6 +438,7 @@
                 });
             });
 
+            // Trigger initial state
             const checkedRadio = document.querySelector('input[name="ListingType"]:checked');
             if (checkedRadio) {
                 checkedRadio.dispatchEvent(new Event('change', { bubbles: true }));
@@ -444,6 +448,7 @@
             stepHeaders.forEach(header => {
                 header.addEventListener('click', (e) => {
                     e.preventDefault();
+                    const step = header.dataset.step;
                     const content = header.nextElementSibling;
                     const icon = header.querySelector('.step-icon');
 
@@ -474,6 +479,7 @@
                 const year = document.querySelector('input[name="ModelYear"]').value;
                 const color = document.querySelector('input[name="Color"]').value;
 
+                // Safety checks for selects in case they are null
                 const transSelect = document.querySelector('select[name="Transmission"]');
                 const transmission = transSelect ? transSelect.options[transSelect.selectedIndex].text : '';
 
@@ -483,6 +489,7 @@
                 const power = document.querySelector('input[name="Power"]').value;
                 const doors = document.querySelector('input[name="Doors"]').value;
 
+                // Safety check for radio
                 const radioChecked = document.querySelector('input[name="ListingType"]:checked');
                 const listingType = radioChecked && radioChecked.value === '0' ? 'For Sale' : 'For Rent';
 
@@ -548,4 +555,4 @@
             });
         });
     </script>
-}        
+}

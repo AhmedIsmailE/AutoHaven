@@ -70,8 +70,8 @@ namespace AutoHaven.Controllers
                 if (!string.IsNullOrEmpty(searchTerm))
                 {
                     query = query.Where(cl =>
-                        cl.Car.Manufacturer.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                        cl.Car.Model.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            cl.Car.Manufacturer.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                            cl.Car.Model.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                         (cl.Description != null && cl.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
                     ).AsQueryable();
                 }
@@ -192,6 +192,7 @@ namespace AutoHaven.Controllers
                 return View(new List<CarListingModel>());
             }
         }
+
         // ==================== GET: Listing Details ====================
         [HttpGet]
         public IActionResult Details(int? id)
@@ -294,7 +295,6 @@ namespace AutoHaven.Controllers
                     CurrentFuel = viewModel.Fuel,
                     Power = viewModel.Power,
                     Doors = viewModel.Doors
-                   
                 };
 
                 _carRepo.Insert(car);
