@@ -17,6 +17,7 @@
                 <nav class="hidden md:flex items-center gap-8">
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Buy</a>
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Rent</a>
+                    @* ------------------------ sell is only visible for providers ---------------------------*@
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Sell</a>
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Account" asp-action="About">About Us</a>
                 </nav>
@@ -61,12 +62,12 @@
                 <div class="hidden sm:flex items-center gap-2">
                     @if (isAuthenticated)
                     {
-                        <a href="/Dashboard" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
-                            <span class="truncate">Dashboard</span>
-                        </a>
+                        // <a href="/Dashboard" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
+                        //     <span class="truncate">Dashboard</span>
+                        // </a>
 
                         <form method="post" asp-controller="Account" asp-action="Logout" class="inline">
-                            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-br from-primary to-blue-900 text-white text-sm font-bold shadow-sm hover:shadow-lg transition-shadow">
+                            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
                                 <span class="truncate">Log Out</span>
                             </button>
                         </form>

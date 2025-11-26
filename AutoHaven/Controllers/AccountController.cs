@@ -99,7 +99,7 @@ namespace AutoHaven.Controllers
                         await _signInManager.SignInWithClaimsAsync(user, isPersistent: loginUserViewModel.RememberMe, claims); // Create Cookies
 
 
-                        return RedirectToAction("Index");
+                        return RedirectToAction("Home");
                     }
                 }
 
@@ -115,11 +115,6 @@ namespace AutoHaven.Controllers
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
-        }
-        [Authorize]
-        public IActionResult Index()
-        {
-            return View();
         }
         [Authorize]
         [HttpGet]
@@ -295,29 +290,14 @@ namespace AutoHaven.Controllers
             return RedirectToAction(nameof(Profile));
         }
 
-
-
-
-
-
-        //[Authorize]
-        //public IActionResult Index()
-        //{
-        //    //List<Product> products = productData.Products;
-        //    //return View(products);
-        //    if (User.Identity.IsAuthenticated)
-        //    {
-
-        //        //return View(specific_model);
-
-        //    }
-        //    else
-        //    {
-        //        return View("Login");
-        //    }
-
-        //}
-
+        public IActionResult Home()
+        {
+            return View();
+        }
+        public IActionResult Admin()
+        {
+            return View("AdminDashboard");
+        }
     }
 }
 
