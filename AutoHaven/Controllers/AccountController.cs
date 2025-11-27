@@ -1,4 +1,4 @@
-﻿using AutoHaven.Models;
+using AutoHaven.Models;
 using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -300,10 +300,3 @@ namespace AutoHaven.Controllers
         }
     }
 }
-
-
-
-
-
-
-

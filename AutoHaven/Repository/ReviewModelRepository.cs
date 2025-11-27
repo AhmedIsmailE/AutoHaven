@@ -38,8 +38,8 @@ namespace AutoHaven.Repository
             if (review.Rating < 1 || review.Rating > 5) // Rating is out of 5 only
                 throw new ArgumentOutOfRangeException(nameof(review.Rating), "Rating must be between 1 and 5.");
 
-            review.CreatedAt = DateTime.UtcNow;
-            review.UpdatedAt = DateTime.UtcNow;
+            review.CreatedAt = DateTime.Now;
+            review.UpdatedAt = DateTime.Now;
 
             projectDbcontext.Reviews.Add(review);
             projectDbcontext.SaveChanges();
@@ -55,7 +55,7 @@ namespace AutoHaven.Repository
 
             existing.Rating = review.Rating;
             existing.Comment = review.Comment;
-            existing.UpdatedAt = DateTime.UtcNow;
+            existing.UpdatedAt = DateTime.Now;
 
             projectDbcontext.SaveChanges();
         }
