@@ -17,6 +17,7 @@
                 <nav class="hidden md:flex items-center gap-8">
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Buy</a>
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Rent</a>
+                    @* ------------------------ sell is only visible for providers ---------------------------*@
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Sell</a>
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Account" asp-action="About">About Us</a>
                 </nav>
@@ -61,12 +62,12 @@
                 <div class="hidden sm:flex items-center gap-2">
                     @if (isAuthenticated)
                     {
-                        <a href="/Dashboard" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
-                            <span class="truncate">Dashboard</span>
-                        </a>
+                        // <a href="/Dashboard" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
+                        //     <span class="truncate">Dashboard</span>
+                        // </a>
 
                         <form method="post" asp-controller="Account" asp-action="Logout" class="inline">
-                            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-br from-primary to-blue-900 text-white text-sm font-bold shadow-sm hover:shadow-lg transition-shadow">
+                            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
                                 <span class="truncate">Log Out</span>
                             </button>
                         </form>
@@ -82,9 +83,7 @@
                     }
 
                 </div>
-                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User profile picture"
-                     style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDLaKXqfdOSmZsfGEDMFh_fgpncAQJJKAcbIDAS2LXZTqaJUsb5quHHkL-9xEUo9OB6nlRis0ntH_dUb_a3ug22illzWtyq3cPPf87mcbcXcCVr4AAwKLDXQvcHK-8UuJC1VB6DZXOIXKCMYaLWd7k9u1lGoiZTj5bcFLqdYeXPzBOr-hY8VMgGp2rBisH8eE8BH0B4Nxz5wEwjRo6DR6Mf9iNeR-IM2U5zohOBCF6SdqJsK2wT7mv5rutvGU38rJCUJ0T77gBroQ");'>
-                </div>
+                
 
                 @* Avatar area: only render if authenticated *@
                 @if (isAuthenticated && !string.IsNullOrWhiteSpace(avatarUrl))
