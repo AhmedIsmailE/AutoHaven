@@ -15,7 +15,7 @@
 //            List<SubscriptionPlanModel> sublists = projectDbcontext.SubscriptionPlans.AsNoTracking().ToList();
 //            return sublists;
 //        }
-//
+
 //        public SubscriptionPlanModel GetById(int id)
 //        {
 //            SubscriptionPlanModel sublist = projectDbcontext.SubscriptionPlans.FirstOrDefault(s => s.SubscriptionPlanId == id);

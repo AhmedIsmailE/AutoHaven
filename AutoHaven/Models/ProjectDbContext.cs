@@ -16,7 +16,7 @@ namespace AutoHaven.Models
         public DbSet<CarImageModel> CarImages { get; set; }
         public DbSet<FavouriteModel> Favourites { get; set; }
         public DbSet<ReviewModel> Reviews { get; set; }
-       //public DbSet<SubscriptionPlanModel> SubscriptionPlans { get; set; }
+        //public DbSet<SubscriptionPlanModel> SubscriptionPlans { get; set; }
         public DbSet<UserSubscriptionModel> UserSubscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
