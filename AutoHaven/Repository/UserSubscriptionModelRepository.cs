@@ -123,6 +123,7 @@ namespace AutoHaven.Repository
             existing.EndDate = subscription.EndDate;
             existing.CurrentStatus = subscription.CurrentStatus;  // ✅ CHANGED: .status to .Status
             //existing.CurrentBillingCycle = subscription.CurrentBillingCycle;  // ✅ CHANGED: .billingcycle to .BillingCycle
+
             _projectDbContext.SaveChanges();
         }
 
