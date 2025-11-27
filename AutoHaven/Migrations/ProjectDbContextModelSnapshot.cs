@@ -33,9 +33,6 @@ namespace AutoHaven.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("AvatarUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");

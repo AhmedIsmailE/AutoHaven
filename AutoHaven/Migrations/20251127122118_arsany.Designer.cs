@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoHaven.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20251124142430_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251127122118_arsany")]
+    partial class arsany
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -196,6 +196,9 @@ namespace AutoHaven.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Views")
                         .HasColumnType("int");
 
                     b.HasKey("ListingId");

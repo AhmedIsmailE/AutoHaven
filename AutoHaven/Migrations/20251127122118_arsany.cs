@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AutoHaven.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class arsany : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -212,6 +212,7 @@ namespace AutoHaven.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CarId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
+                    Views = table.Column<int>(type: "int", nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
                     RentPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     NewPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
