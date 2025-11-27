@@ -1,0 +1,460 @@
+﻿@model AutoHaven.Models.CarListingModel
+@{
+    ViewData["Title"] = $"{Model.Car.ModelYear} {Model.Car.Manufacturer} {Model.Car.Model}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+        <main class="w-full max-w-7xl mx-auto px-4 lg:px-8 py-8">
+
+            <!-- Breadcrumb Navigation -->
+            <div class="flex flex-wrap gap-2 pb-6">
+                <a href="@Url.Action("Index", "Home")" class="text-charcoal/80 dark:text-silver/80 text-sm font-medium leading-normal hover:text-navy dark:hover:text-white">Home</a>
+                <span class="text-charcoal/60 dark:text-silver/60 text-sm font-medium leading-normal">/</span>
+                <a href="@Url.Action("Index", "Car")" class="text-charcoal/80 dark:text-silver/80 text-sm font-medium leading-normal hover:text-navy dark:hover:text-white">Listings</a>
+                <span class="text-charcoal/60 dark:text-silver/60 text-sm font-medium leading-normal">/</span>
+                <span class="text-navy dark:text-white text-sm font-medium leading-normal">@Model.Car.ModelYear @Model.Car.Manufacturer @Model.Car.Model</span>
+            </div>
+
+            <!-- Title & Price -->
+            <div class="flex flex-wrap justify-between items-start gap-4 pb-6">
+                <h1 class="text-navy dark:text-off-white text-3xl font-black leading-tight tracking-[-0.033em]">
+                    @Model.Car.ModelYear @Model.Car.Manufacturer @Model.Car.Model
+                </h1>
+                <div class="flex items-center gap-2 text-charcoal dark:text-silver">
+                    @if (Model.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling)
+                    {
+                        <span class="text-2xl font-bold text-navy dark:text-off-white">$@Model.NewPrice.ToString("N2")</span>
+                    }
+                    else
+                    {
+                        <div class="text-right">
+                            <span class="text-2xl font-bold text-navy dark:text-off-white">$@Model.RentPrice.ToString("N2")</span>
+                            <span class="text-sm text-charcoal/70 dark:text-silver/70 block">/ per day</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-8">
+
+                <!-- Left Column: Image Gallery (2/3 width) -->
+                <div class="lg:col-span-2.5 flex flex-col gap-4">
+                    <!-- Main Image - Fixed Height -->
+                    <div id="mainImage" class="bg-cover bg-center overflow-hidden shadow-sm bg-silver dark:bg-charcoal rounded-xl w-full"
+                         style='background-image: url("/@(Model.CarImages?.FirstOrDefault()?.Path ?? "images/placeholder.jpg")");
+                     background-position: center;
+                     background-repeat: no-repeat;
+                     background-size: cover;
+                     min-height: 400px;
+                     height: 400px;'>
+                    </div>
+
+                    <!-- Thumbnail Gallery -->
+                    @if (Model.CarImages != null && Model.CarImages.Any())
+                    {
+                        <div class="flex gap-2 overflow-x-auto pb-2">
+                            @foreach (var image in Model.CarImages)
+                            {
+                                <img src="/@image.Path"
+                                     alt="@image.AltText"
+                                     class="w-20 h-20 rounded-lg object-cover cursor-pointer border-2 @(image.IsPrimary ? "border-primary" : "border-gray-300") hover:opacity-80 transition-opacity flex-shrink-0"
+                                     onclick="changeMainImage('/@image.Path')" />
+                            }
+                        </div>
+                    }
+                </div>
+
+                <!-- Right Column: Actions & Seller (1/3 width) -->
+                <div class="lg:col-span-1 flex flex-col gap-6">
+
+                    <!-- Actions Card -->
+                    <div class="bg-white dark:bg-charcoal/40 rounded-xl p-6 shadow-sm border border-silver/50 dark:border-charcoal">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-bold text-navy dark:text-off-white">Actions</h3>
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <button id="favBtn" class="text-charcoal dark:text-silver hover:text-primary dark:hover:text-white transition-colors"
+                                        onclick="toggleFavorite(@Model.ListingId)">
+                                    <span class="material-symbols-outlined text-2xl" id="favIcon">favorite</span>
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="text-charcoal dark:text-silver hover:text-primary dark:hover:text-white transition-colors"
+                                        onclick="alert('Please log in to add favorites')">
+                                    <span class="material-symbols-outlined text-2xl">favorite</span>
+                                </button>
+                            }
+                        </div>
+                        <button class="w-full flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-navy hover:bg-navy/90 text-off-white text-base font-bold leading-normal tracking-[0.015em] transition-shadow shadow-md">
+                            @if (Model.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling)
+                            {
+                                <span>Buy Now</span>
+                            }
+                            else
+                            {
+                                <span>Rent Now</span>
+                            }
+                        </button>
+                    </div>
+
+                    <!-- Seller Card -->
+                    <div class="bg-white dark:bg-charcoal/40 rounded-xl p-6 shadow-sm border border-silver/50 dark:border-charcoal">
+                        <h3 class="text-lg font-bold text-navy dark:text-off-white mb-4">Contact Seller</h3>
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-14 h-14 rounded-full bg-silver dark:bg-charcoal flex-shrink-0"></div>
+                            <div>
+                                <p class="font-bold text-navy dark:text-white text-sm">@(Model.User?.Name ?? "Seller")</p>
+                                <p class="text-xs text-charcoal/70 dark:text-silver/70">@(Model.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? "Seller" : "Rental Provider")</p>
+                            </div>
+                        </div>
+
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <!-- Phone visible when logged in -->
+                            <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <p class="text-xs text-blue-800 dark:text-blue-300 mb-1"><strong>Phone:</strong></p>
+                                <p class="text-base font-semibold text-navy dark:text-white">@Model.User?.PhoneNumber</p>
+                            </div>
+
+                            <button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-primary/90 text-off-white text-sm font-bold leading-normal transition-all"
+                                    onclick="openContactForm()">
+                                Send Message
+                            </button>
+                        }
+                        else
+                        {
+                            <!-- Login prompt when not authenticated -->
+                            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 mb-4">
+                                <p class="text-yellow-800 dark:text-yellow-300 text-xs">
+                                    <strong>Want to contact?</strong> Log in to see phone number.
+                                </p>
+                            </div>
+                            <a href="@Url.Action("Login", "Account")" class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-primary/90 text-off-white text-sm font-bold leading-normal transition-all">
+                                Log In
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <!-- Left: Specs & Description (2/3) -->
+                <div class="lg:col-span-2 flex flex-col gap-6">
+
+                    <!-- Specifications -->
+                    <div class="bg-white dark:bg-charcoal/40 rounded-xl p-6 shadow-sm border border-silver/50 dark:border-charcoal">
+                        <h3 class="text-lg font-bold text-navy dark:text-off-white mb-4">Specifications</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-sm text-charcoal/70 dark:text-silver/70 mb-1">Year</p>
+                                <p class="font-semibold text-navy dark:text-white">@Model.Car.ModelYear</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-charcoal/70 dark:text-silver/70 mb-1">Fuel</p>
+                                <p class="font-semibold text-navy dark:text-white">@Model.Car.CurrentFuel</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-charcoal/70 dark:text-silver/70 mb-1">Transmission</p>
+                                <p class="font-semibold text-navy dark:text-white">@Model.Car.CurrentTransmission</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-charcoal/70 dark:text-silver/70 mb-1">Color</p>
+                                <p class="font-semibold text-navy dark:text-white">@Model.Color</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-charcoal/70 dark:text-silver/70 mb-1">Power</p>
+                                <p class="font-semibold text-navy dark:text-white">@Model.Car.Power HP</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-charcoal/70 dark:text-silver/70 mb-1">Doors</p>
+                                <p class="font-semibold text-navy dark:text-white">@Model.Car.Doors</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="bg-white dark:bg-charcoal/40 rounded-xl p-6 shadow-sm border border-silver/50 dark:border-charcoal">
+                        <h3 class="text-lg font-bold text-navy dark:text-off-white mb-4">Description</h3>
+                        <p class="text-charcoal/90 dark:text-silver/90 leading-relaxed">
+                            @(string.IsNullOrEmpty(Model.Description) ? "No description provided." : Model.Description)
+                        </p>
+                    </div>
+
+                    <!-- Reviews Section -->
+                    <div class="bg-white dark:bg-charcoal/40 rounded-xl p-6 shadow-sm border border-silver/50 dark:border-charcoal">
+                        <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold text-navy dark:text-off-white">Reviews & Ratings</h3>
+                                <div class="flex items-center gap-3 mt-2">
+                                    @{
+                                        double avgRating = ViewBag.AverageRating ?? 0;
+                                        int reviewCount = ViewBag.ReviewCount ?? 0;
+                                    }
+                                    <div class="flex gap-0.5">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= Math.Floor(avgRating))
+                                            {
+                                                <span class="material-symbols-outlined text-yellow-400">star</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined text-gray-300">star</span>
+                                            }
+                                        }
+                                    </div>
+                                    <span class="font-bold text-navy dark:text-white">@avgRating.ToString("F1")</span>
+                                    <span class="text-charcoal/70 dark:text-silver/70">(@reviewCount reviews)</span>
+                                </div>
+                            </div>
+
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <button class="px-4 py-2 bg-primary text-off-white rounded-lg font-semibold hover:bg-primary/90 text-sm"
+                                        onclick="openReviewModal()">
+                                    Add Review
+                                </button>
+                            }
+                        </div>
+
+                        <!-- Reviews List -->
+                        <div class="space-y-4">
+                            @if (ViewBag.Reviews != null && ViewBag.Reviews.Count > 0)
+                            {
+                                @foreach (var review in ViewBag.Reviews)
+                                {
+                                    <div class="p-4 bg-gray-50 dark:bg-charcoal/50 rounded-lg border border-gray-200 dark:border-charcoal">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <p class="font-bold text-navy dark:text-white text-sm">@review.User.Name</p>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <div class="flex gap-0.5">
+                                                        @for (int i = 1; i <= 5; i++)
+                                                        {
+                                                            if (i <= review.Rating)
+                                                            {
+                                                                <span class="material-symbols-outlined text-yellow-400 text-xs">star</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="material-symbols-outlined text-gray-300 text-xs">star</span>
+                                                            }
+                                                        }
+                                                    </div>
+                                                    <span class="text-xs text-charcoal/60 dark:text-silver/60">@review.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                                </div>
+                                            </div>
+
+                                            @if (User.Identity.IsAuthenticated)
+                                            {
+                                                <button class="text-red-500 hover:text-red-700 text-xs"
+                                                        onclick="deleteReview(@review.ReviewId, @Model.ListingId)">
+                                                    Delete
+                                                </button>
+                                            }
+                                        </div>
+                                        <p class="text-charcoal/90 dark:text-silver/90 text-sm">@review.Comment</p>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-charcoal/70 dark:text-silver/70 text-center py-4 text-sm">No reviews yet. Be the first to review!</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Summary (1/3) -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white dark:bg-charcoal/40 rounded-xl p-6 shadow-sm border border-silver/50 dark:border-charcoal h-fit">
+                        <h3 class="text-lg font-bold text-navy dark:text-off-white mb-4">Listing Info</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-charcoal/70 dark:text-silver/70">ID:</span>
+                                <span class="font-semibold text-navy dark:text-white">#@Model.ListingId</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-charcoal/70 dark:text-silver/70">Type:</span>
+                                <span class="font-semibold text-navy dark:text-white">@(Model.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? "For Sale" : "For Rent")</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-charcoal/70 dark:text-silver/70">Status:</span>
+                                <span class="font-semibold text-green-600">@Model.CurrentState</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-charcoal/70 dark:text-silver/70">Views:</span>
+                                <span class="font-semibold text-navy dark:text-white">@Model.Views</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-charcoal/70 dark:text-silver/70">Posted:</span>
+                                <span class="font-semibold text-navy dark:text-white">@Model.CreatedAt.ToString("MMM dd")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Review Modal -->
+@if (User.Identity.IsAuthenticated)
+{
+    <div id="reviewModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-charcoal rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h2 class="text-xl font-bold text-navy dark:text-white mb-4">Add Your Review</h2>
+
+            <form id="reviewForm" method="POST" action="@Url.Action("AddReview", "Car")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="listingId" value="@Model.ListingId" />
+
+                <div class="mb-4">
+                    <label class="block text-navy dark:text-white font-semibold mb-2">Rating</label>
+                    <div class="flex gap-2" id="ratingStars">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <button type="button" class="material-symbols-outlined text-3xl text-gray-300 cursor-pointer star-rating hover:text-yellow-400"
+                                    data-rating="@i" onclick="setRating(@i)">
+                                star
+                            </button>
+                        }
+                    </div>
+                    <input type="hidden" id="rating" name="rating" value="0" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-navy dark:text-white font-semibold mb-2">Comment</label>
+                    <textarea name="comment" id="comment" rows="4"
+                              class="w-full p-3 border border-gray-300 dark:border-charcoal rounded-lg dark:bg-charcoal/50 dark:text-white text-sm"
+                              placeholder="Share your experience..." required></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-charcoal text-navy dark:text-white rounded-lg font-semibold hover:bg-gray-400 text-sm"
+                            onclick="closeReviewModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 text-sm">
+                        Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<!-- Contact Form Modal -->
+@if (User.Identity.IsAuthenticated)
+{
+    <div id="contactModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-charcoal rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h2 class="text-xl font-bold text-navy dark:text-white mb-4">Contact Seller</h2>
+
+            <form id="contactForm" onsubmit="sendContactMessage(event)">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-4">
+                    <textarea id="contactMessage" rows="5"
+                              class="w-full p-3 border border-gray-300 dark:border-charcoal rounded-lg dark:bg-charcoal/50 dark:text-white text-sm"
+                              placeholder="Write your message..." required></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" class="flex-1 px-4 py-2 bg-gray-300 dark:bg-charcoal text-navy dark:text-white rounded-lg font-semibold hover:bg-gray-400 text-sm"
+                            onclick="closeContactForm()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/90 text-sm">
+                        Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function changeMainImage(imagePath) {
+            document.getElementById('mainImage').style.backgroundImage = `url('${imagePath}')`;
+        }
+
+        function openReviewModal() {
+            document.getElementById('reviewModal').classList.remove('hidden');
+        }
+
+        function closeReviewModal() {
+            document.getElementById('reviewModal').classList.add('hidden');
+        }
+
+        function setRating(rating) {
+            document.getElementById('rating').value = rating;
+            document.querySelectorAll('.star-rating').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('text-yellow-400');
+                    star.classList.remove('text-gray-300');
+                } else {
+                    star.classList.remove('text-yellow-400');
+                    star.classList.add('text-gray-300');
+                }
+            });
+        }
+
+        function openContactForm() {
+            document.getElementById('contactModal').classList.remove('hidden');
+        }
+
+        function closeContactForm() {
+            document.getElementById('contactModal').classList.add('hidden');
+        }
+
+        function sendContactMessage(event) {
+            event.preventDefault();
+            alert('Message sent!');
+            closeContactForm();
+        }
+
+        function deleteReview(reviewId, listingId) {
+            if (confirm('Delete this review?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("DeleteReview", "Car")';
+                form.innerHTML = `
+        @Html.AntiForgeryToken()
+                            <input type="hidden" name="reviewId" value="${reviewId}" />
+                            <input type="hidden" name="listingId" value="${listingId}" />
+                        `;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function toggleFavorite(listingId) {
+            const favIcon = document.getElementById('favIcon');
+            const isFavorited = favIcon.textContent === 'favorite';
+            const action = isFavorited ? '@Url.Action("RemoveFromFavorite", "Car")' : '@Url.Action("AddToFavorite", "Car")';
+
+            fetch(action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: JSON.stringify({ listingId: listingId })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        favIcon.textContent = isFavorited ? 'favorite_border' : 'favorite';
+                    }
+                });
+        }
+    </script>
+}

@@ -78,16 +78,22 @@ namespace AutoHaven.ViewModel
         // This property will be checked in the controller to ensure the correct price is filled.
         public bool IsValid()
         {
-            // If listing type is ForSelling, NewPrice must be provided
-            if (ListingType == ListingType.ForSelling && (!NewPrice.HasValue || NewPrice <= 0))
+
+            if (ListingType == ListingType.ForSelling)
             {
-                return false;
+                if (!NewPrice.HasValue || NewPrice <= 0)
+                {
+                    return false;
+                }
             }
 
-            // If listing type is ForRenting, RentPrice must be provided
-            if (ListingType == ListingType.ForRenting && (!RentPrice.HasValue || RentPrice <= 0))
+          
+            if (ListingType == ListingType.ForRenting)
             {
-                return false;
+                if (!RentPrice.HasValue || RentPrice <= 0)
+                {
+                    return false;
+                }
             }
 
             return true;

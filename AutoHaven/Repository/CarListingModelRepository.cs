@@ -13,6 +13,8 @@ namespace AutoHaven.Repository
         ProjectDbContext projectDbcontext;
         IFileStorage? _fileStorage; // it can be null
         const string ImagesFolder = "Uploads/Listings";
+
+
         public CarListingModelRepository(ProjectDbContext _projectDbcontext, IFileStorage? fileStorage = null)
         {
             projectDbcontext = _projectDbcontext;
@@ -20,19 +22,29 @@ namespace AutoHaven.Repository
         }
         public List<CarListingModel> Get()
         {
-            List<CarListingModel> carslist = projectDbcontext.CarListings.AsNoTracking().ToList();
+            List<CarListingModel> carslist = projectDbcontext.CarListings
+                .Include(c => c.Car)                   
+                .Include(c => c.CarImages)             
+                .Include(c => c.User)                  
+                .AsNoTracking()
+                .ToList();
             return carslist;
         }
-
         public CarListingModel GetById(int id)
         {
-            CarListingModel car = projectDbcontext.CarListings.FirstOrDefault(s => s.ListingId == id);
+            CarListingModel car = projectDbcontext.CarListings
+                .Include(c => c.Car)                   
+                .Include(c => c.CarImages)             
+                .Include(c => c.User)                  
+                .FirstOrDefault(s => s.ListingId == id);
             return car;
         }
+
+
         public void Insert(CarListingModel car, IEnumerable<IFormFile>? images = null)
         {
-            car.CreatedAt = DateTime.UtcNow;
-            car.UpdatedAt = DateTime.UtcNow;
+            car.CreatedAt = DateTime.Now;
+            car.UpdatedAt = DateTime.Now;
             car.CarImages = car.CarImages ?? new List<CarImageModel>();
             car.Reviews = car.Reviews ?? new List<ReviewModel>();
             car.Favourites = car.Favourites ?? new List<FavouriteModel>();
@@ -48,14 +60,13 @@ namespace AutoHaven.Repository
                         var first = true;
                         foreach (var f in images)
                         {
-                            string path;
-                            if (_fileStorage != null) path = _fileStorage.SaveFile(f, ImagesFolder);
-                            else path = f.FileName; // fallback
+                            // ✅ ALWAYS save the file, don't use filename as fallback
+                            string path = _fileStorage.SaveFile(f, ImagesFolder);
 
                             var img = new CarImageModel
                             {
                                 ListingId = car.ListingId,
-                                Path = path,
+                                Path = path,  // Now stores the full relative path
                                 AltText = f.FileName,
                                 IsPrimary = first
                             };
@@ -73,8 +84,7 @@ namespace AutoHaven.Repository
                     throw;
                 }
             }
-            projectDbcontext.CarListings.Add(car);
-            projectDbcontext.SaveChanges();
+         
         }
         public void Delete(int id)
         {
@@ -123,7 +133,7 @@ namespace AutoHaven.Repository
             cr.Color = car.Color;
             cr.Type = car.Type;
             cr.CurrentState = car.CurrentState;
-            cr.UpdatedAt = DateTime.UtcNow;
+            cr.UpdatedAt = DateTime.Now;
             using (var tx = projectDbcontext.Database.BeginTransaction())
             {
                 try
@@ -191,7 +201,7 @@ namespace AutoHaven.Repository
                 if (listing != null)
                 {
                     listing.Views++;
-                    listing.UpdatedAt = DateTime.UtcNow;
+                    listing.UpdatedAt = DateTime.Now;
                     projectDbcontext.SaveChanges();
                 }
             }

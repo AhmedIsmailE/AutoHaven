@@ -27,14 +27,14 @@ namespace AutoHaven.ViewModel
 
             public static ProfileViewModel MapToModel(ApplicationUser user)
             {
-                var avatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl)
-                    ? DevFallbackLocalPath
-                    : user.AvatarUrl;
+                //var avatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl)
+                //    ? DevFallbackLocalPath
+                //    : user.AvatarUrl;
 
                 return new ProfileViewModel
                 {
                     Id = user.Id,
-                    AvatarUrl = avatarUrl,
+                   // AvatarUrl = avatarUrl,
                     Name = user.Name,
                     UserName = user.UserName,
                     Email = user.Email,

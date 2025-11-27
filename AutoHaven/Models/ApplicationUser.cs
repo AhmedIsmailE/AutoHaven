@@ -22,7 +22,7 @@ namespace AutoHaven.Models
         [MaxLength(100)]
         public string? State { get; set; }
 
-        public string? AvatarUrl { get; set; }
+      //  public string? AvatarUrl { get; set; }
         public enum RoleEnum { Customer = 0, Provider = 1, Admin = 2 }
         public RoleEnum Role { get; set; } = RoleEnum.Customer;
 
