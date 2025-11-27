@@ -91,6 +91,7 @@ namespace AutoHaven.Repository
         {
             var now = DateTime.Now;
             return _projectDbContext.UserSubscriptions
+                //.Include(us => us.SubscriptionPlan)
                 .AsNoTracking()
                 .FirstOrDefault(us =>
                     us.UserId == userId &&
@@ -121,7 +122,7 @@ namespace AutoHaven.Repository
             existing.StartDate = subscription.StartDate;
             existing.EndDate = subscription.EndDate;
             existing.CurrentStatus = subscription.CurrentStatus;  // ✅ CHANGED: .status to .Status
-
+            //existing.CurrentBillingCycle = subscription.CurrentBillingCycle;  // ✅ CHANGED: .billingcycle to .BillingCycle
             _projectDbContext.SaveChanges();
         }
 
