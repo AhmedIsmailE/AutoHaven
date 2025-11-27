@@ -1,0 +1,249 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Subscription</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'deep-navy': '#0f172a',
+                        'electric-blue': '#2563eb',
+                        'dark-grey': '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        details > summary {
+            list-style: none;
+        }
+
+            details > summary::-webkit-details-marker {
+                display: none;
+            }
+        /* Smooth transition for all interactive elements */
+        .pricing-card {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .pricing-btn {
+            transition: background-color 0.3s ease;
+        }
+
+        .badge {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 font-sans">
+
+    <div class="w-full @@container">
+        <div class="relative flex min-h-[380px] flex-col gap-6 overflow-hidden p-8 text-center items-center justify-center">
+
+            <div class="absolute inset-0 w-full h-full">
+                <img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=1920"
+                     alt="Luxury Car Background"
+                     class="w-full h-full object-cover object-center" />
+            </div>
+
+            <div class="absolute inset-0 bg-deep-navy/75 z-0"></div>
+
+            <div class="relative z-10 flex flex-col gap-3 max-w-3xl mt-4">
+                <h1 class="text-white text-3xl font-black leading-tight tracking-[-0.033em] md:text-5xl drop-shadow-lg">
+                    Drive More, Worry Less.
+                </h1>
+                <p class="text-gray-200 text-sm font-normal leading-normal md:text-base drop-shadow-md max-w-xl mx-auto">
+                    Unlock exclusive access to our fleet with plans designed for every driver. Simple, flexible, and all-inclusive.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="pricing-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-12 px-4 max-w-7xl mx-auto items-start">
+
+        <div id="card-starter" onclick="selectPlan('card-starter')" class="pricing-card cursor-pointer flex flex-1 flex-col gap-6 rounded-xl border border-solid border-gray-200 bg-white p-8 shadow-sm group">
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center w-full min-h-[24px]">
+                    <h3 class="text-dark-grey text-xl font-bold leading-tight">Starter</h3>
+                    <span class="badge opacity-0 text-white text-xs font-bold rounded-full bg-electric-blue px-3 py-1">Basic</span>
+                </div>
+                <p class="flex items-baseline gap-1 text-dark-grey">
+                    <span class="text-4xl font-black leading-tight tracking-[-0.033em]">$9.99</span>
+                    <span class="text-base font-bold leading-tight">/month</span>
+                </p>
+            </div>
+            <button class="pricing-btn flex w-full cursor-pointer items-center justify-center rounded-lg h-11 px-4 bg-deep-navy text-white text-sm font-bold hover:opacity-90">
+                Get Started
+            </button>
+            <div class="flex flex-col gap-3">
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Car Listings up to 5 
+                </div>
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Standard Control
+                </div>
+                @* <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> 500 miles/month
+                </div>
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Roadside assistance
+                </div> *@
+            </div>
+        </div>
+
+        <div id="card-pro" onclick="selectPlan('card-pro')" class="pricing-card cursor-pointer relative flex flex-1 flex-col gap-6 rounded-xl border-2 border-solid border-electric-blue bg-white p-8 transform md:scale-105 shadow-xl z-10">
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center w-full min-h-[24px]">
+                    <h3 class="text-dark-grey text-xl font-bold leading-tight">Pro</h3>
+                    <span class="badge opacity-100 text-white text-xs font-bold rounded-full bg-electric-blue px-3 py-1">Most Popular</span>
+                </div>
+                <p class="flex items-baseline gap-1 text-dark-grey">
+                    <span class="text-4xl font-black leading-tight tracking-[-0.033em]">$24.99</span>
+                    <span class="text-base font-bold leading-tight">/month</span>
+                </p>
+            </div>
+            <button class="pricing-btn flex w-full cursor-pointer items-center justify-center rounded-lg h-11 px-4 bg-electric-blue text-white text-sm font-bold hover:opacity-90">
+                Go Pro
+            </button>
+            <div class="flex flex-col gap-3">
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Car Listings up to 20
+                </div>
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Featured Cars up to 3
+                </div>
+                @* <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> 1,500 miles/month
+                </div>
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Reduced service fees
+                </div> *@
+            </div>
+        </div>
+
+        <div id="card-elite" onclick="selectPlan('card-elite')" class="pricing-card cursor-pointer flex flex-1 flex-col gap-6 rounded-xl border border-solid border-gray-200 bg-white p-8 shadow-sm">
+            <div class="flex flex-col gap-2">
+                <div class="flex justify-between items-center w-full min-h-[24px]">
+                    <h3 class="text-dark-grey text-xl font-bold leading-tight">Elite</h3>
+                    <span class="badge opacity-0 text-white text-xs font-bold rounded-full bg-electric-blue px-3 py-1">Full Access</span>
+                </div>
+                <p class="flex items-baseline gap-1 text-dark-grey">
+                    <span class="text-4xl font-black leading-tight tracking-[-0.033em]">$49.99</span>
+                    <span class="text-base font-bold leading-tight">/month</span>
+                </p>
+            </div>
+            <button class="pricing-btn flex w-full cursor-pointer items-center justify-center rounded-lg h-11 px-4 bg-deep-navy text-white text-sm font-bold hover:opacity-90">
+                Become Elite
+            </button>
+            <div class="flex flex-col gap-3">
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Car Listings up to 50
+                </div>
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Featured Cars up to 10
+                </div>
+                @* <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Unlimited mileage
+                </div>
+                <div class="text-sm font-normal flex items-center gap-3 text-gray-600">
+                    <span class="material-symbols-outlined text-electric-blue text-lg">check_circle</span> Personal concierge
+                </div> *@
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-16 mb-12">
+        <h2 class="text-dark-grey dark:text-white text-3xl font-bold px-4 pb-6 pt-5 text-center">Frequently Asked Questions</h2>
+        <div class="flex flex-col p-4 max-w-3xl mx-auto">
+            <details class="accordion-item flex flex-col border-t border-t-gray-200 dark:border-t-gray-700 py-3 group">
+                <summary class="flex cursor-pointer items-center justify-between gap-6 py-2 list-none">
+                    <p class="text-dark-grey dark:text-gray-200 text-base font-medium">Can I cancel my subscription at any time?</p>
+                    <span class="material-symbols-outlined text-dark-grey dark:text-gray-200 group-open:rotate-180 transition-transform">expand_more</span>
+                </summary>
+                <p class="text-gray-600 dark:text-gray-400 text-sm pb-2 pt-1">Yes, you can cancel your subscription at any time through your account dashboard.</p>
+            </details>
+            <details class="accordion-item flex flex-col border-t border-b border-t-gray-200 dark:border-t-gray-700 border-b-gray-200 dark:border-b-gray-700 py-3 group">
+                <summary class="flex cursor-pointer items-center justify-between gap-6 py-2 list-none">
+                    <p class="text-dark-grey dark:text-gray-200 text-base font-medium">Are there any hidden fees?</p>
+                    <span class="material-symbols-outlined text-dark-grey dark:text-gray-200 group-open:rotate-180 transition-transform">expand_more</span>
+                </summary>
+                <p class="text-gray-600 dark:text-gray-400 text-sm pb-2 pt-1">No, our pricing is all-inclusive. Only taxes and tolls are extra.</p>
+            </details>
+        </div>
+    </div>
+
+    <script>
+        function selectPlan(selectedCardId) {
+            const cards = ['card-starter', 'card-pro', 'card-elite'];
+
+            cards.forEach(cardId => {
+                const cardEl = document.getElementById(cardId);
+                const buttonEl = cardEl.querySelector('button');
+                const badgeEl = cardEl.querySelector('.badge');
+
+                if (cardId === selectedCardId) {
+                    // --- ACTIVE STATE ---
+                    // 1. Add Blue Border
+                    cardEl.classList.remove('border-gray-200');
+                    cardEl.classList.add('border-2', 'border-electric-blue');
+
+                    // 2. Pop Effect (Scale & Shadow)
+                    cardEl.classList.add('md:scale-105', 'shadow-xl', 'z-10');
+                    cardEl.classList.remove('shadow-sm');
+
+                    // 3. Button becomes Blue
+                    buttonEl.classList.remove('bg-deep-navy');
+                    buttonEl.classList.add('bg-electric-blue');
+
+                    // 4. Show Badge
+                    badgeEl.classList.remove('opacity-0');
+                    badgeEl.classList.add('opacity-100');
+
+                } else {
+                    // --- INACTIVE STATE ---
+                    // 1. Gray Border
+                    cardEl.classList.add('border-gray-200');
+                    cardEl.classList.remove('border-2', 'border-electric-blue');
+
+                    // 2. Remove Pop Effect
+                    cardEl.classList.remove('md:scale-105', 'shadow-xl', 'z-10');
+                    cardEl.classList.add('shadow-sm');
+
+                    // 3. Button becomes Dark Navy
+                    buttonEl.classList.add('bg-deep-navy');
+                    buttonEl.classList.remove('bg-electric-blue');
+
+                    // 4. Hide Badge
+                    badgeEl.classList.add('opacity-0');
+                    badgeEl.classList.remove('opacity-100');
+                }
+            });
+        }
+
+        // Accordion Logic
+        const detailsElements = document.querySelectorAll('details.accordion-item');
+        detailsElements.forEach((details) => {
+            details.addEventListener('toggle', (e) => {
+                if (details.open) {
+                    detailsElements.forEach((otherDetails) => {
+                        if (otherDetails !== details && otherDetails.open) {
+                            otherDetails.removeAttribute('open');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

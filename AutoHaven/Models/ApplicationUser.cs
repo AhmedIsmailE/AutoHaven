@@ -31,6 +31,11 @@ namespace AutoHaven.Models
         public virtual List<ReviewModel> Reviews { get; set; } = new();
         public virtual List<CarListingModel> CarListings { get; set; } = new();
         public virtual List<UserSubscriptionModel> UserSubscriptions { get; set; } = new();
+
+        //Paypal
+        //public string? Mode { get; }
+        //public string? ClientId { get; }
+        //public string? ClientSecret { get; }
     }
 
 }
