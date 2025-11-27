@@ -26,7 +26,7 @@
 
 //        public UserSubscriptionModel GetActiveForUser(int id)
 //        {
-//            var now = DateTime.UtcNow;
+//            var now = DateTime.Now;
 //            UserSubscriptionModel useractive= projectDbcontext.UserSubscriptions.AsNoTracking().FirstOrDefault(us => us.UserId == id && us.StartDate <= now && us.EndDate >= now);
 //            return useractive;
 //        }
@@ -89,7 +89,7 @@ namespace AutoHaven.Repository
 
         public UserSubscriptionModel GetActiveForUser(int userId)  // ✅ CHANGED: parameter name for clarity
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             return _projectDbContext.UserSubscriptions
                 .Include(us => us.SubscriptionPlan)
                 .AsNoTracking()
@@ -104,7 +104,7 @@ namespace AutoHaven.Repository
         {
             if (subscription == null) throw new ArgumentNullException(nameof(subscription));
 
-            subscription.StartDate = DateTime.UtcNow;
+            subscription.StartDate = DateTime.Now;
             _projectDbContext.UserSubscriptions.Add(subscription);
             _projectDbContext.SaveChanges();
         }

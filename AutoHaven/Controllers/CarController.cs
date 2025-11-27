@@ -4,6 +4,7 @@ using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static AutoHaven.Models.CarListingModel;
 
 namespace AutoHaven.Controllers
 {
@@ -300,20 +301,21 @@ namespace AutoHaven.Controllers
                 _carRepo.Insert(car);
 
                 // Create Listing
+          
                 var listing = new CarListingModel
                 {
                     CarId = car.CarId,
                     UserId = userId,
-                    Type = viewModel.ListingType,
-                    NewPrice = viewModel.NewPrice ?? 0,
-                    RentPrice = viewModel.RentPrice ?? 0,
+                    Type = viewModel.ListingType,              
+                    NewPrice = viewModel.NewPrice ?? 0,        
+                    RentPrice = viewModel.RentPrice ?? 0,      
                     Description = viewModel.Description ?? string.Empty,
                     Color = viewModel.Color ?? string.Empty,
                     CurrentState = CarListingModel.State.Available,
                     IsFeatured = false,
                     Discount = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 };
 
                 // Insert listing with images
@@ -330,7 +332,13 @@ namespace AutoHaven.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error creating listing: {ex.Message}");
+                string errorMessage = ex.InnerException?.InnerException?.Message
+                    ?? ex.InnerException?.Message
+                    ?? ex.Message;
+
+                System.Diagnostics.Debug.WriteLine("FULL ERROR: " + ex.ToString());
+
+                ModelState.AddModelError("", $"Error creating listing: {errorMessage}");
                 return View(viewModel);
             }
         }
@@ -422,7 +430,7 @@ namespace AutoHaven.Controllers
                 listing.RentPrice = viewModel.RentPrice ?? 0;
                 listing.Description = viewModel.Description ?? string.Empty;
                 listing.Color = viewModel.Color ?? string.Empty;
-                listing.UpdatedAt = DateTime.UtcNow;
+                listing.UpdatedAt = DateTime.Now;
 
                 // Update listing and images
                 var filesToUpload = newImages?.Where(f => f.Length > 0).ToList();
@@ -510,7 +518,7 @@ namespace AutoHaven.Controllers
                 {
                     UserId = userId,
                     ListingId = listingId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
 
                 _favouriteRepo.Insert(favorite);
@@ -598,8 +606,8 @@ namespace AutoHaven.Controllers
                     ListingId = listingId,
                     Rating = rating,
                     Comment = comment,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 };
 
                 _reviewRepo.Insert(review);
