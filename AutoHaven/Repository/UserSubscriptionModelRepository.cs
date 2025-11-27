@@ -74,6 +74,7 @@ namespace AutoHaven.Repository
         {
             return _projectDbContext.UserSubscriptions
                 .Include(us => us.User)
+                //.Include(us => us.SubscriptionPlan)
                 .AsNoTracking()
                 .ToList();
         }
