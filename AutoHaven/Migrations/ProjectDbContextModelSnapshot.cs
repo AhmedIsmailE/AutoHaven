@@ -33,6 +33,9 @@ namespace AutoHaven.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -247,6 +250,39 @@ namespace AutoHaven.Migrations
                     b.ToTable("Cars");
                 });
 
+            modelBuilder.Entity("AutoHaven.Models.CarViewHistoryModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AnonymousId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserAgent")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.ToTable("CarViewHistories");
+                });
+
             modelBuilder.Entity("AutoHaven.Models.FavouriteModel", b =>
                 {
                     b.Property<int>("FavouriteId")
@@ -309,13 +345,19 @@ namespace AutoHaven.Migrations
                     b.ToTable("Reviews");
                 });
 
-            modelBuilder.Entity("AutoHaven.Models.SubscriptionPlanModel", b =>
+            modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
-                    b.Property<int>("SubscriptionPlanId")
+                    b.Property<int>("UserSubscriptionId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubscriptionPlanId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserSubscriptionId"));
+
+                    b.Property<int>("CurrentStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("FeatureSlots")
                         .HasColumnType("int");
@@ -326,38 +368,6 @@ namespace AutoHaven.Migrations
                     b.Property<decimal>("PriceMonth")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("PriceYear")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("SubscriptionName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("tier")
-                        .HasColumnType("int");
-
-                    b.HasKey("SubscriptionPlanId");
-
-                    b.ToTable("SubscriptionPlans");
-                });
-
-            modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
-                {
-                    b.Property<int>("UserSubscriptionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserSubscriptionId"));
-
-                    b.Property<int>("CurrentBillingCycle")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CurrentStatus")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -367,9 +377,10 @@ namespace AutoHaven.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("UserSubscriptionId");
+                    b.Property<int>("tier")
+                        .HasColumnType("int");
 
-                    b.HasIndex("SubscriptionPlanId");
+                    b.HasKey("UserSubscriptionId");
 
                     b.HasIndex("UserId");
 
@@ -539,6 +550,17 @@ namespace AutoHaven.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("AutoHaven.Models.CarViewHistoryModel", b =>
+                {
+                    b.HasOne("AutoHaven.Models.CarListingModel", "CarListing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CarListing");
+                });
+
             modelBuilder.Entity("AutoHaven.Models.FavouriteModel", b =>
                 {
                     b.HasOne("AutoHaven.Models.CarListingModel", "CarListing")
@@ -576,19 +598,11 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
-                    b.HasOne("AutoHaven.Models.SubscriptionPlanModel", "SubscriptionPlan")
-                        .WithMany("UserSubscriptions")
-                        .HasForeignKey("SubscriptionPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("AutoHaven.Models.ApplicationUser", "User")
                         .WithMany("UserSubscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("SubscriptionPlan");
 
                     b.Navigation("User");
                 });
@@ -667,11 +681,6 @@ namespace AutoHaven.Migrations
             modelBuilder.Entity("AutoHaven.Models.CarModel", b =>
                 {
                     b.Navigation("CarListings");
-                });
-
-            modelBuilder.Entity("AutoHaven.Models.SubscriptionPlanModel", b =>
-                {
-                    b.Navigation("UserSubscriptions");
                 });
 #pragma warning restore 612, 618
         }
