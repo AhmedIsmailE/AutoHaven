@@ -76,10 +76,17 @@
                             <span class="material-symbols-outlined text-lg group-open:rotate-180 transition-transform">expand_more</span>
                         </summary>
                         <div class="pb-2 space-y-2 max-h-48 overflow-y-auto">
-                            @foreach (var make in ViewBag.Makes)
+                            @{
+                                var selectedMakes = ViewBag.SelectedMakes as string[] ?? new string[] { };
+                            }
+                            @foreach (var make in ViewBag.AvailableMakes)
                             {
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" name="makes" value="@make" class="w-4 h-4 rounded"/>
+                                    <input type="checkbox"
+                                           name="makes"
+                                           value="@make"
+                                    @(Array.Exists(selectedMakes, element => element == make) ? "checked" : "")
+                                           class="w-4 h-4 rounded" />
                                     <span class="text-sm text-[#0d121b] dark:text-white">@make</span>
                                 </label>
                             }
@@ -232,56 +239,83 @@
             else
             {
                 <!-- Car Cards Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
-                    @foreach (var listing in Model)
-                    {
-                        decimal price = listing.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? listing.NewPrice : listing.RentPrice;
-                        string priceLabel = listing.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? "Sale" : "Per Day";
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+    @foreach (var listing in Model)
+    {
+        decimal price = listing.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? listing.NewPrice : listing.RentPrice;
+        string priceLabel = listing.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? "Sale" : "Per Day";
 
-                        <div class="flex flex-col bg-white dark:bg-card-dark rounded-xl shadow-sm overflow-hidden border border-border-light dark:border-border-dark group transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                            <!-- Image -->
-                            <div class="relative overflow-hidden bg-background-light dark:bg-background-dark h-48">
-                                @if (listing.CarImages != null && listing.CarImages.Any())
-                                {
-                                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                                         src="@listing.CarImages.First().Path" alt="@listing.Car.Manufacturer @listing.Car.Model"/>
-                                }
-                                else
-                                {
-                                    <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                        <span class="material-symbols-outlined !text-6xl">directions_car</span>
-                                    </div>
-                                }
+        <!-- ✅ GET AVERAGE RATING -->
+        
+            var reviews = ViewBag.Reviews as List<AutoHaven.Models.ReviewModel> ?? new List<AutoHaven.Models.ReviewModel>();
+            var listingReviews = reviews.Where(r => r.ListingId == listing.ListingId).ToList();
+            double avgRating = listingReviews.Any() ? listingReviews.Average(r => r.Rating) : 0;
+            int reviewCount = listingReviews.Count();
+        
 
-                                <!-- Badge -->
-                                @if (listing.IsFeatured)
-                                {
-                                    <div class="absolute bottom-3 left-3 bg-primary/80 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full">Featured</div>
-                                }
-                            </div>
+        <div class="flex flex-col bg-white dark:bg-card-dark rounded-xl shadow-sm overflow-hidden border border-border-light dark:border-border-dark group transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+            <!-- Image -->
+            <div class="relative overflow-hidden bg-background-light dark:bg-background-dark h-48">
+                @if (listing.CarImages != null && listing.CarImages.Any())
+                {
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                         src="/@listing.CarImages.First().Path" alt="@listing.Car.Manufacturer @listing.Car.Model"/>
+                }
+                else
+                {
+                    <div class="w-full h-full flex items-center justify-center text-gray-400">
+                        <span class="material-symbols-outlined !text-6xl">directions_car</span>
+                    </div>
+                }
 
-                            <!-- Content -->
-                            <div class="p-4 flex flex-col flex-grow">
-                                <h3 class="text-lg font-bold text-[#0d121b] dark:text-white mb-1">
-                                    @listing.Car.ModelYear @listing.Car.Manufacturer @listing.Car.Model
-                                </h3>
-                                <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-3">
-                                    @listing.Car.CurrentTransmission • @listing.Car.CurrentFuel
-                                </p>
+                <!-- Badge -->
+                @if (listing.IsFeatured)
+                {
+                    <div class="absolute bottom-3 left-3 bg-primary/80 backdrop-blur-sm text-white text-xs font-bold px-2 py-1 rounded-full">Featured</div>
+                }
+            </div>
 
-                                <!-- Price and Details -->
-                                <div class="mt-auto flex justify-between items-center">
-                                    <div>
-                                        <p class="text-xl font-black text-primary">$@price.ToString("N0")</p>
-                                        <p class="text-xs text-[#4c669a] dark:text-gray-400">@priceLabel</p>
-                                    </div>
-                                    <a href="@Url.Action("Details", "Car", new { id = listing.ListingId })" 
-                                       class="text-sm font-bold text-primary hover:underline">Details</a>
-                                </div>
-                            </div>
-                        </div>
-                    }
+            <!-- Content -->
+            <div class="p-4 flex flex-col flex-grow">
+                <h3 class="text-lg font-bold text-[#0d121b] dark:text-white mb-1">
+                    @listing.Car.ModelYear @listing.Car.Manufacturer @listing.Car.Model
+                </h3>
+                <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-3">
+                    @listing.Car.CurrentTransmission • @listing.Car.CurrentFuel
+                </p>
+
+                <!-- ✅ AVERAGE RATING DISPLAY -->
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="flex gap-0.5">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            @if (i <= Math.Floor(avgRating))
+                            {
+                                <span class="material-symbols-outlined text-yellow-400 text-xs">star</span>
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined text-gray-300 text-xs">star</span>
+                            }
+                        }
+                    </div>
+                    <span class="text-xs font-semibold text-[#0d121b] dark:text-white">@avgRating.ToString("F1")</span>
+                    <span class="text-xs text-[#4c669a] dark:text-gray-400">(@reviewCount)</span>
                 </div>
+
+                <!-- Price and Details -->
+                <div class="mt-auto flex justify-between items-center">
+                    <div>
+                        <p class="text-xl font-black text-primary">$@price.ToString("N0")</p>
+                        <p class="text-xs text-[#4c669a] dark:text-gray-400">@priceLabel</p>
+                    </div>
+                    <a href="@Url.Action("Details", "Car", new { id = listing.ListingId })" 
+                       class="text-sm font-bold text-primary hover:underline">Details</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
                 <!-- Pagination -->
                 @if (ViewBag.TotalPages > 1)
@@ -289,17 +323,18 @@
                     <nav aria-label="Pagination" class="flex items-center justify-center gap-2">
                         @if (ViewBag.CurrentPage > 1)
                         {
-                            <a href="@Url.Action("Index", "Car", new { 
-                                page = ViewBag.CurrentPage - 1,
-                                searchTerm = ViewBag.SearchTerm,
-                                minPrice = ViewBag.MinPrice,
-                                maxPrice = ViewBag.MaxPrice,
-                                selectedYear = ViewBag.SelectedYear,
-                                transmission = ViewBag.Transmission,
-                                fuel = ViewBag.Fuel,
-                                listingType = ViewBag.ListingType,
-                                sortBy = ViewBag.SortBy
-                            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+                            <a href="@Url.Action("Index", "Car", new {
+                page = ViewBag.CurrentPage - 1,
+                searchTerm = ViewBag.SearchTerm,
+                minPrice = ViewBag.MinPrice,
+                maxPrice = ViewBag.MaxPrice,
+                selectedYear = ViewBag.SelectedYear,
+                transmission = ViewBag.Transmission,
+                fuel = ViewBag.Fuel,
+                listingType = ViewBag.ListingType,
+                sortBy = ViewBag.SortBy,
+                makes = string.Join("&makes=", ViewBag.SelectedMakes ?? new string[] { })  // ✅ ADD THIS
+            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
                                 <span class="material-symbols-outlined">chevron_left</span>
                             </a>
                         }
@@ -312,17 +347,18 @@
                             }
                             else if (i <= 3 || i >= ViewBag.TotalPages - 2 || (i >= ViewBag.CurrentPage - 1 && i <= ViewBag.CurrentPage + 1))
                             {
-                                <a href="@Url.Action("Index", "Car", new { 
-                                    page = i,
-                                    searchTerm = ViewBag.SearchTerm,
-                                    minPrice = ViewBag.MinPrice,
-                                    maxPrice = ViewBag.MaxPrice,
-                                    selectedYear = ViewBag.SelectedYear,
-                                    transmission = ViewBag.Transmission,
-                                    fuel = ViewBag.Fuel,
-                                    listingType = ViewBag.ListingType,
-                                    sortBy = ViewBag.SortBy
-                                })" class="px-4 py-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark text-[#0d121b] dark:text-white">@i</a>
+                                <a href="@Url.Action("Index", "Car", new {
+                    page = i,
+                    searchTerm = ViewBag.SearchTerm,
+                    minPrice = ViewBag.MinPrice,
+                    maxPrice = ViewBag.MaxPrice,
+                    selectedYear = ViewBag.SelectedYear,
+                    transmission = ViewBag.Transmission,
+                    fuel = ViewBag.Fuel,
+                    listingType = ViewBag.ListingType,
+                    sortBy = ViewBag.SortBy,
+                    makes = string.Join("&makes=", ViewBag.SelectedMakes ?? new string[] { })  
+                })" class="px-4 py-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark text-[#0d121b] dark:text-white">@i</a>
                             }
                             else if (i == 4 || i == ViewBag.TotalPages - 3)
                             {
@@ -332,17 +368,18 @@
 
                         @if (ViewBag.CurrentPage < ViewBag.TotalPages)
                         {
-                            <a href="@Url.Action("Index", "Car", new { 
-                                page = ViewBag.CurrentPage + 1,
-                                searchTerm = ViewBag.SearchTerm,
-                                minPrice = ViewBag.MinPrice,
-                                maxPrice = ViewBag.MaxPrice,
-                                selectedYear = ViewBag.SelectedYear,
-                                transmission = ViewBag.Transmission,
-                                fuel = ViewBag.Fuel,
-                                listingType = ViewBag.ListingType,
-                                sortBy = ViewBag.SortBy
-                            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+                            <a href="@Url.Action("Index", "Car", new {
+                page = ViewBag.CurrentPage + 1,
+                searchTerm = ViewBag.SearchTerm,
+                minPrice = ViewBag.MinPrice,
+                maxPrice = ViewBag.MaxPrice,
+                selectedYear = ViewBag.SelectedYear,
+                transmission = ViewBag.Transmission,
+                fuel = ViewBag.Fuel,
+                listingType = ViewBag.ListingType,
+                sortBy = ViewBag.SortBy,
+                makes = string.Join("&makes=", ViewBag.SelectedMakes ?? new string[] { })  
+            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
                                 <span class="material-symbols-outlined">chevron_right</span>
                             </a>
                         }
