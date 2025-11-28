@@ -12,13 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoHaven.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-<<<<<<<< HEAD:AutoHaven/Migrations/20251127132755_Init.Designer.cs
-    [Migration("20251127132755_Init")]
-    partial class Init
-========
-    [Migration("20251127190858_Oa")]
-    partial class Oa
->>>>>>>> dbcd80f274183b0068c64a9f9ff53a903e6804cb:AutoHaven/Migrations/20251127190858_Oa.Designer.cs
+    [Migration("20251128182017_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

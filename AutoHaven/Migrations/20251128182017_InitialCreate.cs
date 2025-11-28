@@ -6,11 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AutoHaven.Migrations
 {
     /// <inheritdoc />
-<<<<<<<< HEAD:AutoHaven/Migrations/20251127132755_Init.cs
-    public partial class Init : Migration
-========
-    public partial class Oa : Migration
->>>>>>>> dbcd80f274183b0068c64a9f9ff53a903e6804cb:AutoHaven/Migrations/20251127190858_Oa.cs
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
