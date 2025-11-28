@@ -278,7 +278,7 @@ namespace AutoHaven.Controllers
                 var currentListingCount = _carListingRepo.Get()
                     .Count(cl => cl.UserId == userId);
 
-                if (userSubscription != null && currentListingCount >= userSubscription.MaxCarListing)
+                if (userSubscription != null && currentListingCount >= userSubscription.SubscriptionPlan.MaxCarListing)
                 {
                     ModelState.AddModelError("", "You've reached your listing limit. Please upgrade your subscription.");
                     return View(viewModel);

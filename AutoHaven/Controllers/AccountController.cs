@@ -10,16 +10,16 @@ namespace AutoHaven.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUserModel> _userManager;
+        private readonly SignInManager<ApplicationUserModel> _signInManager;
         private readonly IWebHostEnvironment _env;
         private readonly ProjectDbContext _projectDbContext;
         private const long MaxFileBytes = 2 * 1024 * 1024;
         private const int MaxWidth = 1024;
         private const int MaxHeight = 1024;
         public AccountController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUserModel> userManager,
+            SignInManager<ApplicationUserModel> signInManager,
             ProjectDbContext projectDbContext,
             IWebHostEnvironment env)
         {
@@ -42,7 +42,7 @@ namespace AutoHaven.Controllers
             if (ModelState.IsValid)
             {
                 // Create new ApplicationUser
-                ApplicationUser applicationUser = new ApplicationUser();
+                ApplicationUserModel applicationUser = new ApplicationUserModel();
                 applicationUser.UserName = userViewModel.UserName;
                 applicationUser.Email = userViewModel.Email;
                 applicationUser.PhoneNumber = userViewModel.PhoneNumber;
@@ -77,7 +77,7 @@ namespace AutoHaven.Controllers
             if (ModelState.IsValid)
             {
                 // Search user by Email or Phone
-                ApplicationUser user = await _userManager.Users
+                ApplicationUserModel user = await _userManager.Users
                     .FirstOrDefaultAsync(u => u.Email == loginUserViewModel.EmailOrPhone
                                            || u.PhoneNumber == loginUserViewModel.EmailOrPhone);
 

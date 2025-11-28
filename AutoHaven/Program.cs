@@ -16,7 +16,7 @@ builder.Services.AddDbContext<ProjectDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("connection"));
 });
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
+builder.Services.AddIdentity<ApplicationUserModel, IdentityRole<int>>()
     .AddEntityFrameworkStores<ProjectDbContext>()
     .AddDefaultTokenProviders();
 
@@ -24,6 +24,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
 builder.Services.AddScoped<ICarListingModelRepository, CarListingModelRepository>();
 builder.Services.AddScoped<ICarModelRepository, CarModelRepository>();
 builder.Services.AddScoped<IUserSubscriptionModelRepository, UserSubscriptionModelRepository>();
+builder.Services.AddScoped<ISubscriptionPlanModelRepository, SubscriptionPlanModelRepository>();
 builder.Services.AddScoped<IReviewModelRepository, ReviewModelRepository>();
 builder.Services.AddScoped<IFavouriteModelRepository, FavouriteRepository>();
 var app = builder.Build();

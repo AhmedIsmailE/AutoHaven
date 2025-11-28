@@ -34,7 +34,7 @@ namespace AutoHaven.Models
         public DateTime UpdatedAt { get; set; }
 
         public CarModel Car { get; set; }
-        public ApplicationUser User { get; set; } = null!;
+        public ApplicationUserModel User { get; set; } = null!;
         public List<CarImageModel> CarImages { get; set; }
         public List<ReviewModel> Reviews { get; set; }
         public List<FavouriteModel> Favourites { get; set; }

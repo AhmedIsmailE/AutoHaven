@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 namespace AutoHaven.Models
 {
-    public class ProjectDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
+    public class ProjectDbContext : IdentityDbContext<ApplicationUserModel, IdentityRole<int>, int>
     {
         public ProjectDbContext(DbContextOptions<ProjectDbContext> options)
             : base(options)
@@ -15,7 +15,7 @@ namespace AutoHaven.Models
         public DbSet<CarImageModel> CarImages { get; set; }
         public DbSet<FavouriteModel> Favourites { get; set; }
         public DbSet<ReviewModel> Reviews { get; set; }
-        //public DbSet<SubscriptionPlanModel> SubscriptionPlans { get; set; }
+        public DbSet<SubscriptionPlanModel> SubscriptionPlans { get; set; }
         public DbSet<UserSubscriptionModel> UserSubscriptions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,6 +33,44 @@ namespace AutoHaven.Models
                 .WithMany(c => c.Favourites)
                 .HasForeignKey(f => f.ListingId)
                 .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<SubscriptionPlanModel>().HasData(
+            new SubscriptionPlanModel
+            {
+                SubscriptionPlanId = 1,
+                SubscriptionName = "Free",
+                MaxCarListing = 0,
+                FeatureSlots = 0,
+                PricePerMonth = 0,
+                tier = SubscriptionPlanModel.Tiers.Free
+            },
+            new SubscriptionPlanModel
+            {
+                SubscriptionPlanId = 2,
+                SubscriptionName = "Starter",
+                MaxCarListing = 5,
+                FeatureSlots = 0,
+                PricePerMonth = 10,   
+                tier = SubscriptionPlanModel.Tiers.Starter
+            },
+            new SubscriptionPlanModel
+            {
+                SubscriptionPlanId = 3,
+                SubscriptionName = "Pro",
+                MaxCarListing = 20,
+                FeatureSlots = 3,
+                PricePerMonth = 25, 
+                tier = SubscriptionPlanModel.Tiers.Pro
+            },
+            new SubscriptionPlanModel
+            {
+                SubscriptionPlanId = 4,
+                SubscriptionName = "Elite",
+                MaxCarListing = 50,
+                FeatureSlots = 10,
+                PricePerMonth = 50,   
+                tier = SubscriptionPlanModel.Tiers.Elite
+            }
+            );
         }
     }
 }
