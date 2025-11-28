@@ -22,10 +22,10 @@ namespace AutoHaven.ViewModel
             public string? Street { get; set; }
             public string? City { get; set; }
             public string? State { get; set; }
-            public ApplicationUser.RoleEnum Role { get; set; }
+            public ApplicationUserModel.RoleEnum Role { get; set; }
             public DateTime CreatedAt { get; set; }
 
-            public static ProfileViewModel MapToModel(ApplicationUser user)
+            public static ProfileViewModel MapToModel(ApplicationUserModel user)
             {
             var avatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl)
                 ? DevFallbackLocalPath

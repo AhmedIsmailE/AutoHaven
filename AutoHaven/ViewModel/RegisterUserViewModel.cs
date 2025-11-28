@@ -29,7 +29,7 @@ namespace AutoHaven.ViewModel
 
         [Required(ErrorMessage = "Please select a role")]
         [Display(Name = "Account Type")]
-        public ApplicationUser.RoleEnum Role { get; set; } = ApplicationUser.RoleEnum.Customer;
+        public ApplicationUserModel.RoleEnum Role { get; set; } = ApplicationUserModel.RoleEnum.Customer;
 
         //[StringLength(100)]
         //[Display(Name = "Full Name")]

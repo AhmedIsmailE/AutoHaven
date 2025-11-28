@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AutoHaven.Models
 {
-    public class ApplicationUser : IdentityUser<int>
+    public class ApplicationUserModel : IdentityUser<int>
     {
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
