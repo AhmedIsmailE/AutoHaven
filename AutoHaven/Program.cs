@@ -24,6 +24,8 @@ builder.Services.AddScoped<ICarModelRepository, CarModelRepository>();
 builder.Services.AddScoped<IUserSubscriptionModelRepository, UserSubscriptionModelRepository>();
 builder.Services.AddScoped<IReviewModelRepository, ReviewModelRepository>();
 builder.Services.AddScoped<IFavouriteModelRepository, FavouriteRepository>();
+builder.Services.AddScoped<ICarViewHistoryRepository, CarViewHistoryRepository>();
+
 
 // ✅ ADD FILE STORAGE HERE - BEFORE builder.Build()
 builder.Services.AddScoped<IFileStorage, FileSystemStorage>();
@@ -46,6 +48,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Home}/{id?}");
 
 app.Run();

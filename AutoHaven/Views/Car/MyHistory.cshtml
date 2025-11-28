@@ -1,0 +1,254 @@
+﻿@model IEnumerable<AutoHaven.Models.CarViewHistoryModel>
+@using AutoHaven.Models
+@using System.Linq
+
+@{
+    ViewData["Title"] = "Browsing History";
+
+    var page = (ViewBag.CurrentPage as int?) ?? 1;
+    var totalPages = (ViewBag.TotalPages as int?) ?? 1;
+
+    var q = (ViewContext.HttpContext.Request.Query["q"].ToString() ?? string.Empty).Trim();
+    var sortBy = (ViewContext.HttpContext.Request.Query["sortBy"].ToString() ?? "recent");
+    var selRecent = sortBy == "recent";
+    var selPriceDesc = sortBy == "price_desc";
+    var selPriceAsc = sortBy == "price_asc";
+    string currentSort = ViewContext.HttpContext.Request.Query["sortBy"].ToString() ?? (ViewBag.SortBy as string) ?? "newest";
+
+    // Prepare " selected" strings (note leading space)
+    var optNewest = currentSort == "newest" ? " selected" : "";
+    var optPriceAsc = currentSort == "price_asc" ? " selected" : "";
+    var optPriceDesc = currentSort == "price_desc" ? " selected" : "";
+    var optHighestRated = currentSort == "highest_rated" ? " selected" : "";
+    var optMostViewed = currentSort == "most_viewed" ? " selected" : "";
+
+    string DefaultImageUrl() => Url.Content("~/images/default-car.png");
+
+    // --- replace the old ResolveImageUrl with this ---
+    Func<CarImageModel?, string> ResolveImageUrl = (img) =>
+    {
+        // Default fallback
+        string DefaultImageUrl() => Url.Content("~/images/default-car.png");
+
+        if (img == null) return DefaultImageUrl();
+
+        var url = img.Path?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(url)) return DefaultImageUrl();
+
+        // If it's already an absolute URL or a root-relative path, return as-is (or make root-relative absolute)
+        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        // If it already starts with a leading slash, treat it as root-relative
+        if (url.StartsWith("/"))
+        {
+            return url;
+        }
+
+        // If your images are stored under wwwroot/Uploads/Listings (e.g. "Uploads/Listings/abc.jpg"),
+        // return a root-relative URL by prepending "~/" so Url.Content resolves it to "/Uploads/Listings/..."
+        if (url.StartsWith("Uploads/", StringComparison.OrdinalIgnoreCase) ||
+            url.StartsWith("Uploads\\", StringComparison.OrdinalIgnoreCase) ||
+            url.IndexOf("Listings", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return Url.Content($"~/{url.Replace("\\", "/")}");
+        }
+
+        // Last fallback: assume the file lives under wwwroot/images/
+        return Url.Content($"~/images/{url.TrimStart('/')}");
+    };
+}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - AutoHaven</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Manrope', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        .card-shadow {
+            box-shadow: 0 8px 24px rgba(16,24,40,0.06);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="max-w-6xl mx-auto px-4 py-10">
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold">Browsing History</h1>
+            <p class="text-sm text-gray-500 mt-1">A chronological list of your recently viewed vehicle listings.</p>
+        </div>
+
+        <!-- Search, sort, clear -->
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-3 mb-6">
+            <form method="get" asp-action="MyHistory" asp-controller="Car" class="flex-1">
+                <div class="relative max-w-xl">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                    <input name="q" value="@q" type="text" placeholder="Search your history..." class="w-full pl-10 pr-4 h-11 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600" />
+                </div>
+            </form>
+
+            <div class="flex items-center gap-3 ml-auto">
+                <form method="get" asp-action="MyHistory" asp-controller="Car" class="flex items-center gap-2">
+                    <input type="hidden" name="q" value="@q" />
+                    <select name="sortBy" id="sortByHistory" onchange="this.form.submit();"
+                            class="form-select text-sm rounded-lg border border-gray-200 bg-white text-gray-800 focus:ring-blue-600">
+                        @Html.Raw($"<option value=\"newest\"{optNewest}>Newest Listed</option>")
+                        @Html.Raw($"<option value=\"price_asc\"{optPriceAsc}>Price (Low to High)</option>")
+                        @Html.Raw($"<option value=\"price_desc\"{optPriceDesc}>Price (High to Low)</option>")
+                        @Html.Raw($"<option value=\"highest_rated\"{optHighestRated}>Highest Rated</option>")
+                        @Html.Raw($"<option value=\"most_viewed\"{optMostViewed}>Most Viewed</option>")
+                    </select>
+                </form>
+
+                <form method="post" asp-action="ClearHistory" asp-controller="Car" onsubmit="return confirm('Clear your browsing history?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="flex items-center gap-2 h-11 px-4 rounded-lg border border-transparent bg-white text-sm text-gray-600 hover:bg-gray-100">
+                        <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /></svg>
+                        <span>Clear History</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- List -->
+        <div class="space-y-6">
+            @if (!Model?.Any() ?? true)
+            {
+                <div class="bg-white rounded-lg p-8 text-center card-shadow border border-gray-100">
+                    <p class="text-gray-600">You haven't viewed any listings yet.</p>
+                    <a asp-controller="Car" asp-action="Index" class="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-md">Browse listings</a>
+                </div>
+            }
+            else
+            {
+                foreach (var entry in Model)
+                {
+                    var listing = entry?.CarListing;
+                    if (listing == null) continue;
+
+                    // Prefer primary image → fallback to first image
+                    var mainImage = listing.CarImages?.FirstOrDefault(ci => ci.IsPrimary)
+                    ?? listing.CarImages?.FirstOrDefault();
+
+                    var imageUrl = ResolveImageUrl(mainImage);
+
+                    <!-- Card -->
+                    <div class="bg-white rounded-lg p-4 md:p-6 flex gap-4 items-start card-shadow border border-gray-100">
+                        <!-- Thumbnail -->
+                        <div class="w-36 h-24 md:w-40 md:h-28 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 bg-gray-50">
+                            <img src="@imageUrl" alt="@listing.Car?.Manufacturer @listing.Car?.Model" class="w-full h-full object-cover" />
+                        </div>
+
+                        <!-- Main content -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="min-w-0">
+                                    <p class="text-xs text-gray-400">Viewed: @entry.ViewedAt.ToLocalTime().ToString("g")</p>
+
+                                    <h3 class="text-lg font-semibold text-gray-900 mt-1 truncate">
+                                        @(
+                                                                        listing.Car != null
+                                                                        ? $"{listing.Car.Manufacturer} {listing.Car.Model} {listing.Car.ModelYear}"
+                                                                        : $"Listing #{listing.ListingId}"
+                                                                        )
+                            </h3>
+
+                                    <p class="text-sm text-gray-500 mt-2 truncate">
+                                @if (listing.Type == CarListingModel.ListingType.ForSelling)
+                                        {
+                                            <text>Power: @(listing.Car?.Power ?? 0) • Price: @listing.NewPrice.ToString("C")</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Power: @(listing.Car?.Power ?? 0) • Price: @listing.RentPrice.ToString("C")/day</text>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(listing.Color))
+                                        {
+                                            <text> • Color: @listing.Color</text>
+                                        }
+                                    </p>
+                                </div>
+
+                                <div class="shrink-0">
+                                    <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full @(listing.Type == CarListingModel.ListingType.ForRenting ? "text-green-700 bg-green-100" : "text-blue-700 bg-blue-100")">
+                                        @(listing.Type == CarListingModel.ListingType.ForRenting ? "For Rent" : "For Sale")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Actions: push to right by using ml-auto on container -->
+                            <div class="ml-12 flex items-center gap-3 w-full">
+                                <div class="ml-auto flex items-center gap-3">
+                                    <a asp-action="Details" asp-controller="Car" asp-route-id="@listing.ListingId"
+                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 6h11v12H4z" />
+                                        </svg>
+                                        <span>View Listing</span>
+                                    </a>
+
+                                    <form method="post" asp-action="AddToFavorite" asp-controller="Car" asp-route-listingId="@listing.ListingId" class="inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200 text-sm text-gray-700 bg-white hover:bg-gray-50">
+                                            <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                                            </svg>
+                                            <span>Save</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Remove X (extreme right) -->
+                        <div class="ml-4 flex-shrink-0 self-start">
+                            <form method="post" asp-action="RemoveFromHistory" asp-controller="Car" asp-route-id="@entry.Id" onsubmit="return confirm('Remove this entry from your history?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="text-gray-400 hover:text-gray-600 p-1 rounded-full" title="Remove from history">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- pagination -->
+        <div class="mt-8 flex justify-center items-center gap-3">
+            <nav class="inline-flex items-center gap-2" aria-label="Pagination">
+                <a class="px-3 py-2 rounded-md border border-gray-200 bg-white" asp-action="MyHistory" asp-controller="Car" asp-route-page="@(page > 1 ? page - 1 : 1)">‹</a>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    if (i == page)
+                    {
+                        <span class="px-3 py-2 rounded-md bg-blue-600 text-white">@i</span>
+                    }
+                    else if (i <= 3 || i > totalPages - 3 || (i >= page - 1 && i <= page + 1))
+                    {
+                        <a class="px-3 py-2 rounded-md border border-gray-200 bg-white" asp-action="MyHistory" asp-controller="Car" asp-route-page="@i">@i</a>
+                    }
+                    else if (i == 4 && page > 4)
+                    {
+                        <span class="px-3 py-2">…</span>
+                    }
+                }
+
+                <a class="px-3 py-2 rounded-md border border-gray-200 bg-white" asp-action="MyHistory" asp-controller="Car" asp-route-page="@(page<totalPages? page + 1 : totalPages)">›</a>
+            </nav>
+        </div>
+    </div>
+</body>
+</html>

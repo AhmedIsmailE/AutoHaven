@@ -22,38 +22,47 @@
                 </nav>
             </div>
 
-            @* --- Auth area: Dashboard / Login / Signup / Avatar (if authenticated) --- *@
             @{
-                // Is user authenticated?
                 var isAuthenticated = User?.Identity?.IsAuthenticated == true;
-
-                // Attempt to get the ApplicationUser and its AvatarUrl (if any)
                 string? avatarUrl = null;
+
                 if (isAuthenticated)
                 {
                     try
                     {
-                        var appUser = UserManager.GetUserAsync(User).GetAwaiter().GetResult();
+                        // await properly inside the view
+                        var appUser = await UserManager.GetUserAsync(User);
                         if (appUser != null)
                         {
-                            var prop = appUser.GetType().GetProperty("AvatarUrl");
-                            if (prop != null)
-                                avatarUrl = prop.GetValue(appUser) as string;
+                            avatarUrl = appUser.AvatarUrl;
                         }
                     }
                     catch
                     {
-                        // if anything goes wrong, leave avatarUrl null and fallback will be used
+                        avatarUrl = null;
                     }
                 }
 
-                // Developer-provided fallback (local path you uploaded)
-                var fallback = "images/Default/default.jpg";
+                // canonical fallback path (ensure this file exists under wwwroot/images/Default/default.jpg)
+                var fallback = "/images/Default/default.jpg";
 
-                // Only use fallback when user is authenticated and there is no AvatarUrl set.
-                if (isAuthenticated && string.IsNullOrWhiteSpace(avatarUrl))
+                // Normalize avatarUrl to absolute app path using Url.Content
+                if (!string.IsNullOrWhiteSpace(avatarUrl))
                 {
-                    avatarUrl = fallback;
+                    // if avatarUrl already looks absolute (starts with http or leading slash), keep it otherwise turn into app-relative path
+                    if (avatarUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) || avatarUrl.StartsWith("/"))
+                    {
+                        avatarUrl = Url.Content(avatarUrl);
+                    }
+                    else
+                    {
+                        // e.g. "images/Default/default.jpg" -> "~/images/Default/default.jpg" -> "/images/Default/default.jpg"
+                        avatarUrl = Url.Content("~/" + avatarUrl.TrimStart('~', '/'));
+                    }
+                }
+                else if (isAuthenticated)
+                {
+                    avatarUrl = Url.Content(fallback);
                 }
             }
 
@@ -61,12 +70,8 @@
                 <div class="hidden sm:flex items-center gap-2">
                     @if (isAuthenticated)
                     {
-                        <a href="/Dashboard" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
-                            <span class="truncate">Dashboard</span>
-                        </a>
-
                         <form method="post" asp-controller="Account" asp-action="Logout" class="inline">
-                            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gradient-to-br from-primary to-blue-900 text-white text-sm font-bold shadow-sm hover:shadow-lg transition-shadow">
+                            <button type="submit" class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-5 bg-gray-200 dark:bg-gray-800 text-accent dark:text-gray-300 text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
                                 <span class="truncate">Log Out</span>
                             </button>
                         </form>
@@ -80,13 +85,8 @@
                             <span class="truncate">Sign Up</span>
                         </a>
                     }
-
-                </div>
-                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="User profile picture"
-                     style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDLaKXqfdOSmZsfGEDMFh_fgpncAQJJKAcbIDAS2LXZTqaJUsb5quHHkL-9xEUo9OB6nlRis0ntH_dUb_a3ug22illzWtyq3cPPf87mcbcXcCVr4AAwKLDXQvcHK-8UuJC1VB6DZXOIXKCMYaLWd7k9u1lGoiZTj5bcFLqdYeXPzBOr-hY8VMgGp2rBisH8eE8BH0B4Nxz5wEwjRo6DR6Mf9iNeR-IM2U5zohOBCF6SdqJsK2wT7mv5rutvGU38rJCUJ0T77gBroQ");'>
                 </div>
 
-                @* Avatar area: only render if authenticated *@
                 @if (isAuthenticated && !string.IsNullOrWhiteSpace(avatarUrl))
                 {
                     <a href="@Url.Action("Profile", "Account")" title="View profile" class="ml-2">

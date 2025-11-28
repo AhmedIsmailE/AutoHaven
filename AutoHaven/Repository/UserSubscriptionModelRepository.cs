@@ -74,7 +74,7 @@ namespace AutoHaven.Repository
         {
             return _projectDbContext.UserSubscriptions
                 .Include(us => us.User)
-                .Include(us => us.SubscriptionPlan)
+                //.Include(us => us.SubscriptionPlan)
                 .AsNoTracking()
                 .ToList();
         }
@@ -83,7 +83,7 @@ namespace AutoHaven.Repository
         {
             return _projectDbContext.UserSubscriptions
                 .Include(us => us.User)
-                .Include(us => us.SubscriptionPlan)
+                //.Include(us => us.SubscriptionPlan)
                 .FirstOrDefault(us => us.UserSubscriptionId == id);  // ✅ CHANGED: s.UserId to UserSubscriptionId
         }
 
@@ -91,7 +91,7 @@ namespace AutoHaven.Repository
         {
             var now = DateTime.Now;
             return _projectDbContext.UserSubscriptions
-                .Include(us => us.SubscriptionPlan)
+                //.Include(us => us.SubscriptionPlan)
                 .AsNoTracking()
                 .FirstOrDefault(us =>
                     us.UserId == userId &&
@@ -122,7 +122,7 @@ namespace AutoHaven.Repository
             existing.StartDate = subscription.StartDate;
             existing.EndDate = subscription.EndDate;
             existing.CurrentStatus = subscription.CurrentStatus;  // ✅ CHANGED: .status to .Status
-            existing.CurrentBillingCycle = subscription.CurrentBillingCycle;  // ✅ CHANGED: .billingcycle to .BillingCycle
+            //existing.CurrentBillingCycle = subscription.CurrentBillingCycle;  // ✅ CHANGED: .billingcycle to .BillingCycle
 
             _projectDbContext.SaveChanges();
         }

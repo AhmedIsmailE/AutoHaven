@@ -1,4 +1,4 @@
-﻿using AutoHaven.Models;
+using AutoHaven.Models;
 using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -99,7 +99,7 @@ namespace AutoHaven.Controllers
                         await _signInManager.SignInWithClaimsAsync(user, isPersistent: loginUserViewModel.RememberMe, claims); // Create Cookies
 
 
-                        return RedirectToAction("Index");
+                        return RedirectToAction("Home");
                     }
                 }
 
@@ -116,12 +116,6 @@ namespace AutoHaven.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
-        [Authorize]
-        public IActionResult Index()
-        {
-            return View();
-        }
-      
         [Authorize]
         [HttpGet]
         // ==================== GET: Profile ====================
@@ -162,7 +156,11 @@ namespace AutoHaven.Controllers
             user.Street = model.Street;
             user.City = model.City;
             user.State = model.State;
+<<<<<<< HEAD
             user.UpdatedAt = DateTime.Now;
+=======
+            user.UpdatedAt = DateTime.UtcNow;
+>>>>>>> dbcd80f274183b0068c64a9f9ff53a903e6804cb
 
             if (!string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase))
             {
@@ -258,7 +256,12 @@ namespace AutoHaven.Controllers
                 return View("Profile", model);
             }
 
+<<<<<<< HEAD
             TempData["Success"] = "Profile updated.";
+=======
+            TempData["Notification.Message"] = "Profile updated successfully!";
+            TempData["Notification.Type"] = "success";
+>>>>>>> dbcd80f274183b0068c64a9f9ff53a903e6804cb
             return RedirectToAction(nameof(Profile));
         }
         // ==================== POST: ResetAvatar ====================
@@ -286,11 +289,16 @@ namespace AutoHaven.Controllers
                 // Set the default avatar instead of null
                 user.AvatarUrl = ProfileViewModel.DevFallbackLocalPath;
 
+<<<<<<< HEAD
                 user.UpdatedAt = DateTime.Now;
+=======
+                user.UpdatedAt = DateTime.UtcNow;
+>>>>>>> dbcd80f274183b0068c64a9f9ff53a903e6804cb
 
                 await _userManager.UpdateAsync(user);
             }
             catch { }
+<<<<<<< HEAD
 
             TempData["Success"] = "Avatar reset.";
             return RedirectToAction(nameof(Profile));
@@ -318,13 +326,20 @@ namespace AutoHaven.Controllers
         //    }
 
         //}
+=======
+>>>>>>> dbcd80f274183b0068c64a9f9ff53a903e6804cb
 
+            TempData["Notification.Message"] = "Avatar Resetted!";
+            TempData["Notification.Type"] = "success";
+            return RedirectToAction(nameof(Profile));
+        }
+        public IActionResult Home()
+        {
+            return View();
+        }
+        public IActionResult Admin()
+        {
+            return View("AdminDashboard");
+        }
     }
 }
-
-
-
-
-
-
-

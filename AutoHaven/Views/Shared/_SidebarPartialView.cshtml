@@ -12,10 +12,21 @@
                 </div>
                 <div class="flex flex-col gap-4">
                     <div class="flex flex-col gap-2">
-                        <a class="flex items-center gap-3 rounded-lg bg-primary/20 px-3 py-2 text-primary" href="#">
-                            <span class="material-symbols-outlined">dashboard</span>
-                            <p class="text-sm font-medium leading-normal">Dashboard</p>
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" href="#">
+                            <span class="material-symbols-outlined">home</span>
+                            <p class="text-sm font-medium leading-normal">Home</p>
                         </a>
+                        @* ------------------- These are only for admins  ------------- 
+                         <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" href="#">
+                            <span class="material-symbols-outlined">article</span>
+                            <p class="text-sm font-medium leading-normal">Listings Manager</p>
+                        </a>
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" href="#">
+                            <span class="material-symbols-outlined">group</span>
+                            <p class="text-sm font-medium leading-normal">User Management</p>
+                        </a>
+                        *@
+                            @*my listing only for providers not customer nor admins *@
                         <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" href="#">
                             <span class="material-symbols-outlined">directions_car</span>
                             <p class="text-sm font-medium leading-normal">My Listings</p>
@@ -24,27 +35,26 @@
                             <span class="material-symbols-outlined">favorite_border</span>
                             <p class="text-sm font-medium leading-normal">Favorites</p>
                         </a>
-                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" href="#">
-                            <span class="material-symbols-outlined">mail_outline</span>
-                            <p class="text-sm font-medium leading-normal">Messages</p>
-                        </a>
-                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" href="#">
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                           href="@Url.Action("MyHistory", "Car")">
                             <span class="material-symbols-outlined">history</span>
-                            <p class="text-sm font-medium leading-normal">Booking History</p>
+                            <span class="text-sm font-medium leading-normal">History</span>
                         </a>
-                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" href="#">
+
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors"
+                           href="@Url.Action("Profile", "Account")">
                             <span class="material-symbols-outlined">settings</span>
-                            <p class="text-sm font-medium leading-normal">Account Settings</p>
+                            <span class="text-sm font-medium leading-normal">Profile</span>
                         </a>
                     </div>
                 </div>
             </div>
-            <div class="flex flex-col gap-1">
+            @* <div class="flex flex-col gap-1">
                 <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors" asp-controller="Account" asp-action="Logout">
                     <span class="material-symbols-outlined">logout</span>
                     <p class="text-sm font-medium leading-normal">Logout</p>
                 </a>
-            </div>
+            </div> *@
         </div>
     </div>
 </aside>
