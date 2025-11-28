@@ -20,7 +20,7 @@ namespace AutoHaven.Models
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
-        public virtual ApplicationUser User { get; set; }
+        public virtual ApplicationUserModel User { get; set; }
 
         public CarListingModel CarListing { get; set; }
     }

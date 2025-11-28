@@ -4,6 +4,7 @@ using AutoHaven.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoHaven.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    partial class ProjectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251128212712_bismallah")]
+    partial class bismallah
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,39 +253,6 @@ namespace AutoHaven.Migrations
                     b.ToTable("Cars");
                 });
 
-            modelBuilder.Entity("AutoHaven.Models.CarViewHistoryModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AnonymousId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ListingId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserAgent")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ViewedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ListingId");
-
-                    b.ToTable("CarViewHistories");
-                });
-
             modelBuilder.Entity("AutoHaven.Models.FavouriteModel", b =>
                 {
                     b.Property<int>("FavouriteId")
@@ -345,6 +315,73 @@ namespace AutoHaven.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("AutoHaven.Models.SubscriptionPlanModel", b =>
+                {
+                    b.Property<int>("SubscriptionPlanId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubscriptionPlanId"));
+
+                    b.Property<int>("FeatureSlots")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCarListing")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PricePerMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SubscriptionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("tier")
+                        .HasColumnType("int");
+
+                    b.HasKey("SubscriptionPlanId");
+
+                    b.ToTable("SubscriptionPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            SubscriptionPlanId = 1,
+                            FeatureSlots = 0,
+                            MaxCarListing = 0,
+                            PricePerMonth = 0m,
+                            SubscriptionName = "Free",
+                            tier = 0
+                        },
+                        new
+                        {
+                            SubscriptionPlanId = 2,
+                            FeatureSlots = 0,
+                            MaxCarListing = 5,
+                            PricePerMonth = 10m,
+                            SubscriptionName = "Starter",
+                            tier = 1
+                        },
+                        new
+                        {
+                            SubscriptionPlanId = 3,
+                            FeatureSlots = 3,
+                            MaxCarListing = 20,
+                            PricePerMonth = 25m,
+                            SubscriptionName = "Pro",
+                            tier = 2
+                        },
+                        new
+                        {
+                            SubscriptionPlanId = 4,
+                            FeatureSlots = 10,
+                            MaxCarListing = 50,
+                            PricePerMonth = 50m,
+                            SubscriptionName = "Elite",
+                            tier = 3
+                        });
+                });
+
             modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
                     b.Property<int>("UserSubscriptionId")
@@ -359,14 +396,8 @@ namespace AutoHaven.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("FeatureSlots")
+                    b.Property<int>("PlanId")
                         .HasColumnType("int");
-
-                    b.Property<int>("MaxCarListing")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("PriceMonth")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -374,10 +405,9 @@ namespace AutoHaven.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("tier")
-                        .HasColumnType("int");
-
                     b.HasKey("UserSubscriptionId");
+
+                    b.HasIndex("PlanId");
 
                     b.HasIndex("UserId");
 
@@ -547,17 +577,6 @@ namespace AutoHaven.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("AutoHaven.Models.CarViewHistoryModel", b =>
-                {
-                    b.HasOne("AutoHaven.Models.CarListingModel", "CarListing")
-                        .WithMany()
-                        .HasForeignKey("ListingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CarListing");
-                });
-
             modelBuilder.Entity("AutoHaven.Models.FavouriteModel", b =>
                 {
                     b.HasOne("AutoHaven.Models.CarListingModel", "CarListing")
@@ -595,11 +614,19 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
+                    b.HasOne("AutoHaven.Models.SubscriptionPlanModel", "SubscriptionPlan")
+                        .WithMany("UserSubscriptions")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", "User")
                         .WithMany("UserSubscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("SubscriptionPlan");
 
                     b.Navigation("User");
                 });
@@ -678,6 +705,11 @@ namespace AutoHaven.Migrations
             modelBuilder.Entity("AutoHaven.Models.CarModel", b =>
                 {
                     b.Navigation("CarListings");
+                });
+
+            modelBuilder.Entity("AutoHaven.Models.SubscriptionPlanModel", b =>
+                {
+                    b.Navigation("UserSubscriptions");
                 });
 #pragma warning restore 612, 618
         }

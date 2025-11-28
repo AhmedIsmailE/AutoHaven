@@ -9,32 +9,15 @@ namespace AutoHaven.Models
     {
         [Key]
         public int UserSubscriptionId { get; set; }
-
         [ForeignKey("User")]
         public int UserId { get; set; }
-
         [ForeignKey("SubscriptionPlan")]
-        public int SubscriptionPlanId { get; set; }
-        public int MaxCarListing { get; set; }
-        public int FeatureSlots { get; set; }
-
-        public decimal PriceMonth { get; set; }
-
+        public int PlanId { get; set; }
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public enum Tiers { Free = 0, Premium = 1, Luxury = 2 }
-
-        public Tiers tier { get; set; } = Tiers.Free;
-
-
-        //public enum BillingCycle { Monthly = 0, HalfYear = 1, Yearly = 2 }
+        public DateTime EndDate { get; set; }  
         public enum Status { Active = 0, Cancelled = 1, Expired = 2 }
-
-       // ADDED THESE PROPERTIES
-        //public BillingCycle CurrentBillingCycle { get; set; }
         public Status CurrentStatus { get; set; }
-
-        public virtual ApplicationUser User { get; set; } = null!;
-        //public virtual SubscriptionPlanModel SubscriptionPlan { get; set; } = null!;
+        public virtual ApplicationUserModel User { get; set; } = null!;
+        public virtual SubscriptionPlanModel SubscriptionPlan { get; set; } = null!;
     }
 }
