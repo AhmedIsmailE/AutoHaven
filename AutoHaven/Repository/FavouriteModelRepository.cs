@@ -66,7 +66,7 @@ namespace AutoHaven.Repository
             if (existing != null)
                 throw new InvalidOperationException("This listing is already in your favorites.");
 
-            favourite.CreatedAt = DateTime.UtcNow;
+            favourite.CreatedAt = DateTime.Now;
             _projectDbContext.Favourites.Add(favourite);
             _projectDbContext.SaveChanges();
         }

@@ -1,9 +1,7 @@
-﻿
-
-
-using AutoHaven.Models;
+﻿using AutoHaven.Models;
 using AutoHaven.IRepository;
-using AutoHaven.Repository;  // ← Your implementations are here!
+using AutoHaven.Repository;
+using AutoHaven.Storage;  // ← ADD THIS
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,6 +25,13 @@ builder.Services.AddScoped<IUserSubscriptionModelRepository, UserSubscriptionMod
 builder.Services.AddScoped<ISubscriptionPlanModelRepository, SubscriptionPlanModelRepository>();
 builder.Services.AddScoped<IReviewModelRepository, ReviewModelRepository>();
 builder.Services.AddScoped<IFavouriteModelRepository, FavouriteRepository>();
+builder.Services.AddScoped<ICarViewHistoryRepository, CarViewHistoryRepository>();
+
+
+// ✅ ADD FILE STORAGE HERE - BEFORE builder.Build()
+builder.Services.AddScoped<IFileStorage, FileSystemStorage>();
+
+// ✅ BUILD AFTER ALL SERVICES ARE REGISTERED
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

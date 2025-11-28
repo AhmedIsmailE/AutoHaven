@@ -4,6 +4,7 @@ using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static AutoHaven.Models.CarListingModel;
 
 namespace AutoHaven.Controllers
 {
@@ -14,19 +15,22 @@ namespace AutoHaven.Controllers
         private readonly IUserSubscriptionModelRepository _userSubscriptionRepo;
         private readonly IReviewModelRepository _reviewRepo;
         private readonly IFavouriteModelRepository _favouriteRepo;
+        private readonly ICarViewHistoryRepository _historyRepo;
 
-        public  CarController (
+        public CarController (
             ICarListingModelRepository carListingRepo,
             ICarModelRepository carRepo,
             IUserSubscriptionModelRepository userSubscriptionRepo,
             IReviewModelRepository reviewRepo,
-            IFavouriteModelRepository favouriteRepo)
+            IFavouriteModelRepository favouriteRepo,
+            ICarViewHistoryRepository historyRepo)
         {
             _carListingRepo = carListingRepo;
             _carRepo = carRepo;
             _userSubscriptionRepo = userSubscriptionRepo;
             _reviewRepo = reviewRepo;
             _favouriteRepo = favouriteRepo;
+            _historyRepo = historyRepo;
         }
 
         // ==================== GET: Browse All Listings ====================
@@ -209,6 +213,35 @@ namespace AutoHaven.Controllers
 
                 // ✅ INCREMENT VIEW COUNT
                 _carListingRepo.IncrementViews(id.Value);
+                // ================= For History Part =================
+                try
+                {
+                    int uid = GetCurrentUserId();
+
+                    var history = new CarViewHistoryModel
+                    {
+                        ListingId = id.Value,
+                        UserId = uid > 0 ? uid : null,
+                        ViewedAt = DateTime.UtcNow,
+                        UserAgent = Request.Headers["User-Agent"].ToString(),
+                        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    };
+
+                    if (uid > 0)
+                    {
+                        var old = _historyRepo
+                            .GetByUserId(uid)
+                            .FirstOrDefault(h => h.ListingId == id.Value);
+
+                        if (old != null)
+                        {
+                            _historyRepo.Delete(old.Id);
+                        }
+                    }
+
+                    _historyRepo.Insert(history);
+                }
+                catch { }
 
                 // Get reviews for this listing
                 var reviews = _reviewRepo.GetByListingId(id.Value);
@@ -273,7 +306,7 @@ namespace AutoHaven.Controllers
                 if (userId == 0)
                     return Unauthorized();
 
-                // Check subscription limits
+             /*   // Check subscription limits
                 var userSubscription = _userSubscriptionRepo.GetActiveForUser(userId);
                 var currentListingCount = _carListingRepo.Get()
                     .Count(cl => cl.UserId == userId);
@@ -282,7 +315,7 @@ namespace AutoHaven.Controllers
                 {
                     ModelState.AddModelError("", "You've reached your listing limit. Please upgrade your subscription.");
                     return View(viewModel);
-                }
+                }*/
 
                 // Create Car
                 var car = new CarModel
@@ -300,20 +333,21 @@ namespace AutoHaven.Controllers
                 _carRepo.Insert(car);
 
                 // Create Listing
+          
                 var listing = new CarListingModel
                 {
                     CarId = car.CarId,
                     UserId = userId,
-                    Type = viewModel.ListingType,
-                    NewPrice = viewModel.NewPrice ?? 0,
-                    RentPrice = viewModel.RentPrice ?? 0,
+                    Type = viewModel.ListingType,              
+                    NewPrice = viewModel.NewPrice ?? 0,        
+                    RentPrice = viewModel.RentPrice ?? 0,      
                     Description = viewModel.Description ?? string.Empty,
                     Color = viewModel.Color ?? string.Empty,
                     CurrentState = CarListingModel.State.Available,
                     IsFeatured = false,
                     Discount = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 };
 
                 // Insert listing with images
@@ -325,12 +359,19 @@ namespace AutoHaven.Controllers
                 _carListingRepo.Insert(listing, validImages);
 
 
-                TempData["Success"] = "Listing created successfully!";
+                TempData["Notification.Message"] = "List Got Created!";
+                TempData["Notification.Type"] = "success";
                 return RedirectToAction(nameof(Details), new { id = listing.ListingId });
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"Error creating listing: {ex.Message}");
+                string errorMessage = ex.InnerException?.InnerException?.Message
+                    ?? ex.InnerException?.Message
+                    ?? ex.Message;
+
+                System.Diagnostics.Debug.WriteLine("FULL ERROR: " + ex.ToString());
+
+                ModelState.AddModelError("", $"Error creating listing: {errorMessage}");
                 return View(viewModel);
             }
         }
@@ -422,13 +463,14 @@ namespace AutoHaven.Controllers
                 listing.RentPrice = viewModel.RentPrice ?? 0;
                 listing.Description = viewModel.Description ?? string.Empty;
                 listing.Color = viewModel.Color ?? string.Empty;
-                listing.UpdatedAt = DateTime.UtcNow;
+                listing.UpdatedAt = DateTime.Now;
 
                 // Update listing and images
                 var filesToUpload = newImages?.Where(f => f.Length > 0).ToList();
                 _carListingRepo.Update(listing, imageIdsToKeep ?? new int[0], filesToUpload);
 
-                TempData["Success"] = "Listing updated successfully!";
+                TempData["Notification.Message"] = "List Updated Successfully!";
+                TempData["Notification.Type"] = "success";
                 return RedirectToAction(nameof(Details), new { id = listing.ListingId });
             }
             catch (Exception ex)
@@ -456,7 +498,8 @@ namespace AutoHaven.Controllers
 
                 _carListingRepo.Delete(id);
 
-                TempData["Success"] = "Listing deleted successfully!";
+                TempData["Notification.Message"] = "Listing deleted successfully!";
+                TempData["Notification.Type"] = "success";
                 return RedirectToAction(nameof(MyListings));
             }
             catch (Exception ex)
@@ -501,25 +544,42 @@ namespace AutoHaven.Controllers
                 int userId = GetCurrentUserId();
                 if (userId == 0)
                     return Unauthorized();
-
+                
                 var listing = _carListingRepo.GetById(listingId);
                 if (listing == null)
-                    return NotFound("Listing not found.");
+                {
+                    TempData["Notification.Message"] = "Listing isn't existed";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction("MyHistory");
+                }
+
+                var already = _favouriteRepo.Get()
+                     .Any(f => f.UserId == userId && f.ListingId == listingId);
+                if (already)
+                {
+                    TempData["Notification.Message"] = "Already in your favourites.";
+                    TempData["Notification.Type"] = "info";
+                    return RedirectToAction("MyHistory");
+                }
 
                 var favorite = new FavouriteModel
                 {
                     UserId = userId,
                     ListingId = listingId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now
                 };
 
                 _favouriteRepo.Insert(favorite);
 
-                return Ok(new { message = "Added to favorites", success = true });
+                TempData["Notification.Message"] = "Added To Favourites!";
+                TempData["Notification.Type"] = "success";
+                return RedirectToAction("MyHistory");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message, success = false });
+                TempData["Notification.Message"] = "Error: " + ex.Message;
+                TempData["Notification.Type"] = "error";
+                return RedirectToAction("MyHistory");
             }
         }
 
@@ -598,18 +658,20 @@ namespace AutoHaven.Controllers
                     ListingId = listingId,
                     Rating = rating,
                     Comment = comment,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 };
 
                 _reviewRepo.Insert(review);
 
-                TempData["Success"] = "Review added successfully!";
+                TempData["Notification.Message"] = "Review added successfully!";
+                TempData["Notification.Type"] = "success";
                 return RedirectToAction(nameof(Details), new { id = listingId });
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error adding review: {ex.Message}";
+                TempData["Notification.Message"] = $"Error adding review: {ex.Message}";
+                TempData["Notification.Type"] = "error";
                 return RedirectToAction(nameof(Details), new { id = listingId });
             }
         }
@@ -685,5 +747,149 @@ namespace AutoHaven.Controllers
 
             return 0;
         }
+        // ================== History Actions =======================
+        [Authorize]
+        [HttpGet]
+        public IActionResult MyHistory(string q = "", string sortBy = "newest", int page = 1)
+        {
+            int uid = GetCurrentUserId();
+            if (uid == 0) return Unauthorized();
+
+            const int pageSize = 4;               // <-- max 4 posts per page
+            if (page < 1) page = 1;
+
+            // Get all history rows for user
+            var userHistQuery = _historyRepo.Get()
+                .Where(h => h.UserId == uid)
+                .AsQueryable();
+
+            // Optional search (manufacturer, model, description)
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var qTrim = q.Trim();
+                userHistQuery = userHistQuery.Where(h =>
+                    (h.CarListing != null && h.CarListing.Car != null &&
+                        ((h.CarListing.Car.Manufacturer ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase) ||
+                         (h.CarListing.Car.Model ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase)))
+                    || ((h.CarListing != null ? h.CarListing.Description : "") ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase)
+                );
+            }
+
+            // Group by listing and take latest view per listing
+            var latestPerListing = userHistQuery
+                .GroupBy(h => h.ListingId)
+                .Select(g => g.OrderByDescending(x => x.ViewedAt).FirstOrDefault());
+
+            // Materialize to list so we can sort by computed values (ratings, views, price)
+            var latestList = latestPerListing
+                .Where(x => x != null)
+                .Select(x => x!) // non-null
+                .ToList();
+
+            // Apply sorting
+            IEnumerable<CarViewHistoryModel> ordered = latestList;
+
+            switch ((sortBy ?? "newest").ToLowerInvariant())
+            {
+                case "price_asc":
+                    ordered = latestList.OrderBy(h =>
+                        h.CarListing != null && h.CarListing.Type == CarListingModel.ListingType.ForSelling
+                            ? h.CarListing.NewPrice
+                            : h.CarListing != null ? h.CarListing.RentPrice : decimal.MaxValue);
+                    break;
+
+                case "price_desc":
+                    ordered = latestList.OrderByDescending(h =>
+                        h.CarListing != null && h.CarListing.Type == CarListingModel.ListingType.ForSelling
+                            ? h.CarListing.NewPrice
+                            : h.CarListing != null ? h.CarListing.RentPrice : 0m);
+                    break;
+
+                case "highest_rated":
+                    ordered = latestList.OrderByDescending(h =>
+                        _reviewRepo.Get().Where(r => r.ListingId == h.ListingId).Average(r => (double?)r.Rating) ?? 0);
+                    break;
+
+                case "most_viewed":
+                    ordered = latestList.OrderByDescending(h => h.CarListing?.Views ?? 0);
+                    break;
+
+                case "newest":
+                default:
+                    // newest = most recently viewed
+                    ordered = latestList.OrderByDescending(h => h.ViewedAt);
+                    break;
+            }
+
+            // Pagination
+            var totalCount = ordered.Count();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            var items = ordered
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Fill ViewBag for view (the view expects these)
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalCount = totalCount;
+            ViewBag.SortBy = sortBy ?? "newest";
+            ViewBag.SearchTerm = q ?? string.Empty;
+
+            // Optional filter lists (used by your view)
+            var allListings = _carListingRepo.Get().ToList();
+            ViewBag.Makes = allListings.Where(cl => cl.Car != null && !string.IsNullOrEmpty(cl.Car.Manufacturer))
+                                      .Select(cl => cl.Car.Manufacturer).Distinct().OrderBy(x => x).ToList();
+            ViewBag.Years = allListings.Where(cl => cl.Car != null).Select(cl => cl.Car.ModelYear).Distinct().OrderByDescending(y => y).ToList();
+            ViewBag.Transmissions = Enum.GetValues(typeof(CarModel.Transmission)).Cast<CarModel.Transmission>().ToList();
+            ViewBag.Fuels = Enum.GetValues(typeof(CarModel.FuelType)).Cast<CarModel.FuelType>().ToList();
+
+            return View("MyHistory", items);
+        }
+
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ClearHistory()
+        {
+            int uid = GetCurrentUserId();
+            if (uid == 0) return Unauthorized();
+
+            _historyRepo.DeleteByUser(uid);
+
+            TempData["Notification.Message"] = "History cleared.";
+            TempData["Notification.Type"] = "success";
+            return RedirectToAction(nameof(MyHistory));
+        }
+
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RemoveFromHistory(int id)
+        {
+            int uid = GetCurrentUserId();
+            if (uid == 0) return Unauthorized();
+
+            var row = _historyRepo.Get().FirstOrDefault(h => h.Id == id && h.UserId == uid);
+            if (row != null)
+            {
+                _historyRepo.Delete(id);
+                TempData["Notification.Message"] = "Removed from history.";
+                TempData["Notification.Type"] = "success";
+            }
+            else
+            {
+                TempData["Notification.Message"] = "History entry not found.";
+                TempData["Notification.Type"] = "error";
+            }
+
+            return RedirectToAction(nameof(MyHistory));
+        }
+
+
     }
 }
