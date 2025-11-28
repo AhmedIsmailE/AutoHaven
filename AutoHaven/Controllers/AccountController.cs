@@ -252,7 +252,8 @@ namespace AutoHaven.Controllers
                 return View("Profile", model);
             }
 
-            TempData["Success"] = "Profile updated.";
+            TempData["Notification.Message"] = "Profile updated successfully!";
+            TempData["Notification.Type"] = "success";
             return RedirectToAction(nameof(Profile));
         }
         // ==================== POST: ResetAvatar ====================
@@ -286,10 +287,10 @@ namespace AutoHaven.Controllers
             }
             catch { }
 
-            TempData["Success"] = "Avatar reset.";
+            TempData["Notification.Message"] = "Avatar Resetted!";
+            TempData["Notification.Type"] = "success";
             return RedirectToAction(nameof(Profile));
         }
-
         public IActionResult Home()
         {
             return View();

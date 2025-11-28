@@ -12,6 +12,7 @@ namespace AutoHaven.Models
 
         public DbSet<CarModel> Cars { get; set; }
         public DbSet<CarListingModel> CarListings { get; set; }
+        public DbSet<CarViewHistoryModel> CarViewHistories { get; set; } // To Collect History Posts Per User
         public DbSet<CarImageModel> CarImages { get; set; }
         public DbSet<FavouriteModel> Favourites { get; set; }
         public DbSet<ReviewModel> Reviews { get; set; }
