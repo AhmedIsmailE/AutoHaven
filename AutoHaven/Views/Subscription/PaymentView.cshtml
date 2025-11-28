@@ -1,0 +1,122 @@
+﻿
+@model AutoHaven.Models.SubscriptionPlanModel
+
+<script src="https://www.paypal.com/sdk/js?client-id=@(ViewBag.PaypalClientId)&currency=USD"></script>
+<input type="hidden" id="PlanId" value="@Model.SubscriptionPlanId" />
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; width: 100%;">
+
+    <div class="card shadow-lg border-0 rounded-3" style="width: 450px; overflow: hidden;">
+        <div class="card shadow-lg border-0 rounded-3" style="width: 450px; overflow: hidden;">
+
+            <div class="card-header text-white text-center py-4" style="background-color: #0f172a;">
+                <h5 class="mb-0 text-uppercase fw-bold" style="letter-spacing: 1px;">Confirm Subscription</h5>
+            </div>
+            
+            <div class="card-body p-4 bg-light">
+
+                <div class="text-center mb-4">
+                    <p class="text-muted mb-1">You are subscribing to</p>
+                    <h2 class="fw-bold text-dark mb-2">@Model.SubscriptionName Plan</h2>
+
+                    <div class="d-flex justify-content-center align-items-baseline">
+                        <span class="fs-1 fw-bold text-primary">$@Model.PricePerMonth</span>
+                        <span class="text-muted ms-1">For 1 Month</span>
+                    </div>
+                </div>
+
+                <hr class="my-4 text-muted">
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-secondary">Subtotal: </span>
+                    <span class="fw-bold">$@Model.PricePerMonth</span>
+                </div>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="text-secondary">Taxes: </span>
+                    <span class="fw-bold">$0.00</span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-3 rounded mb-4" style="background-color: #e2e8f0;">
+                    <span class="fw-bold text-dark">Total Due</span>
+                    <span class="fs-4 fw-bold text-dark">$@Model.PricePerMonth</span>
+                </div>
+
+                <input type="hidden" id="totalAmount" value="@Model.PricePerMonth" />
+
+                <div id="notification-container" class="mb-3"></div>
+
+                <div id="paypal-button-container" class="w-100"></div>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        <i class="bi bi-lock-fill"></i> Payments are 100% Secure and Encrypted
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+    
+
+
+<script>
+    paypal.Buttons({
+        async createOrder() {
+            const response = await fetch("@Url.ActionLink("CreateOrder", "Subscription")", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    amount: document.getElementById("totalAmount").value
+                })
+            });
+
+            const order = await response.json();
+            return order.id;
+        },
+
+        async onApprove(data) {
+            // Get Plan ID from the hidden input
+            var planIdVal = document.getElementById("PlanId").value;
+
+            // Send BOTH OrderID and PlanID to the backend
+            const response = await fetch("@Url.ActionLink("CompleteOrder", "Subscription")", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderID: data.orderID,
+                planId: planIdVal
+              })
+            })
+
+            const result = await response.json();
+
+            // If backend says "success", it means money is taken AND DB is updated
+            if (result === "success") {
+                 window.location.href = "/Subscription/PurchaseSuccess";
+            }
+            else {
+                // Show Error
+                document.getElementById("notification-container").innerHTML = `
+                <div class='alert alert-danger alert-dismissible fade show' role='alert'>
+                    <strong>Failed!</strong> Payment captured but database update failed, or payment declined.
+                    <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                </div> `;
+            }
+        },
+
+        onCancel(data) {
+             document.getElementById("notification-container").innerHTML = `
+            <div class='alert alert-warning alert-dismissible fade show' role='alert'>
+                <strong style='color:red'>Cancelled.</strong>
+                <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+            </div> `;
+        },
+        onError(err) {
+            document.getElementById("notification-container").innerHTML = `
+            <div class='alert alert-danger alert-dismissible fade show' role='alert'>
+                <strong style='color:red'>Error!</strong> Something went wrong.
+                <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+            </div> `;
+        }
+    }).render('#paypal-button-container');
+</script>
