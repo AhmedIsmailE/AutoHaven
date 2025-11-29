@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AutoHaven.Migrations
 {
     /// <inheritdoc />
-    public partial class arsany : Migration
+    public partial class admins : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -376,6 +376,17 @@ namespace AutoHaven.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "AvatarUrl", "City", "CompanyName", "ConcurrencyStamp", "CreatedAt", "Email", "EmailConfirmed", "IdImagePath", "LockoutEnabled", "LockoutEnd", "Name", "NationalId", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "Role", "SecurityStamp", "State", "Street", "TwoFactorEnabled", "UpdatedAt", "UserName" },
+                values: new object[,]
+                {
+                    { 1, 0, null, null, null, "23322f47-553e-47f8-9b8c-99af700e4208", new DateTime(2025, 11, 29, 22, 49, 25, 192, DateTimeKind.Local).AddTicks(4422), "ahmed@gmail.com", false, null, false, null, null, null, "AHMED@GMAIL.COM", "MADPIXEL", "AQAAAAIAAYagAAAAEFfvOSgekG+TrqaY1iBLyA2lFPYSM5c/1ZVwTWWdFGyRpYoXPZJZqANn0yf/bb0brw==", "01121386733", false, 2, "f4100d11-aafd-48ec-b673-6e00051150f8", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 192, DateTimeKind.Local).AddTicks(4459), "MadPixel" },
+                    { 2, 0, null, null, null, "42c39b07-c2a2-44d2-b27d-eda104a9467d", new DateTime(2025, 11, 29, 22, 49, 25, 263, DateTimeKind.Local).AddTicks(7107), "arsany@gmail.com", false, null, false, null, null, null, "ARSANY@GMAIL.COM", "ARSANY", "AQAAAAIAAYagAAAAEMLlVDZsymXHA3Q/FDNijZcPEm/zrBii/ztila7E+pJWHWbPbbD9raFm4L1u4/+rtA==", "01289938194", false, 2, "90d616f7-013b-4f76-94fd-8b0fe9c8550d", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 263, DateTimeKind.Local).AddTicks(7110), "Arsany" },
+                    { 3, 0, null, null, null, "cd7778ed-c809-4b8f-9cae-aff5c594bfbb", new DateTime(2025, 11, 29, 22, 49, 25, 342, DateTimeKind.Local).AddTicks(4948), "mohamed@gmail.com", false, null, false, null, null, null, "MOHAMED@GMAIL.COM", "MOHAMED", "AQAAAAIAAYagAAAAEMZRqJ43Gtgu2IWz2p1Jp2OyL8Xadg8rxz6MoPnR4137fYN3Z9Sl8Xc07UZI5dKjKA==", "01012488360", false, 2, "3e496a25-b10f-473a-a831-e732f8b38333", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 342, DateTimeKind.Local).AddTicks(4951), "Mohamed" },
+                    { 4, 0, null, null, null, "2e50d3d6-d455-4626-815b-6cd8f049dad4", new DateTime(2025, 11, 29, 22, 49, 25, 430, DateTimeKind.Local).AddTicks(8933), "omar@gmail.com", false, null, false, null, null, null, "OMAR@GMAIL.COM", "OMAR", "AQAAAAIAAYagAAAAEFFppWYNgAgUK+DMXipateqk46Zb4lDyaWkZAnRtl0/VYuAj0RrL+86JqgBgcdwM+Q==", "01111031724", false, 2, "da8ff12e-5d5f-45b2-ba3d-6565d755d74c", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 430, DateTimeKind.Local).AddTicks(8950), "Omar" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "SubscriptionPlans",
                 columns: new[] { "SubscriptionPlanId", "FeatureSlots", "MaxCarListing", "PricePerMonth", "SubscriptionName", "tier" },
                 values: new object[,]
@@ -384,6 +395,17 @@ namespace AutoHaven.Migrations
                     { 2, 0, 5, 10m, "Starter", 1 },
                     { 3, 3, 20, 25m, "Pro", 2 },
                     { 4, 10, 50, 50m, "Elite", 3 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "UserSubscriptions",
+                columns: new[] { "UserSubscriptionId", "CurrentStatus", "EndDate", "PlanId", "StartDate", "UserId" },
+                values: new object[,]
+                {
+                    { 1, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(82), 4, new DateTime(2025, 11, 29, 22, 49, 25, 540, DateTimeKind.Local).AddTicks(9944), 1 },
+                    { 2, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(268), 4, new DateTime(2025, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(251), 2 },
+                    { 3, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(311), 4, new DateTime(2025, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(301), 3 },
+                    { 4, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(352), 4, new DateTime(2025, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(341), 4 }
                 });
 
             migrationBuilder.CreateIndex(

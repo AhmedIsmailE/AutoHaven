@@ -87,6 +87,7 @@ namespace AutoHaven.Controllers
                 // Create new ApplicationUser
                 ApplicationUserModel applicationUser = new ApplicationUserModel();
                 applicationUser.UserName = userViewModel.UserName;
+                applicationUser.Name = userViewModel.Name;
                 applicationUser.Email = userViewModel.Email;
                 applicationUser.PhoneNumber = userViewModel.PhoneNumber;
                 applicationUser.Role = userViewModel.Role;
