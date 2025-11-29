@@ -269,6 +269,63 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- ✅ FEATURED CHECKBOX - STEP 3 -->
+                        <!-- ✅ FEATURED LISTING SECTION -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-6">
+                            <button type="button" class="step-header w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-step="featured">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-white font-bold">✓</span>
+                                    <div class="text-left">
+                                        <h3 class="text-xl font-bold text-[#0d121b] dark:text-white">Featured Listing</h3>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Make your car stand out on the homepage</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined step-icon text-[#4c669a] dark:text-gray-400 transition-transform">expand_more</span>
+                            </button>
+
+                            <div class="step-content hidden p-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
+                                <!-- Info Box -->
+                                <div class="flex items-start gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 mt-1">info</span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Featured Listing Benefits</p>
+                                        <ul class="text-sm text-blue-800 dark:text-blue-400 mt-2 space-y-1">
+                                            <li>✓ Appears on homepage in featured section</li>
+                                            <li>✓ Gets priority visibility</li>
+                                            <li>✓ Increases chances of inquiries</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- ✅ CHECKBOX WITH ASP.NET HELPER (NO HIDDEN INPUT!) -->
+                                <div class="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer group">
+                                    <!-- ✅ REMOVED the hidden input with value="false" -->
+                                    <!-- ✅ Use ASP.NET CheckBoxFor instead -->
+                                    @Html.CheckBoxFor(m => m.WantsFeatured, new
+                                        {
+                                            @class = "w-5 h-5 text-primary rounded cursor-pointer focus:ring-2 focus:ring-primary",
+                                            id = "wantsFeatured"
+                                        })
+
+                                    <label for="wantsFeatured" class="flex-1 cursor-pointer">
+                                        <p class="font-semibold text-[#0d121b] dark:text-white group-hover:text-primary transition-colors">
+                                            🌟 Feature This Listing
+                                        </p>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">
+                                            Your subscription allows featured listings. Featured cars get more visibility!
+                                        </p>
+                                    </label>
+                                </div>
+
+                                <!-- Subscription Status Info -->
+                                <div id="subscriptionInfo" class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm text-[#4c669a] dark:text-gray-400">
+                                        <span class="material-symbols-outlined align-middle !text-base">check_circle</span>
+                                        Your subscription allows featured listings
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                         <!-- ✅ SHOW EXISTING IMAGES WHEN EDITING -->
                         @if (currentImages.Any())
                         {
@@ -440,18 +497,18 @@
                         const imageItem = document.createElement('div');
                         imageItem.className = 'flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700';
                         imageItem.innerHTML = `
-                                            <div class="flex items-center gap-3 flex-1">
-                                                <span class="material-symbols-outlined text-primary">image</span>
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-[#0d121b] dark:text-white font-medium truncate">${file.name}</p>
-                                                    <p class="text-sm text-[#4c669a] dark:text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                                                </div>
-                                                ${index === 0 ? '<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded">Primary</span>' : ''}
-                                            </div>
-                                            <button type="button" class="delete-btn ml-2 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold leading-normal tracking-[0.015em]" data-index="${index}">
-                                                <span class="material-symbols-outlined text-lg">delete</span>
-                                            </button>
-                                        `;
+                                    <div class="flex items-center gap-3 flex-1">
+                                        <span class="material-symbols-outlined text-primary">image</span>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[#0d121b] dark:text-white font-medium truncate">${file.name}</p>
+                                            <p class="text-sm text-[#4c669a] dark:text-gray-400">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                        </div>
+                                        ${index === 0 ? '<span class="bg-primary text-white text-xs font-bold px-2 py-1 rounded">Primary</span>' : ''}
+                                    </div>
+                                    <button type="button" class="delete-btn ml-2 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-bold leading-normal tracking-[0.015em]" data-index="${index}">
+                                        <span class="material-symbols-outlined text-lg">delete</span>
+                                    </button>
+                                `;
 
                         imageItem.querySelector('.delete-btn').addEventListener('click', () => {
                             uploadedFiles.splice(index, 1);
@@ -506,18 +563,39 @@
                 updatePriceVisibility("1");
             }
 
-            // ===== ACCORDION FUNCTIONALITY - ALLOWS MULTIPLE OPEN SECTIONS =====
+            // ===== ACCORDION FUNCTIONALITY - ALL STEP HEADERS =====
+            // ✅ FIXED: Universal handler for ALL accordion sections
             stepHeaders.forEach(header => {
-                header.addEventListener('click', (e) => {
+                header.addEventListener('click', function (e) {
+                    // ✅ IMPORTANT: Prevent default to ensure button doesn't try to submit
                     e.preventDefault();
-                    const content = header.nextElementSibling;
-                    const icon = header.querySelector('.step-icon');
+                    e.stopPropagation();
 
-                    // ✅ CHANGED: Don't close other sections - just toggle current one
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('.step-icon');
+
+                    // Toggle hidden class
+                    const isHidden = content.classList.contains('hidden');
                     content.classList.toggle('hidden');
-                    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+
+                    // Rotate icon
+                    if (isHidden) {
+                        icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+
+                    console.log('🔄 Accordion toggled:', this.getAttribute('data-step'), 'Hidden:', !isHidden);
                 });
             });
+
+            // ===== CHECKBOX VALUE HANDLING =====
+            const wantsFeaturedCheckbox = document.getElementById('wantsFeatured');
+            if (wantsFeaturedCheckbox) {
+                wantsFeaturedCheckbox.addEventListener('change', function () {
+                    console.log('✨ Featured checkbox:', this.checked ? 'CHECKED' : 'UNCHECKED');
+                });
+            }
 
             // ===== FORM VALIDATION ON SUBMIT =====
             form.addEventListener('submit', function (e) {
@@ -549,12 +627,7 @@
                     return false;
                 }
 
-                console.log('✅ Form validation passed - submitting...');
-                return true;
-            });
-            // When form submits, collect checkbox values
-            form.addEventListener('submit', function (e) {
-                // ✅ COLLECT IMAGE IDS TO KEEP
+                // ===== COLLECT IMAGE IDS TO KEEP =====
                 const checkboxes = document.querySelectorAll('input[name="imageIdsToKeep"]:checked');
                 const imageIdsToKeep = Array.from(checkboxes).map(cb => cb.value);
 
@@ -564,8 +637,10 @@
                     hiddenInput.value = imageIdsToKeep.join(',');
                 }
 
-               
+                console.log('✅ Form validation passed - submitting...');
+                return true;
             });
-        }); 
+        });
     </script>
+}
 }
