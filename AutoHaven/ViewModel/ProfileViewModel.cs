@@ -1,7 +1,6 @@
 ﻿using AutoHaven.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-
 namespace AutoHaven.ViewModel
 {
     public class ProfileViewModel
@@ -23,10 +22,10 @@ namespace AutoHaven.ViewModel
             public string? Street { get; set; }
             public string? City { get; set; }
             public string? State { get; set; }
-            public ApplicationUser.RoleEnum Role { get; set; }
+            public ApplicationUserModel.RoleEnum Role { get; set; }
             public DateTime CreatedAt { get; set; }
-            public DateTime UpdatedAt { get; set; }
-            public static ProfileViewModel MapToModel(ApplicationUser user)
+
+            public static ProfileViewModel MapToModel(ApplicationUserModel user)
             {
             var avatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl)
                 ? DevFallbackLocalPath
@@ -45,9 +44,8 @@ namespace AutoHaven.ViewModel
                     City = user.City,
                     State = user.State,
                     Role = user.Role,
-                    CreatedAt = user.CreatedAt,
-                    UpdatedAt = user.UpdatedAt
-            };
+                    CreatedAt = user.CreatedAt
+                };
             }
 
     }

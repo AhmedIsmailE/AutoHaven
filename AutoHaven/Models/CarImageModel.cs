@@ -10,7 +10,7 @@ namespace AutoHaven.Models
         [ForeignKey("CarListing")]
         public int ListingId { get; set; }
 
-       public string Path { get; set; }
+        public string Path { get; set; }
         public string AltText { get; set; }
         public bool IsPrimary { get; set; }
 

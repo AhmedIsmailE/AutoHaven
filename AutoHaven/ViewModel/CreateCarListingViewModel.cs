@@ -74,10 +74,6 @@ namespace AutoHaven.ViewModel
         [Display(Name = "Vehicle Images")]
         public List<IFormFile>? ImageFiles { get; set; }
 
-
-        // ✅ NEW: Featured option
-        public bool WantsFeatured { get; set; } = false;
-
         // ===== VALIDATION HELPER PROPERTY =====
         // This property will be checked in the controller to ensure the correct price is filled.
         public bool IsValid()

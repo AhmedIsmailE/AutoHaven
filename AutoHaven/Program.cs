@@ -4,7 +4,6 @@ using AutoHaven.Repository;
 using AutoHaven.Storage;  // ← ADD THIS
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using AutoHaven.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,9 +26,6 @@ builder.Services.AddScoped<ISubscriptionPlanModelRepository, SubscriptionPlanMod
 builder.Services.AddScoped<IReviewModelRepository, ReviewModelRepository>();
 builder.Services.AddScoped<IFavouriteModelRepository, FavouriteRepository>();
 builder.Services.AddScoped<ICarViewHistoryRepository, CarViewHistoryRepository>();
-builder.Services.AddScoped<CarListingValidationService>();
-builder.Services.AddScoped<ICarListingModelRepository, CarListingModelRepository>();
-builder.Services.AddScoped<IUserSubscriptionModelRepository, UserSubscriptionModelRepository>();
 
 
 // ✅ ADD FILE STORAGE HERE - BEFORE builder.Build()
@@ -53,6 +49,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Account}/{action=Home}/{id?}");
 
 app.Run();

@@ -68,12 +68,7 @@ namespace AutoHaven.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("NationalId")
-                        .HasMaxLength(14)
-                        .HasColumnType("nvarchar(14)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NationalId")
                         .HasMaxLength(14)
@@ -440,9 +435,6 @@ namespace AutoHaven.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserSubscriptionId"));
 
-                    b.Property<int?>("CarListingModelListingId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CurrentStatus")
                         .HasColumnType("int");
 
@@ -459,8 +451,6 @@ namespace AutoHaven.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("UserSubscriptionId");
-
-                    b.HasIndex("CarListingModelListingId");
 
                     b.HasIndex("PlanId");
 
@@ -680,10 +670,6 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
-                    b.HasOne("AutoHaven.Models.CarListingModel", null)
-                        .WithMany("UserSubscriptions")
-                        .HasForeignKey("CarListingModelListingId");
-
                     b.HasOne("AutoHaven.Models.SubscriptionPlanModel", "SubscriptionPlan")
                         .WithMany("UserSubscriptions")
                         .HasForeignKey("PlanId")
@@ -770,8 +756,6 @@ namespace AutoHaven.Migrations
                     b.Navigation("Favourites");
 
                     b.Navigation("Reviews");
-
-                    b.Navigation("UserSubscriptions");
                 });
 
             modelBuilder.Entity("AutoHaven.Models.CarModel", b =>

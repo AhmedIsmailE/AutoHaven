@@ -26,10 +26,6 @@ namespace AutoHaven.ViewModel
         [Display(Name = "Full Name")]
         public string Name { get; set; }
 
-        [StringLength(100)]
-        [Display(Name = "Full Name")]
-        public string Name { get; set; }
-
         [Required(ErrorMessage = "Phone number is required")]
         [Phone(ErrorMessage = "Invalid phone number")]
         public string PhoneNumber { get; set; }
@@ -38,19 +34,16 @@ namespace AutoHaven.ViewModel
         [Display(Name = "Account Type")]
         public ApplicationUserModel.RoleEnum Role { get; set; } = ApplicationUserModel.RoleEnum.Customer;
 
-        // ==================== PROVIDER FIELDS ====================
+
+
+        // Provider ONLY:
         [StringLength(14, MinimumLength = 14, ErrorMessage = "National ID must be 14 digits")]
         public string? NationalId { get; set; }
-
         [DataType(DataType.Upload)]
         public IFormFile? IdImage { get; set; }
-
         public string? CompanyName { get; set; }
-
         public string? State { get; set; }
-
         public string? City { get; set; }
-
         public string? Street { get; set; }
     }
 }

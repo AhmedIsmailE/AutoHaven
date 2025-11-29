@@ -10,13 +10,5 @@ namespace AutoHaven.IRepository
         public void Delete(int id);
         public void Update(CarListingModel car, int[] imageIdsToKeep, IEnumerable<IFormFile>? newImages = null);
         void IncrementViews(int listingId);
-        // Count active listings for a user
-        int CountActiveListingsByUserId(int userId);
-
-        // Count featured listings for a user
-        int CountFeaturedByUserId(int userId);
-
-        // Hide cars when subscription expires
-        void HideListingsByUserId(int userId);
     }
 }
