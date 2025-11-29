@@ -72,6 +72,28 @@ namespace AutoHaven.Models
                 tier = SubscriptionPlanModel.Tiers.Elite
             }
             );
+            modelBuilder.Entity<FavouriteModel>()
+            .HasOne(f => f.CarListing)
+            .WithMany(c => c.Favourites)
+            .HasForeignKey(f => f.ListingId)
+            .OnDelete(DeleteBehavior.NoAction);
+            // Important: create unique index on NormalizedUserName and NormalizedEmail to match Identity normalization
+            modelBuilder.Entity<ApplicationUserModel>()
+                .HasIndex(u => u.NormalizedUserName)
+                .IsUnique()
+                .HasDatabaseName("IX_AspNetUsers_NormalizedUserName_Unique");
+
+            modelBuilder.Entity<ApplicationUserModel>()
+                .HasIndex(u => u.NormalizedEmail)
+                .IsUnique()
+                .HasDatabaseName("IX_AspNetUsers_NormalizedEmail_Unique");
+
+            // EF Core way to make unique index that allows multiple NULLs
+            modelBuilder.Entity<ApplicationUserModel>()
+                .HasIndex(u => u.NationalId)
+                .IsUnique()
+                .HasFilter("[NationalId] IS NOT NULL") // فقط تحقق الفريد للقيم غير null
+                .HasDatabaseName("IX_AspNetUsers_NationalId_Unique");
         }
     }
 }
