@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AutoHaven.Models
 {
@@ -9,9 +10,10 @@ namespace AutoHaven.Models
     {
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        [MaxLength(100)]
         public string? CompanyName { get; set; }
 
-        public string? Name { get; set; } 
+        public string? Name { get; set; }
 
         [MaxLength(150)]
         public string? Street { get; set; }
@@ -23,6 +25,12 @@ namespace AutoHaven.Models
         public string? State { get; set; }
 
         public string? AvatarUrl { get; set; }
+        [NotMapped]
+        public IFormFile? IdImage { get; set; }
+        public string? IdImagePath { get; set; }
+        [StringLength(14, MinimumLength = 14)]
+        public string? NationalId { get; set; }
+
         public enum RoleEnum { Customer = 0, Provider = 1, Admin = 2 }
         public RoleEnum Role { get; set; } = RoleEnum.Customer;
 

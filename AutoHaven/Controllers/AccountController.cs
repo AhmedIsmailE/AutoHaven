@@ -39,6 +39,35 @@ namespace AutoHaven.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterUserViewModel userViewModel)
         {
+            // only validate provider-specific rules
+            if (userViewModel.Role == ApplicationUserModel.RoleEnum.Provider)
+            {
+                if (string.IsNullOrEmpty(userViewModel.CompanyName))
+                    ModelState.AddModelError("CompanyName", "Company Name is required.");
+
+                if (string.IsNullOrEmpty(userViewModel.State))
+                    ModelState.AddModelError("State", "State is required.");
+
+                if (string.IsNullOrEmpty(userViewModel.City))
+                    ModelState.AddModelError("City", "City is required.");
+
+                if (string.IsNullOrEmpty(userViewModel.Street))
+                    ModelState.AddModelError("Street", "Street is required.");
+
+                if (string.IsNullOrEmpty(userViewModel.NationalId) || userViewModel.NationalId.Length != 14)
+                    ModelState.AddModelError("NationalId", "National ID must be 14 digits.");
+
+                if (userViewModel.IdImage == null)
+                    ModelState.AddModelError("IdImage", "ID Image is required.");
+                // unique check
+                if (!string.IsNullOrWhiteSpace(userViewModel.NationalId))
+                {
+                    var existsNi = await _userManager.Users.AnyAsync(u => u.NationalId == userViewModel.NationalId);
+                    if (existsNi)
+                        ModelState.AddModelError(nameof(userViewModel.NationalId), "This National ID is already used.");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 // Create new ApplicationUser
@@ -49,7 +78,73 @@ namespace AutoHaven.Controllers
                 applicationUser.Role = userViewModel.Role;
                 applicationUser.CreatedAt = DateTime.Now;
                 applicationUser.UpdatedAt = DateTime.Now;
+                if (userViewModel.Role == ApplicationUserModel.RoleEnum.Provider)
+                {
+                    applicationUser.State = userViewModel.State;
+                    applicationUser.Street = userViewModel.Street;
+                    applicationUser.CompanyName = userViewModel.CompanyName;
+                    applicationUser.NationalId = userViewModel.NationalId;
+                    applicationUser.City = userViewModel.City;
+
+
+                }
                 //  applicationUser.PasswordHash=userViewModel.Password;  
+                // Check if Email already exists
+                var existingEmail = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.Email == userViewModel.Email);
+
+                if (existingEmail != null)
+                {
+                    ModelState.AddModelError("Email", "Email is already in use.");
+                    return View(userViewModel);
+                }
+
+                // Check if Username already exists
+                var existingUsername = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.UserName == userViewModel.UserName);
+
+                if (existingUsername != null)
+                {
+                    ModelState.AddModelError("UserName", "Username is already taken.");
+                    return View(userViewModel);
+                }
+
+                // Handle ID Image
+                if (userViewModel.IdImage != null && userViewModel.IdImage.Length > 0)
+                {
+                    var allowed = new[] { "image/png", "image/jpeg", "image/jpg", "image/gif" };
+                    if (!allowed.Contains(userViewModel.IdImage.ContentType.ToLower()))
+                    {
+                        ModelState.AddModelError("IdImage", "Only PNG/JPG/GIF images are allowed.");
+                        return View(userViewModel);
+                    }
+
+                    if (userViewModel.IdImage.Length > 2 * 1024 * 1024) // 2 MB limit
+                    {
+                        ModelState.AddModelError("IdImage", "Maximum file size is 2 MB.");
+                        return View(userViewModel);
+                    }
+
+                    // Save image to wwwroot/images/Providers/{username}/ID/
+                    var webRoot = _env.WebRootPath;
+                    var usernameSafe = string.Concat(userViewModel.UserName.Split(Path.GetInvalidFileNameChars()));
+                    var uploadDir = Path.Combine(webRoot, "images", "Providers", usernameSafe, "ID");
+                    Directory.CreateDirectory(uploadDir);
+
+                    var ext = Path.GetExtension(userViewModel.IdImage.FileName);
+                    if (string.IsNullOrWhiteSpace(ext)) ext = ".png";
+
+                    var fileName = $"id_{Guid.NewGuid():N}{ext}";
+                    var filePath = Path.Combine(uploadDir, fileName);
+
+                    using (var fs = new FileStream(filePath, FileMode.Create))
+                    {
+                        await userViewModel.IdImage.CopyToAsync(fs);
+                    }
+
+                    // store relative path if needed
+                    applicationUser.IdImagePath = $"/images/Providers/{usernameSafe}/ID/{fileName}";
+                }
                 IdentityResult result = await _userManager.CreateAsync(applicationUser, userViewModel.Password);
                 if (result.Succeeded)
                 {
@@ -290,6 +385,11 @@ namespace AutoHaven.Controllers
             TempData["Notification.Message"] = "Avatar Resetted!";
             TempData["Notification.Type"] = "success";
             return RedirectToAction(nameof(Profile));
+        }
+        [Authorize]
+        public IActionResult About()
+        {
+            return View("About");
         }
         public IActionResult Home()
         {

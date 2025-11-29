@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AutoHaven.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20251127190858_Oa")]
-    partial class Oa
+    [Migration("20251129120157_Letsgo")]
+    partial class Letsgo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace AutoHaven.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("AutoHaven.Models.ApplicationUser", b =>
+            modelBuilder.Entity("AutoHaven.Models.ApplicationUserModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -44,7 +44,8 @@ namespace AutoHaven.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("CompanyName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -60,6 +61,9 @@ namespace AutoHaven.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("IdImagePath")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -68,6 +72,10 @@ namespace AutoHaven.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NationalId")
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -112,12 +120,19 @@ namespace AutoHaven.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("NationalId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AspNetUsers_NationalId_Unique")
+                        .HasFilter("[NationalId] IS NOT NULL");
+
                     b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
+                        .IsUnique()
+                        .HasDatabaseName("IX_AspNetUsers_NormalizedEmail_Unique")
+                        .HasFilter("[NormalizedEmail] IS NOT NULL");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
+                        .HasDatabaseName("IX_AspNetUsers_NormalizedUserName_Unique")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
@@ -348,6 +363,73 @@ namespace AutoHaven.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("AutoHaven.Models.SubscriptionPlanModel", b =>
+                {
+                    b.Property<int>("SubscriptionPlanId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubscriptionPlanId"));
+
+                    b.Property<int>("FeatureSlots")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxCarListing")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PricePerMonth")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SubscriptionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("tier")
+                        .HasColumnType("int");
+
+                    b.HasKey("SubscriptionPlanId");
+
+                    b.ToTable("SubscriptionPlans");
+
+                    b.HasData(
+                        new
+                        {
+                            SubscriptionPlanId = 1,
+                            FeatureSlots = 0,
+                            MaxCarListing = 0,
+                            PricePerMonth = 0m,
+                            SubscriptionName = "Free",
+                            tier = 0
+                        },
+                        new
+                        {
+                            SubscriptionPlanId = 2,
+                            FeatureSlots = 0,
+                            MaxCarListing = 5,
+                            PricePerMonth = 10m,
+                            SubscriptionName = "Starter",
+                            tier = 1
+                        },
+                        new
+                        {
+                            SubscriptionPlanId = 3,
+                            FeatureSlots = 3,
+                            MaxCarListing = 20,
+                            PricePerMonth = 25m,
+                            SubscriptionName = "Pro",
+                            tier = 2
+                        },
+                        new
+                        {
+                            SubscriptionPlanId = 4,
+                            FeatureSlots = 10,
+                            MaxCarListing = 50,
+                            PricePerMonth = 50m,
+                            SubscriptionName = "Elite",
+                            tier = 3
+                        });
+                });
+
             modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
                     b.Property<int>("UserSubscriptionId")
@@ -362,28 +444,18 @@ namespace AutoHaven.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("FeatureSlots")
+                    b.Property<int>("PlanId")
                         .HasColumnType("int");
-
-                    b.Property<int>("MaxCarListing")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("PriceMonth")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("SubscriptionPlanId")
-                        .HasColumnType("int");
-
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int>("tier")
-                        .HasColumnType("int");
-
                     b.HasKey("UserSubscriptionId");
+
+                    b.HasIndex("PlanId");
 
                     b.HasIndex("UserId");
 
@@ -542,7 +614,7 @@ namespace AutoHaven.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", "User")
                         .WithMany("CarListings")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -571,7 +643,7 @@ namespace AutoHaven.Migrations
                         .HasForeignKey("ListingId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", "User")
                         .WithMany("Favourites")
                         .HasForeignKey("UserId");
 
@@ -588,7 +660,7 @@ namespace AutoHaven.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", "User")
                         .WithMany("Reviews")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -601,11 +673,19 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("AutoHaven.Models.UserSubscriptionModel", b =>
                 {
-                    b.HasOne("AutoHaven.Models.ApplicationUser", "User")
+                    b.HasOne("AutoHaven.Models.SubscriptionPlanModel", "SubscriptionPlan")
+                        .WithMany("UserSubscriptions")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", "User")
                         .WithMany("UserSubscriptions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("SubscriptionPlan");
 
                     b.Navigation("User");
                 });
@@ -621,7 +701,7 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
-                    b.HasOne("AutoHaven.Models.ApplicationUser", null)
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -630,7 +710,7 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
-                    b.HasOne("AutoHaven.Models.ApplicationUser", null)
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -645,7 +725,7 @@ namespace AutoHaven.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AutoHaven.Models.ApplicationUser", null)
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -654,14 +734,14 @@ namespace AutoHaven.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
-                    b.HasOne("AutoHaven.Models.ApplicationUser", null)
+                    b.HasOne("AutoHaven.Models.ApplicationUserModel", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AutoHaven.Models.ApplicationUser", b =>
+            modelBuilder.Entity("AutoHaven.Models.ApplicationUserModel", b =>
                 {
                     b.Navigation("CarListings");
 
@@ -684,6 +764,11 @@ namespace AutoHaven.Migrations
             modelBuilder.Entity("AutoHaven.Models.CarModel", b =>
                 {
                     b.Navigation("CarListings");
+                });
+
+            modelBuilder.Entity("AutoHaven.Models.SubscriptionPlanModel", b =>
+                {
+                    b.Navigation("UserSubscriptions");
                 });
 #pragma warning restore 612, 618
         }

@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace AutoHaven.Migrations
 {
     /// <inheritdoc />
-    public partial class Oa : Migration
+    public partial class Letsgo : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,12 +36,14 @@ namespace AutoHaven.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CompanyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Street = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     State = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     AvatarUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IdImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NationalId = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
                     Role = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -79,6 +83,23 @@ namespace AutoHaven.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Cars", x => x.CarId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SubscriptionPlans",
+                columns: table => new
+                {
+                    SubscriptionPlanId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubscriptionName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MaxCarListing = table.Column<int>(type: "int", nullable: false),
+                    FeatureSlots = table.Column<int>(type: "int", nullable: false),
+                    PricePerMonth = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    tier = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubscriptionPlans", x => x.SubscriptionPlanId);
                 });
 
             migrationBuilder.CreateTable(
@@ -188,33 +209,6 @@ namespace AutoHaven.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserSubscriptions",
-                columns: table => new
-                {
-                    UserSubscriptionId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: false),
-                    SubscriptionPlanId = table.Column<int>(type: "int", nullable: false),
-                    MaxCarListing = table.Column<int>(type: "int", nullable: false),
-                    FeatureSlots = table.Column<int>(type: "int", nullable: false),
-                    PriceMonth = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    tier = table.Column<int>(type: "int", nullable: false),
-                    CurrentStatus = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_UserSubscriptions", x => x.UserSubscriptionId);
-                    table.ForeignKey(
-                        name: "FK_UserSubscriptions_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "CarListings",
                 columns: table => new
                 {
@@ -249,6 +243,35 @@ namespace AutoHaven.Migrations
                         column: x => x.CarId,
                         principalTable: "Cars",
                         principalColumn: "CarId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserSubscriptions",
+                columns: table => new
+                {
+                    UserSubscriptionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    PlanId = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CurrentStatus = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserSubscriptions", x => x.UserSubscriptionId);
+                    table.ForeignKey(
+                        name: "FK_UserSubscriptions_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserSubscriptions_SubscriptionPlans_PlanId",
+                        column: x => x.PlanId,
+                        principalTable: "SubscriptionPlans",
+                        principalColumn: "SubscriptionPlanId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -352,6 +375,17 @@ namespace AutoHaven.Migrations
                         principalColumn: "ListingId");
                 });
 
+            migrationBuilder.InsertData(
+                table: "SubscriptionPlans",
+                columns: new[] { "SubscriptionPlanId", "FeatureSlots", "MaxCarListing", "PricePerMonth", "SubscriptionName", "tier" },
+                values: new object[,]
+                {
+                    { 1, 0, 0, 0m, "Free", 0 },
+                    { 2, 0, 5, 10m, "Starter", 1 },
+                    { 3, 3, 20, 25m, "Pro", 2 },
+                    { 4, 10, 50, 50m, "Elite", 3 }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -380,12 +414,21 @@ namespace AutoHaven.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "EmailIndex",
+                name: "IX_AspNetUsers_NationalId_Unique",
                 table: "AspNetUsers",
-                column: "NormalizedEmail");
+                column: "NationalId",
+                unique: true,
+                filter: "[NationalId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "UserNameIndex",
+                name: "IX_AspNetUsers_NormalizedEmail_Unique",
+                table: "AspNetUsers",
+                column: "NormalizedEmail",
+                unique: true,
+                filter: "[NormalizedEmail] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_NormalizedUserName_Unique",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true,
@@ -432,6 +475,11 @@ namespace AutoHaven.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserSubscriptions_PlanId",
+                table: "UserSubscriptions",
+                column: "PlanId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserSubscriptions_UserId",
                 table: "UserSubscriptions",
                 column: "UserId");
@@ -475,6 +523,9 @@ namespace AutoHaven.Migrations
 
             migrationBuilder.DropTable(
                 name: "CarListings");
+
+            migrationBuilder.DropTable(
+                name: "SubscriptionPlans");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

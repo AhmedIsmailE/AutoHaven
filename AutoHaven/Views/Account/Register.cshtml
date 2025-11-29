@@ -79,7 +79,7 @@
                         </div>
 
                         <!-- ASP.NET FORM -->
-                        <form asp-action="Register" method="post" class="space-y-6">
+                        <form asp-action="Register" method="post" class="space-y-6" enctype="multipart/form-data">
 
                             <!-- SUMMARY -->
                             <div asp-validation-summary="All" class="text-red-600 text-sm"></div>
@@ -95,6 +95,14 @@
                                     <span asp-validation-for="UserName" class="text-red-600 text-sm"></span>
                                 </label>
 
+                                <!-- NAME -->
+                                <label class="flex flex-col">
+                                    <p class="pb-2 text-sm font-medium">Full Name</p>
+                                    <input asp-for="Name"
+                                           class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark"
+                                           placeholder="Enter your Full name" />
+                                    <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+                                </label>
                                 <!-- EMAIL -->
                                 <label class="flex flex-col">
                                     <p class="pb-2 text-sm font-medium">Email Address</p>
@@ -145,6 +153,44 @@
                                     </select>
                                     <span asp-validation-for="Role" class="text-red-600 text-sm"></span>
                                 </label>
+                                <!-- PROVIDER FIELDS -->
+                                <div id="providerFields" style="display:none">
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">Company Name</p>
+                                        <input asp-for="CompanyName" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your company name" />
+                                        <span asp-validation-for="CompanyName" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">State</p>
+                                        <input asp-for="State" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your state" />
+                                        <span asp-validation-for="State" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">City</p>
+                                        <input asp-for="City" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your city" />
+                                        <span asp-validation-for="City" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">Street</p>
+                                        <input asp-for="Street" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your street" />
+                                        <span asp-validation-for="Street" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">National ID (14 digits)</p>
+                                        <input asp-for="NationalId" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your National ID" />
+                                        <span asp-validation-for="NationalId" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                      <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">ID Image</p>
+                                        <input asp-for="IdImage" type="file" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" />
+                                        <span asp-validation-for="IdImage" class="text-red-600 text-sm"></span>
+                                    </label>
+                                </div>
 
                             </div>
                             <input type="submit" value="Create" class="btn w-full h-12 rounded-lg bg-primary text-white font-bold hover:bg-primary/90" />
@@ -170,7 +216,23 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            function toggleProviderFields() {
+                if ($('#Role').val() == '1') {
+                    $('#providerFields').show();
+                } else {
+                    $('#providerFields').hide();
+                }
+            }
 
+            toggleProviderFields();
+
+            $('#Role').change(function(){
+                toggleProviderFields();
+            });
+        });
+    </script>
 </body>
 </html>
 
