@@ -22,10 +22,10 @@ namespace AutoHaven.ViewModel
             public string? Street { get; set; }
             public string? City { get; set; }
             public string? State { get; set; }
-            public ApplicationUserModel.RoleEnum Role { get; set; }
+            public ApplicationUser.RoleEnum Role { get; set; }
             public DateTime CreatedAt { get; set; }
-
-            public static ProfileViewModel MapToModel(ApplicationUserModel user)
+            public DateTime UpdatedAt { get; set; }
+            public static ProfileViewModel MapToModel(ApplicationUser user)
             {
             var avatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl)
                 ? DevFallbackLocalPath
@@ -44,8 +44,9 @@ namespace AutoHaven.ViewModel
                     City = user.City,
                     State = user.State,
                     Role = user.Role,
-                    CreatedAt = user.CreatedAt
-                };
+                    CreatedAt = user.CreatedAt,
+                    UpdatedAt = user.UpdatedAt
+            };
             }
 
     }

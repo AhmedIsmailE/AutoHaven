@@ -21,7 +21,6 @@
                     <label for="avatarInput"
                            class="absolute right-0 bottom-0 bg-primary text-white p-2 rounded-full cursor-pointer"
                            title="Change avatar">
-
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                              viewBox="0 0 24 24" stroke="white" stroke-width="3">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
@@ -56,7 +55,7 @@
                         <div><dt class="font-medium inline">Email:</dt> <dd class="inline ml-2">@Model?.Email</dd></div>
                         <div><dt class="font-medium inline">Phone:</dt> <dd class="inline ml-2">@Model?.PhoneNumber</dd></div>
                         <div><dt class="font-medium inline">Company:</dt> <dd class="inline ml-2">@Model?.CompanyName</dd></div>
-                        <div class="mt-3"><dt class="font-medium inline">Registered:</dt> <dd class="inline ml-2">@Model?.CreatedAt.ToString("f")</dd></div>
+                        <div class="mt-3"><dt class="font-medium inline">Last Edit:</dt> <dd class="inline ml-2">@Model?.UpdatedAt.ToString("f")</dd></div>
                     </dl>
                 </div>
 
@@ -69,6 +68,26 @@
                     </dl>
                 </div>
             </div>
+
+            @* Account actions area (Delete account) *@
+            @if (User.Identity.IsAuthenticated && (ViewBag.IsOwner ?? true))
+            {
+                <div class="mt-6 flex justify-end">
+                    <form method="post"
+                          asp-action="RemoveAccount"
+                          asp-controller="Account"
+                          onsubmit="return confirm('Are you sure you want to permanently delete your account?');">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold">
+                            Delete Account
+                        </button>
+                    </form>
+                </div>
+            }
+
 
             @if (TempData["Success"] != null)
             {
@@ -143,12 +162,11 @@
                         <div class="ml-auto flex gap-2">
                             <button type="submit" class="px-4 py-2 bg-primary text-white rounded">Save</button>
 
-                            <!-- FIXED Reset button (no nested form) -->
-                            <button
-                                type="submit"
-                                formaction="@Url.Action("ResetAvatar", "Account")"
-                                formmethod="post"
-                                class="px-4 py-2 border rounded bg-white hover:bg-gray-50">
+                            <!-- Reset avatar -->
+                            <button type="submit"
+                                    formaction="@Url.Action("ResetAvatar", "Account")"
+                                    formmethod="post"
+                                    class="px-4 py-2 border rounded bg-white hover:bg-gray-50">
                                 Reset Avatar
                             </button>
 
@@ -163,25 +181,59 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         (function () {
+
             const avatarInput = document.getElementById('avatarInput');
             const avatarPreview = document.getElementById('avatarPreview');
+            const MAX_BYTES = 2 * 1024 * 1024;
 
-            if (!avatarPreview) return;
+            let previousSrc = avatarPreview?.src;
 
-            if (avatarInput) {
-                avatarInput.addEventListener('change', function () {
-                    const file = this.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = e => avatarPreview.src = e.target.result;
-                    reader.readAsDataURL(file);
+            function showToast(message, type = "error") {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: type,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 4000,
+                    timerProgressBar: true
                 });
-
-                avatarPreview.style.cursor = 'pointer';
-                avatarPreview.addEventListener('click', () => avatarInput.click());
             }
+
+            if (!avatarInput || !avatarPreview) return;
+
+            avatarInput.addEventListener('change', function () {
+                const file = this.files?.[0];
+                if (!file) return;
+
+                // 🔥 Size check using SAME popup as partial view
+                if (file.size > MAX_BYTES) {
+                    showToast("Image exceeds 2MB limit!", "error");
+
+                    avatarPreview.src = previousSrc;
+                    this.value = "";
+                    return;
+                }
+
+                previousSrc = avatarPreview.src;
+
+                const reader = new FileReader();
+                reader.onload = e => avatarPreview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+
+            avatarPreview.style.cursor = 'pointer';
+            avatarPreview.addEventListener('click', () => avatarInput.click());
+
         })();
     </script>
 }
+
+@await Html.PartialAsync("_Notification")
+
+
+

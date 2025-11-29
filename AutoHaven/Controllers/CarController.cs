@@ -14,8 +14,9 @@ namespace AutoHaven.Controllers
         private readonly ICarModelRepository _carRepo;
         private readonly IUserSubscriptionModelRepository _userSubscriptionRepo;
         private readonly IReviewModelRepository _reviewRepo;
-        private readonly IFavouriteModelRepository _favouriteRepo;
         private readonly ICarViewHistoryRepository _historyRepo;
+        private readonly IFavouriteModelRepository _favouriteRepo;
+        
 
         public CarController (
             ICarListingModelRepository carListingRepo,
@@ -311,7 +312,7 @@ namespace AutoHaven.Controllers
                 var currentListingCount = _carListingRepo.Get()
                     .Count(cl => cl.UserId == userId);
 
-                if (userSubscription != null && currentListingCount >= userSubscription.SubscriptionPlan.MaxCarListing)
+                if (userSubscription != null && currentListingCount >= userSubscription.MaxCarListing)
                 {
                     ModelState.AddModelError("", "You've reached your listing limit. Please upgrade your subscription.");
                     return View(viewModel);
@@ -533,8 +534,7 @@ namespace AutoHaven.Controllers
                 return View(new List<CarListingModel>());
             }
         }
-
-        // ==================== POST: Add to Favorites ====================
+        /*
         [Authorize]
         [HttpPost]
         public IActionResult AddToFavorite(int listingId)
@@ -544,23 +544,10 @@ namespace AutoHaven.Controllers
                 int userId = GetCurrentUserId();
                 if (userId == 0)
                     return Unauthorized();
-                
+
                 var listing = _carListingRepo.GetById(listingId);
                 if (listing == null)
-                {
-                    TempData["Notification.Message"] = "Listing isn't existed";
-                    TempData["Notification.Type"] = "error";
-                    return RedirectToAction("MyHistory");
-                }
-
-                var already = _favouriteRepo.Get()
-                     .Any(f => f.UserId == userId && f.ListingId == listingId);
-                if (already)
-                {
-                    TempData["Notification.Message"] = "Already in your favourites.";
-                    TempData["Notification.Type"] = "info";
-                    return RedirectToAction("MyHistory");
-                }
+                    return NotFound("Listing not found.");
 
                 var favorite = new FavouriteModel
                 {
@@ -571,17 +558,14 @@ namespace AutoHaven.Controllers
 
                 _favouriteRepo.Insert(favorite);
 
-                TempData["Notification.Message"] = "Added To Favourites!";
-                TempData["Notification.Type"] = "success";
-                return RedirectToAction("MyHistory");
+                return Ok(new { message = "Added to favorites", success = true });
             }
             catch (Exception ex)
             {
-                TempData["Notification.Message"] = "Error: " + ex.Message;
-                TempData["Notification.Type"] = "error";
-                return RedirectToAction("MyHistory");
+                return BadRequest(new { message = ex.Message, success = false });
             }
         }
+        */
 
         // ==================== POST: Remove from Favorites ====================
         [Authorize]
@@ -746,148 +730,6 @@ namespace AutoHaven.Controllers
                 return id;
 
             return 0;
-        }
-        // ================== History Actions =======================
-        [Authorize]
-        [HttpGet]
-        public IActionResult MyHistory(string q = "", string sortBy = "newest", int page = 1)
-        {
-            int uid = GetCurrentUserId();
-            if (uid == 0) return Unauthorized();
-
-            const int pageSize = 4;               // <-- max 4 posts per page
-            if (page < 1) page = 1;
-
-            // Get all history rows for user
-            var userHistQuery = _historyRepo.Get()
-                .Where(h => h.UserId == uid)
-                .AsQueryable();
-
-            // Optional search (manufacturer, model, description)
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                var qTrim = q.Trim();
-                userHistQuery = userHistQuery.Where(h =>
-                    (h.CarListing != null && h.CarListing.Car != null &&
-                        ((h.CarListing.Car.Manufacturer ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase) ||
-                         (h.CarListing.Car.Model ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase)))
-                    || ((h.CarListing != null ? h.CarListing.Description : "") ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase)
-                );
-            }
-
-            // Group by listing and take latest view per listing
-            var latestPerListing = userHistQuery
-                .GroupBy(h => h.ListingId)
-                .Select(g => g.OrderByDescending(x => x.ViewedAt).FirstOrDefault());
-
-            // Materialize to list so we can sort by computed values (ratings, views, price)
-            var latestList = latestPerListing
-                .Where(x => x != null)
-                .Select(x => x!) // non-null
-                .ToList();
-
-            // Apply sorting
-            IEnumerable<CarViewHistoryModel> ordered = latestList;
-
-            switch ((sortBy ?? "newest").ToLowerInvariant())
-            {
-                case "price_asc":
-                    ordered = latestList.OrderBy(h =>
-                        h.CarListing != null && h.CarListing.Type == CarListingModel.ListingType.ForSelling
-                            ? h.CarListing.NewPrice
-                            : h.CarListing != null ? h.CarListing.RentPrice : decimal.MaxValue);
-                    break;
-
-                case "price_desc":
-                    ordered = latestList.OrderByDescending(h =>
-                        h.CarListing != null && h.CarListing.Type == CarListingModel.ListingType.ForSelling
-                            ? h.CarListing.NewPrice
-                            : h.CarListing != null ? h.CarListing.RentPrice : 0m);
-                    break;
-
-                case "highest_rated":
-                    ordered = latestList.OrderByDescending(h =>
-                        _reviewRepo.Get().Where(r => r.ListingId == h.ListingId).Average(r => (double?)r.Rating) ?? 0);
-                    break;
-
-                case "most_viewed":
-                    ordered = latestList.OrderByDescending(h => h.CarListing?.Views ?? 0);
-                    break;
-
-                case "newest":
-                default:
-                    // newest = most recently viewed
-                    ordered = latestList.OrderByDescending(h => h.ViewedAt);
-                    break;
-            }
-
-            // Pagination
-            var totalCount = ordered.Count();
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-            if (page > totalPages && totalPages > 0) page = totalPages;
-
-            var items = ordered
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            // Fill ViewBag for view (the view expects these)
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.TotalCount = totalCount;
-            ViewBag.SortBy = sortBy ?? "newest";
-            ViewBag.SearchTerm = q ?? string.Empty;
-
-            // Optional filter lists (used by your view)
-            var allListings = _carListingRepo.Get().ToList();
-            ViewBag.Makes = allListings.Where(cl => cl.Car != null && !string.IsNullOrEmpty(cl.Car.Manufacturer))
-                                      .Select(cl => cl.Car.Manufacturer).Distinct().OrderBy(x => x).ToList();
-            ViewBag.Years = allListings.Where(cl => cl.Car != null).Select(cl => cl.Car.ModelYear).Distinct().OrderByDescending(y => y).ToList();
-            ViewBag.Transmissions = Enum.GetValues(typeof(CarModel.Transmission)).Cast<CarModel.Transmission>().ToList();
-            ViewBag.Fuels = Enum.GetValues(typeof(CarModel.FuelType)).Cast<CarModel.FuelType>().ToList();
-
-            return View("MyHistory", items);
-        }
-
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult ClearHistory()
-        {
-            int uid = GetCurrentUserId();
-            if (uid == 0) return Unauthorized();
-
-            _historyRepo.DeleteByUser(uid);
-
-            TempData["Notification.Message"] = "History cleared.";
-            TempData["Notification.Type"] = "success";
-            return RedirectToAction(nameof(MyHistory));
-        }
-
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult RemoveFromHistory(int id)
-        {
-            int uid = GetCurrentUserId();
-            if (uid == 0) return Unauthorized();
-
-            var row = _historyRepo.Get().FirstOrDefault(h => h.Id == id && h.UserId == uid);
-            if (row != null)
-            {
-                _historyRepo.Delete(id);
-                TempData["Notification.Message"] = "Removed from history.";
-                TempData["Notification.Type"] = "success";
-            }
-            else
-            {
-                TempData["Notification.Message"] = "History entry not found.";
-                TempData["Notification.Type"] = "error";
-            }
-
-            return RedirectToAction(nameof(MyHistory));
         }
 
 
