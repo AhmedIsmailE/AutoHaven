@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AutoHaven.Migrations
 {
     /// <inheritdoc />
-    public partial class Letsgo : Migration
+    public partial class DB1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
