@@ -1,0 +1,357 @@
+﻿@model AutoHaven.ViewModel.RegisterUserViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Create Your AutoHaven Account</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#1152d4",
+                "background-light": "#f6f6f8",
+                "background-dark": "#101622",
+              },
+              fontFamily: {
+                "display": ["Manrope", "sans-serif"]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+
+<body class="font-display bg-background-light dark:bg-background-dark text-[#0d121b] dark:text-gray-200">
+
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+
+        <header class="absolute top-0 left-0 right-0 z-10 p-6 md:px-10 md:py-5">
+            <div class="flex items-center gap-4 text-[#0d121b] dark:text-white">
+                <div class="size-6 text-primary">
+                    <svg fill="none" viewBox="0 0 48 48">
+                        <path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold">AutoHaven</h2>
+            </div>
+        </header>
+
+        <main class="flex flex-1 w-full">
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 w-full">
+
+                <!-- LEFT IMAGE -->
+                <div class="hidden lg:block relative">
+                    <img class="h-full w-full object-cover"
+                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlv9OFagEb0itTR14JVvBqBytYUlyr9LehqQB3w7dd8QLg7GX3vBxtb1RnQNeScuMWgg8IW1mZ_zKsF_co0yBbFYRseBiy2jh_6kV7Q_6cEVq3ampfiIvdx_WIZ_nDQnD3PFnDLD9j8AdSx2eTpVcZaDemjd03rtuPsqF_sox7gnI3YfeBidTbbMXRU5nNVjeblJXxo2ap1Zxr5wIdjPE7sTrrJw3Ped0CNG7x1iVKPULiIiMgqoIGctx4gLmLWzL3Ib2ZP8W0ZYU">
+                    <div class="absolute inset-0 bg-black/20"></div>
+                </div>
+
+                <!-- RIGHT FORM -->
+                <div class="flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 w-full bg-white dark:bg-[#182131]">
+
+                    <div class="w-full max-w-md space-y-8">
+
+                        <div>
+                            <p class="text-3xl md:text-4xl font-black">Create Your AutoHaven Account</p>
+                            <p class="mt-2 text-[#4c669a] dark:text-gray-400">
+                                Join our community of car enthusiasts, renters, and sellers.
+                            </p>
+                        </div>
+
+                        <!-- ASP.NET FORM -->
+                        <form asp-action="Register" method="post" class="space-y-6" enctype="multipart/form-data">
+
+                            <!-- SUMMARY -->
+                            <div asp-validation-summary="All" class="text-red-600 text-sm"></div>
+
+                            <div class="space-y-4">
+
+                                <!-- USERNAME -->
+                                <label class="flex flex-col">
+                                    <p class="pb-2 text-sm font-medium">Username</p>
+                                    <input asp-for="UserName"
+                                           class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark"
+                                           placeholder="Enter your username" />
+                                    <span asp-validation-for="UserName" class="text-red-600 text-sm"></span>
+                                </label>
+
+                                <!-- NAME -->
+                                <label class="flex flex-col">
+                                    <p class="pb-2 text-sm font-medium">Full Name</p>
+                                    <input asp-for="Name"
+                                           class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark"
+                                           placeholder="Enter your Full name" />
+                                    <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+                                </label>
+                                <!-- EMAIL -->
+                                <label class="flex flex-col">
+                                    <p class="pb-2 text-sm font-medium">Email Address</p>
+                                    <input asp-for="Email"
+                                           class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark"
+                                           placeholder="Enter your email address" />
+                                    <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
+                                </label>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                                    <!-- PASSWORD -->
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">Password</p>
+                                        <input asp-for="Password" type="password"
+                                               class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark"
+                                               placeholder="Enter a strong password" />
+                                        <span asp-validation-for="Password" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <!-- CONFIRM PASSWORD -->
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">Confirm Password</p>
+                                        <input asp-for="ConfirmPassword" type="password"
+                                               class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark"
+                                               placeholder="Re-enter your password" />
+                                        <span asp-validation-for="ConfirmPassword" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                </div>
+
+                                <!-- PHONE -->
+                                <label class="flex flex-col">
+                                    <p class="pb-2 text-sm font-medium">Phone Number</p>
+                                    <input asp-for="PhoneNumber"
+                                           class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark"
+                                           placeholder="(123) 456-7890" />
+                                    <span asp-validation-for="PhoneNumber" class="text-red-600 text-sm"></span>
+                                </label>
+
+                                <!-- ROLE -->
+                                <label class="flex flex-col">
+                                    <p class="pb-2 text-sm font-medium">I am a...</p>
+                                    <select asp-for="Role"
+                                            class="form-select rounded-lg border border-[#cfd7e7] dark:border-gray-600 h-12 bg-background-light dark:bg-background-dark px-3">
+                                        <option value="0">Customer</option>
+                                        <option value="1">Provider</option>
+                                    </select>
+                                    <span asp-validation-for="Role" class="text-red-600 text-sm"></span>
+                                </label>
+                                <!-- PROVIDER FIELDS -->
+                                <div id="providerFields" style="display:none">
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">Company Name</p>
+                                        <input asp-for="CompanyName" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your company name" />
+                                        <span asp-validation-for="CompanyName" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">State</p>
+                                        <input asp-for="State" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your state" />
+                                        <span asp-validation-for="State" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">City</p>
+                                        <input asp-for="City" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your city" />
+                                        <span asp-validation-for="City" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">Street</p>
+                                        <input asp-for="Street" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your street" />
+                                        <span asp-validation-for="Street" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                    <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">National ID (14 digits)</p>
+                                        <input asp-for="NationalId" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" placeholder="Enter your National ID" />
+                                        <span asp-validation-for="NationalId" class="text-red-600 text-sm"></span>
+                                    </label>
+
+                                      <label class="flex flex-col">
+                                        <p class="pb-2 text-sm font-medium">ID Image</p>
+                                        <input asp-for="IdImage" type="file" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" />
+                                        <span asp-validation-for="IdImage" class="text-red-600 text-sm"></span>
+                                    </label>
+                                </div>
+
+                            </div>
+                            <input type="submit" value="Create" class="btn w-full h-12 rounded-lg bg-primary text-white font-bold hover:bg-primary/90" />
+
+                        </form>
+
+                        <div class="text-center text-sm text-[#4c669a] dark:text-gray-400">
+                            Already have an account?
+                            <a href="/Account/Login" class="font-bold text-primary">Log In</a>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- VALIDATION SCRIPTS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            function toggleProviderFields() {
+                if ($('#Role').val() == '1') {
+                    $('#providerFields').show();
+                } else {
+                    $('#providerFields').hide();
+                }
+            }
+
+            toggleProviderFields();
+
+            $('#Role').change(function(){
+                toggleProviderFields();
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@* @model AutoHaven.ViewModel.RegisterUserViewModel
+
+@{
+    ViewData["Title"] = "Register";
+}
+
+<h1>Register</h1>
+
+<h4>RegisterUserViewModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Register">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="UserName" class="control-label"></label>
+                <input asp-for="UserName" class="form-control" />
+                <span asp-validation-for="UserName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password" class="control-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword" class="control-label"></label>
+                <input asp-for="ConfirmPassword" class="form-control" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PhoneNumber" class="control-label"></label>
+                <input asp-for="PhoneNumber" class="form-control" />
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Role" class="control-label"></label>
+                <select asp-for="Role" class="form-control">
+                    <option value="0">Customer</option>
+                    <option value="1">Provider</option>
+                </select>
+                <span asp-validation-for="Role" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} *@

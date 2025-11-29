@@ -1,0 +1,466 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AutoHaven - Premium Car Renting & Selling</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" crossorigin href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+          rel="stylesheet" />
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Custom CSS for animations and spacing */
+        :root {
+            --section-gap: 6rem;
+            --section-gap-lg: 8rem;
+            --ease-anim: cubic-bezier(.2, .9, .2, 1);
+        }
+
+        /* --- ANIMATION CSS START --- */
+
+        /* 1. Default state: VISIBLE (so if JS fails, content is still seen) */
+        .animate-on-scroll,
+        .stagger > * {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 600ms var(--ease-anim), transform 600ms var(--ease-anim);
+        }
+
+        /* 2. The class JS will add to hide elements initially */
+        .start-hidden {
+            opacity: 0 !important;
+            transform: translateY(20px) !important;
+        }
+
+        /* --- ANIMATION CSS END --- */
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Parallax hero */
+        .hero-parallax {
+            position: relative;
+            overflow: hidden;
+        }
+
+            .hero-parallax .hero-bg {
+                position: absolute;
+                inset: 0;
+                background-size: cover;
+                background-position: center;
+                transform: translate3d(0, 0, 0);
+                transition: transform 0.1s linear;
+                will-change: transform;
+                filter: brightness(.55);
+            }
+
+        /* Card micro-interactions */
+        .car-card {
+            transition: transform 300ms var(--ease-anim), box-shadow 300ms var(--ease-anim);
+            will-change: transform, box-shadow;
+        }
+
+            .car-card:hover {
+                transform: translateY(-8px) scale(1.01);
+                box-shadow: 0 18px 50px rgba(10, 25, 49, 0.12);
+            }
+
+        /* Buttons */
+        .btn-primary,
+        .btn-outline-primary {
+            transition: transform 160ms var(--ease-anim), box-shadow 160ms var(--ease-anim);
+        }
+
+            .btn-primary:hover,
+            .btn-outline-primary:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 30px rgba(2, 6, 23, 0.08);
+            }
+
+        /* Car images */
+        .car-img {
+            transition: transform 650ms var(--ease-anim);
+            will-change: transform;
+        }
+
+        .car-card:hover .car-img {
+            transform: scale(1.03);
+        }
+
+        /* Utility */
+        .section {
+            padding-top: var(--section-gap);
+            padding-bottom: var(--section-gap);
+            background-color: #fff;
+        }
+
+        @@media (min-width: 1024px) {
+            .section {
+                padding-top: var(--section-gap-lg);
+                padding-bottom: var(--section-gap-lg);
+            }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .focus-ring:focus {
+            outline: 3px solid rgba(0, 123, 255, 0.18);
+            outline-offset: 2px;
+            border-radius: 9999px;
+        }
+    </style>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+            extend: {
+                colors: {
+                "primary": "#007BFF",
+                "background-light": "#FFFFFF",
+                "background-dark": "#0A1931",
+                "navy": "#0A1931"
+                },
+                fontFamily: {
+                "display": ["Plus Jakarta Sans", "sans-serif"]
+                },
+                spacing: {
+                section: "6rem",
+                sectionLg: "8rem"
+                },
+            },
+            },
+        }
+    </script>
+</head>
+
+<body class="font-display bg-background-light text-navy dark:bg-background-dark dark:text-background-light">
+
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+
+        <main>
+
+            <section class="hero-parallax section bg-white dark:bg-navy">
+                <div id="heroBg" class="hero-bg" style='background-image: url("https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=3846&auto=format&fit=crop");'></div>
+
+                <div class="absolute inset-0"></div>
+
+                <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hero-content text-center text-white">
+                    <div class="max-w-3xl mx-auto">
+                        <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight animate-on-scroll">The Ultimate Driving Experience.</h1>
+
+                        <div class="mt-12 flex justify-center animate-on-scroll">
+                            <a href="#featured" class="btn-primary h-14 px-8 text-lg flex items-center shadow-lg hover:shadow-xl">
+                                <span class="material-symbols-outlined mr-3 !text-3xl">directions_car</span>
+                                Browse Cars
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="why" class="section bg-background-light dark:bg-background-dark" style="padding-bottom: 20px;">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12 animate-on-scroll">
+                        <h1 class="text-3xl md:text-4xl font-bold">Why Choose AutoHaven?</h1>
+                        <p class="text-gray-600 dark:text-gray-300 mt-2">Premium experience from start to finish.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 stagger" id="whyGrid">
+
+                        <div class="why-card p-6 rounded-xl text-center">
+                            <div class="flex items-center justify-center text-primary mb-4">
+                                <span class="material-symbols-outlined !text-6xl !font-light">verified</span>
+                            </div>
+                            <h2 class="text-2xl font-bold">Verified Quality</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Every vehicle inspected for top performance.</p>
+                        </div>
+
+                        <div class="why-card p-6 rounded-xl text-center">
+                            <div class="flex items-center justify-center text-primary mb-4">
+                                <span class="material-symbols-outlined !text-6xl !font-light">schedule</span>
+                            </div>
+                            <h2 class="text-2xl font-bold">Flexible Booking</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Policies designed to fit your schedule.</p>
+                        </div>
+
+                        <div class="why-card p-6 rounded-xl text-center">
+                            <div class="flex items-center justify-center text-primary mb-4">
+                                <span class="material-symbols-outlined !text-6xl !font-light">workspace_premium</span>
+                            </div>
+                            <h2 class="text-2xl font-bold">Premium Experience</h2>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Enjoy seamless, first-class service.</p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section id="featured" class="section bg-gray-50 dark:bg-navy/30">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl md:text-4xl font-bold animate-on-scroll">Featured Vehicles</h2>
+
+                        <div class="flex gap-3">
+                            <button id="prevCar" class="carousel-btn p-3 rounded-full border border-gray-300 dark:border-navy/50 hover:bg-gray-200 dark:hover:bg-navy/50 transition"><span class="material-symbols-outlined">arrow_back</span></button>
+                            <button id="nextCar" class="carousel-btn p-3 rounded-full border border-gray-300 dark:border-navy/50 hover:bg-gray-200 dark:hover:bg-navy/50 transition"><span class="material-symbols-outlined">arrow_forward</span></button>
+                        </div>
+                    </div>
+
+                    <div id="carList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="car-card bg-background-light dark:bg-background-dark rounded-xl shadow-md overflow-hidden animate-on-scroll">
+                            <div class="car-img aspect-[4/3] bg-cover bg-center" style='background-image: url("https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=3870&auto=format&fit=crop");'></div>
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-navy dark:text-white">Porsche 911 Carrera</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">From <span class="text-primary font-semibold">$399</span> / day</p>
+                                <button class="btn-outline-primary mt-4 w-full">View Details</button>
+                            </div>
+                        </div>
+
+                        <div class="car-card bg-background-light dark:bg-background-dark rounded-xl shadow-md overflow-hidden animate-on-scroll">
+                            <div class="car-img aspect-[4/3] bg-cover bg-center" style='background-image: url("https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=3869&auto=format&fit=crop");'></div>
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-navy dark:text-white">Audi RS7</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">From <span class="text-primary font-semibold">$349</span> / day</p>
+                                <button class="btn-outline-primary mt-4 w-full">View Details</button>
+                            </div>
+                        </div>
+
+                        <div class="car-card bg-background-light dark:bg-background-dark rounded-xl shadow-md overflow-hidden animate-on-scroll">
+                            <div class="car-img aspect-[4/3] bg-cover bg-center" style='background-image: url("https://images.unsplash.com/photo-1606152421811-aa2b71d77631?q=80&w=3870&auto=format&fit=crop");'></div>
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-navy dark:text-white">Range Rover Sport</h3>
+                                <p class="text-gray-500 dark:text-gray-400 mt-1">From <span class="text-primary font-semibold">$299</span> / day</p>
+                                <button class="btn-outline-primary mt-4 w-full">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section bg-background-light dark:bg-background-dark" style="padding-top : 20px">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-12 animate-on-scroll">
+                        <h2 class="text-3xl md:text-4xl font-bold">How It Works</h2>
+                        <p class="text-gray-600 dark:text-gray-300 mt-3">3 simple steps to your dream car.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="how-step animate-on-scroll text-center">
+                            <div class="how-circle inline-flex items-center justify-center w-16 h-16 border-2 border-primary rounded-full mb-4 text-primary font-bold">1</div>
+                            <h3 class="text-xl font-bold">Find Your Car</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Browse our luxury car collection.</p>
+                        </div>
+
+                        <div class="how-step animate-on-scroll text-center">
+                            <div class="how-circle inline-flex items-center justify-center w-16 h-16 border-2 border-primary rounded-full mb-4 text-primary font-bold">2</div>
+                            <h3 class="text-xl font-bold">Book or Inquire</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Select dates or ask about buying.</p>
+                        </div>
+
+                        <div class="how-step animate-on-scroll text-center">
+                            <div class="how-circle inline-flex items-center justify-center w-16 h-16 border-2 border-primary rounded-full mb-4 text-primary font-bold">3</div>
+                            <h3 class="text-xl font-bold">Enjoy the Drive</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Pickup or white-glove delivery.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // ====== ANIMATION LOGIC ======
+            const simpleElements = document.querySelectorAll('.animate-on-scroll');
+            const staggerContainers = document.querySelectorAll('.stagger');
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px 0px -10% 0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = entry.target;
+
+                        // Case A: Stagger Container
+                        if (target.classList.contains('stagger')) {
+                            const children = Array.from(target.children);
+                            children.forEach((child, index) => {
+                                setTimeout(() => {
+                                    child.classList.remove('start-hidden');
+                                }, index * 150);
+                            });
+                            observer.unobserve(target);
+                        }
+                        // Case B: Simple Element
+                        else {
+                            target.classList.remove('start-hidden');
+                            observer.unobserve(target);
+                        }
+                    }
+                });
+            }, observerOptions);
+
+            // Initialize: Apply hidden class and start observing
+            simpleElements.forEach(el => {
+                el.classList.add('start-hidden');
+                observer.observe(el);
+            });
+
+            staggerContainers.forEach(container => {
+                // Hide children initially
+                Array.from(container.children).forEach(child => {
+                    child.classList.add('start-hidden');
+                });
+                observer.observe(container);
+            });
+
+            // ====== Theme toggle (dark/light) ======
+            const themeToggle = document.getElementById("theme-toggle");
+            if(themeToggle) {
+                themeToggle.addEventListener("click", () => {
+                    document.documentElement.classList.toggle("dark");
+                });
+            }
+
+            // ====== Tabs: Rent / Buy toggle visual only ======
+            // NOTE: These elements were removed from the HTML, but the script handles their absence gracefully.
+            const tabRent = document.getElementById("tabRent");
+            const tabBuy = document.getElementById("tabBuy");
+
+            if(tabRent && tabBuy) {
+                tabRent.addEventListener("click", () => {
+                    // 1. Make Rent ACTIVE
+                    // Remove inactive styles
+                    tabRent.classList.remove("text-white/80", "hover:bg-white/10");
+                    // Add active styles (Solid White)
+                    tabRent.classList.add("bg-white", "text-navy", "font-bold");
+
+                    // 2. Make Buy INACTIVE
+                    // Remove active styles
+                    tabBuy.classList.remove("bg-white", "text-navy", "font-bold");
+                    // Add inactive styles (Transparent with Hover effect)
+                    tabBuy.classList.add("text-white/80", "hover:bg-white/10");
+                });
+
+                tabBuy.addEventListener("click", () => {
+                    // 1. Make Buy ACTIVE
+                    tabBuy.classList.remove("text-white/80", "hover:bg-white/10");
+                    tabBuy.classList.add("bg-white", "text-navy", "font-bold");
+
+                    // 2. Make Rent INACTIVE
+                    tabRent.classList.remove("bg-white", "text-navy", "font-bold");
+                    tabRent.classList.add("text-white/80", "hover:bg-white/10");
+                });
+            }
+
+            // ====== Simple carousel ======
+            const carList = document.getElementById("carList");
+            const nextBtn = document.getElementById("nextCar");
+            const prevBtn = document.getElementById("prevCar");
+
+            if(nextBtn) {
+                nextBtn.addEventListener("click", () => {
+                    if (!carList) return;
+                    carList.appendChild(carList.firstElementChild);
+                });
+            }
+            if(prevBtn) {
+                prevBtn.addEventListener("click", () => {
+                    if (!carList) return;
+                    carList.insertBefore(carList.lastElementChild, carList.firstElementChild);
+                });
+            }
+
+            // ====== Parallax ======
+            const heroBg = document.getElementById('heroBg');
+            if (heroBg) {
+                let latestY = 0;
+                let ticking = false;
+
+                function onScroll() {
+                    latestY = window.scrollY;
+                    if (!ticking) {
+                        window.requestAnimationFrame(() => {
+                            const translate = Math.max(-60, Math.min(60, latestY * -0.08));
+                            heroBg.style.transform = `translate3d(0, ${translate}px, 0) scale(1.03)`;
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                }
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll();
+            }
+
+            // ====== Smooth scroll ======
+            document.querySelectorAll('a[href^="#"]').forEach(a => {
+                a.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (!href || href === '#') return;
+                    const el = document.querySelector(href);
+                    if (!el) return;
+                    e.preventDefault();
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+
+        });
+    </script>
+
+    <style>
+        .btn-primary {
+            background: var(--tw-prose-invert, #007BFF);
+            color: white;
+            border-radius: 9999px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center; /* Added center alignment */
+            gap: .5rem;
+        }
+
+        .btn-outline {
+            border: 1px solid rgba(10,25,49,.08);
+            background: transparent;
+            color: inherit;
+            padding: 0.5rem 1.25rem;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+
+        .btn-outline-primary {
+            color: #007BFF;
+            border: 2px solid #007BFF;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+    </style>
+</body>
+
+</html>
