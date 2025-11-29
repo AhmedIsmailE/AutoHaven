@@ -6,7 +6,7 @@
 
 <main class="flex-grow w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col lg:flex-row gap-8">
-        
+
         <!-- Filters Sidebar -->
         <aside class="w-full lg:w-1/4 xl:w-1/5 shrink-0">
             <form id="filterForm" method="get" action="@Url.Action("Index", "Car")">
@@ -15,7 +15,7 @@
                         <h3 class="text-lg font-bold text-[#0d121b] dark:text-white">Filters</h3>
                         <a href="@Url.Action("Index", "Car")" class="text-sm font-medium text-primary hover:underline">Reset</a>
                     </div>
-                    
+
                     <!-- Listing Type Toggle -->
                     @{
                         int currentListingType = ViewBag.ListingType ?? 0;
@@ -23,17 +23,17 @@
                     <div class="flex bg-white dark:bg-card-dark p-1 rounded-lg border border-border-light dark:border-border-dark mb-4">
                         <label class="flex-1 text-sm font-semibold py-2 px-4 rounded-md text-center cursor-pointer"
                                style="background-color: @(currentListingType == 0 ? "#007BFF" : "transparent"); color: @(currentListingType == 0 ? "white" : "inherit");">
-                            <input type="radio" name="listingType" value="0" class="hidden"/>
+                            <input type="radio" name="listingType" value="0" class="hidden" />
                             All
                         </label>
                         <label class="flex-1 text-sm font-semibold py-2 px-4 rounded-md text-center cursor-pointer"
                                style="background-color: @(currentListingType == 1 ? "#007BFF" : "transparent"); color: @(currentListingType == 1 ? "white" : "inherit");">
-                            <input type="radio" name="listingType" value="1" class="hidden"/>
+                            <input type="radio" name="listingType" value="1" class="hidden" />
                             For Sale
                         </label>
                         <label class="flex-1 text-sm font-semibold py-2 px-4 rounded-md text-center cursor-pointer"
                                style="background-color: @(currentListingType == 2 ? "#007BFF" : "transparent"); color: @(currentListingType == 2 ? "white" : "inherit");">
-                            <input type="radio" name="listingType" value="2" class="hidden"/>
+                            <input type="radio" name="listingType" value="2" class="hidden" />
                             For Rent
                         </label>
                     </div>
@@ -44,9 +44,9 @@
                     <!-- Search -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-[#0d121b] dark:text-white mb-2">Search</label>
-                        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm" 
-                               placeholder="Make, model, or description..." 
-                               class="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-white dark:bg-background-dark text-[#0d121b] dark:text-white placeholder-text-secondary-light dark:placeholder-text-secondary-dark focus:outline-none focus:ring-2 focus:ring-primary"/>
+                        <input type="text" name="searchTerm" value="@ViewBag.SearchTerm"
+                               placeholder="Make, model, or description..."
+                               class="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-white dark:bg-background-dark text-[#0d121b] dark:text-white placeholder-text-secondary-light dark:placeholder-text-secondary-dark focus:outline-none focus:ring-2 focus:ring-primary" />
                     </div>
 
                     <!-- Price Range -->
@@ -58,13 +58,13 @@
                         <div class="pb-2 space-y-3">
                             <div>
                                 <label class="text-sm text-[#4c669a] dark:text-gray-400">Min Price</label>
-                                <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="Min" 
-                                       class="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-white dark:bg-background-dark text-[#0d121b] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"/>
+                                <input type="number" name="minPrice" value="@ViewBag.MinPrice" placeholder="Min"
+                                       class="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-white dark:bg-background-dark text-[#0d121b] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" />
                             </div>
                             <div>
                                 <label class="text-sm text-[#4c669a] dark:text-gray-400">Max Price</label>
                                 <input type="number" name="maxPrice" value="@ViewBag.MaxPrice" placeholder="Max"
-                                       class="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-white dark:bg-background-dark text-[#0d121b] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"/>
+                                       class="w-full px-3 py-2 border border-border-light dark:border-border-dark rounded-lg bg-white dark:bg-background-dark text-[#0d121b] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary" />
                             </div>
                         </div>
                     </details>
@@ -76,12 +76,22 @@
                             <span class="material-symbols-outlined text-lg group-open:rotate-180 transition-transform">expand_more</span>
                         </summary>
                         <div class="pb-2 space-y-2 max-h-48 overflow-y-auto">
-                            @foreach (var make in ViewBag.Makes)
+                            @{
+                                var selectedMakes = ViewBag.SelectedMakes as string[] ?? new string[] { };
+                            }
+                            @if (ViewBag.AvailableMakes != null)
                             {
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" name="makes" value="@make" class="w-4 h-4 rounded"/>
-                                    <span class="text-sm text-[#0d121b] dark:text-white">@make</span>
-                                </label>
+                                 @foreach (var make in ViewBag.AvailableMakes)
+                                {
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox"
+                                               name="makes"
+                                               value="@make"
+                                        @(Array.Exists(selectedMakes, element => element == make) ? "checked" : "")
+                                               class="w-4 h-4 rounded" />
+                                        <span class="text-sm text-[#0d121b] dark:text-white">@make</span>
+                                    </label>
+                                }
                             }
                         </div>
                     </details>
@@ -126,7 +136,7 @@
                             {
                                 int transValue = (int)trans;
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="transmission" value="@transValue" class="w-4 h-4 rounded"/>
+                                    <input type="radio" name="transmission" value="@transValue" class="w-4 h-4 rounded" />
                                     <span class="text-sm text-[#0d121b] dark:text-white">@trans</span>
                                 </label>
                             }
@@ -153,7 +163,7 @@
                             {
                                 int fuelValue = (int)fuelType;
                                 <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="fuel" value="@fuelValue" class="w-4 h-4 rounded"/>
+                                    <input type="radio" name="fuel" value="@fuelValue" class="w-4 h-4 rounded" />
                                     <span class="text-sm text-[#0d121b] dark:text-white">@fuelType</span>
                                 </label>
                             }
@@ -185,26 +195,26 @@
             <!-- Sort and View Options -->
             <div class="flex flex-wrap justify-between items-center gap-4 mb-6 p-4 bg-white dark:bg-card-dark rounded-lg border border-border-light dark:border-border-dark">
                 <p class="text-sm font-medium text-[#4c669a] dark:text-gray-400">
-                    Showing <span class="font-bold text-[#0d121b] dark:text-white">@Model.Count</span> of 
+                    Showing <span class="font-bold text-[#0d121b] dark:text-white">@Model.Count</span> of
                     <span class="font-bold text-[#0d121b] dark:text-white">@ViewBag.TotalCount</span> results
                 </p>
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
                         <span class="text-sm font-medium text-[#0d121b] dark:text-white">Sort by:</span>
                         <form method="get" action="@Url.Action("Index", "Car")" style="display: inline;">
-                            <input type="hidden" name="searchTerm" value="@ViewBag.SearchTerm"/>
-                            <input type="hidden" name="minPrice" value="@ViewBag.MinPrice"/>
-                            <input type="hidden" name="maxPrice" value="@ViewBag.MaxPrice"/>
-                            <input type="hidden" name="selectedYear" value="@ViewBag.SelectedYear"/>
-                            <input type="hidden" name="transmission" value="@ViewBag.Transmission"/>
-                            <input type="hidden" name="fuel" value="@ViewBag.Fuel"/>
-                            <input type="hidden" name="listingType" value="@ViewBag.ListingType"/>
-                            
+                            <input type="hidden" name="searchTerm" value="@ViewBag.SearchTerm" />
+                            <input type="hidden" name="minPrice" value="@ViewBag.MinPrice" />
+                            <input type="hidden" name="maxPrice" value="@ViewBag.MaxPrice" />
+                            <input type="hidden" name="selectedYear" value="@ViewBag.SelectedYear" />
+                            <input type="hidden" name="transmission" value="@ViewBag.Transmission" />
+                            <input type="hidden" name="fuel" value="@ViewBag.Fuel" />
+                            <input type="hidden" name="listingType" value="@ViewBag.ListingType" />
+
                             @{
                                 string currentSort = ViewBag.SortBy ?? "newest";
                             }
-                            
-                            <select name="sortBy" id="sortBySelect" onchange="this.form.submit();" 
+
+                            <select name="sortBy" id="sortBySelect" onchange="this.form.submit();"
                                     class="form-select text-sm rounded-lg border-border-light dark:border-border-dark bg-white dark:bg-background-dark text-[#0d121b] dark:text-white focus:ring-primary focus:border-primary">
                                 <option value="newest">Newest Listed</option>
                                 <option value="price_asc">Price (Low to High)</option>
@@ -212,7 +222,7 @@
                                 <option value="highest_rated">Highest Rated</option>
                                 <option value="most_viewed">Most Viewed</option>
                             </select>
-                            
+
                             <script>
                                 document.getElementById('sortBySelect').value = '@currentSort';
                             </script>
@@ -238,13 +248,20 @@
                         decimal price = listing.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? listing.NewPrice : listing.RentPrice;
                         string priceLabel = listing.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? "Sale" : "Per Day";
 
+                        <!-- ✅ GET AVERAGE RATING -->
+                        var reviews = ViewBag.Reviews as List<AutoHaven.Models.ReviewModel> ?? new List<AutoHaven.Models.ReviewModel>();
+                        var listingReviews = reviews.Where(r => r.ListingId == listing.ListingId).ToList();
+                        double avgRating = listingReviews.Any() ? listingReviews.Average(r => r.Rating) : 0;
+                        int reviewCount = listingReviews.Count();
+
+
                         <div class="flex flex-col bg-white dark:bg-card-dark rounded-xl shadow-sm overflow-hidden border border-border-light dark:border-border-dark group transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
                             <!-- Image -->
                             <div class="relative overflow-hidden bg-background-light dark:bg-background-dark h-48">
                                 @if (listing.CarImages != null && listing.CarImages.Any())
                                 {
-                                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                                         src="@listing.CarImages.First().Path" alt="@listing.Car.Manufacturer @listing.Car.Model"/>
+                                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                         src="/@listing.CarImages.First().Path" alt="@listing.Car.Manufacturer @listing.Car.Model" />
                                 }
                                 else
                                 {
@@ -269,13 +286,32 @@
                                     @listing.Car.CurrentTransmission • @listing.Car.CurrentFuel
                                 </p>
 
+                                <!-- ✅ AVERAGE RATING DISPLAY -->
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="flex gap-0.5">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            @if (i <= Math.Floor(avgRating))
+                                            {
+                                                <span class="material-symbols-outlined text-yellow-400 text-xs">star</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="material-symbols-outlined text-gray-300 text-xs">star</span>
+                                            }
+                                        }
+                                    </div>
+                                    <span class="text-xs font-semibold text-[#0d121b] dark:text-white">@avgRating.ToString("F1")</span>
+                                    <span class="text-xs text-[#4c669a] dark:text-gray-400">(@reviewCount)</span>
+                                </div>
+
                                 <!-- Price and Details -->
                                 <div class="mt-auto flex justify-between items-center">
                                     <div>
                                         <p class="text-xl font-black text-primary">$@price.ToString("N0")</p>
                                         <p class="text-xs text-[#4c669a] dark:text-gray-400">@priceLabel</p>
                                     </div>
-                                    <a href="@Url.Action("Details", "Car", new { id = listing.ListingId })" 
+                                    <a href="@Url.Action("Details", "Car", new { id = listing.ListingId })"
                                        class="text-sm font-bold text-primary hover:underline">Details</a>
                                 </div>
                             </div>
@@ -289,17 +325,18 @@
                     <nav aria-label="Pagination" class="flex items-center justify-center gap-2">
                         @if (ViewBag.CurrentPage > 1)
                         {
-                            <a href="@Url.Action("Index", "Car", new { 
-                                page = ViewBag.CurrentPage - 1,
-                                searchTerm = ViewBag.SearchTerm,
-                                minPrice = ViewBag.MinPrice,
-                                maxPrice = ViewBag.MaxPrice,
-                                selectedYear = ViewBag.SelectedYear,
-                                transmission = ViewBag.Transmission,
-                                fuel = ViewBag.Fuel,
-                                listingType = ViewBag.ListingType,
-                                sortBy = ViewBag.SortBy
-                            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+                            <a href="@Url.Action("Index", "Car", new {
+                page = ViewBag.CurrentPage - 1,
+                searchTerm = ViewBag.SearchTerm,
+                minPrice = ViewBag.MinPrice,
+                maxPrice = ViewBag.MaxPrice,
+                selectedYear = ViewBag.SelectedYear,
+                transmission = ViewBag.Transmission,
+                fuel = ViewBag.Fuel,
+                listingType = ViewBag.ListingType,
+                sortBy = ViewBag.SortBy,
+                makes = string.Join("&makes=", ViewBag.SelectedMakes ?? new string[] { })  // ✅ ADD THIS
+            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
                                 <span class="material-symbols-outlined">chevron_left</span>
                             </a>
                         }
@@ -312,17 +349,18 @@
                             }
                             else if (i <= 3 || i >= ViewBag.TotalPages - 2 || (i >= ViewBag.CurrentPage - 1 && i <= ViewBag.CurrentPage + 1))
                             {
-                                <a href="@Url.Action("Index", "Car", new { 
-                                    page = i,
-                                    searchTerm = ViewBag.SearchTerm,
-                                    minPrice = ViewBag.MinPrice,
-                                    maxPrice = ViewBag.MaxPrice,
-                                    selectedYear = ViewBag.SelectedYear,
-                                    transmission = ViewBag.Transmission,
-                                    fuel = ViewBag.Fuel,
-                                    listingType = ViewBag.ListingType,
-                                    sortBy = ViewBag.SortBy
-                                })" class="px-4 py-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark text-[#0d121b] dark:text-white">@i</a>
+                                <a href="@Url.Action("Index", "Car", new {
+                    page = i,
+                    searchTerm = ViewBag.SearchTerm,
+                    minPrice = ViewBag.MinPrice,
+                    maxPrice = ViewBag.MaxPrice,
+                    selectedYear = ViewBag.SelectedYear,
+                    transmission = ViewBag.Transmission,
+                    fuel = ViewBag.Fuel,
+                    listingType = ViewBag.ListingType,
+                    sortBy = ViewBag.SortBy,
+                    makes = string.Join("&makes=", ViewBag.SelectedMakes ?? new string[] { })
+                })" class="px-4 py-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark text-[#0d121b] dark:text-white">@i</a>
                             }
                             else if (i == 4 || i == ViewBag.TotalPages - 3)
                             {
@@ -332,17 +370,18 @@
 
                         @if (ViewBag.CurrentPage < ViewBag.TotalPages)
                         {
-                            <a href="@Url.Action("Index", "Car", new { 
-                                page = ViewBag.CurrentPage + 1,
-                                searchTerm = ViewBag.SearchTerm,
-                                minPrice = ViewBag.MinPrice,
-                                maxPrice = ViewBag.MaxPrice,
-                                selectedYear = ViewBag.SelectedYear,
-                                transmission = ViewBag.Transmission,
-                                fuel = ViewBag.Fuel,
-                                listingType = ViewBag.ListingType,
-                                sortBy = ViewBag.SortBy
-                            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
+                            <a href="@Url.Action("Index", "Car", new {
+                page = ViewBag.CurrentPage + 1,
+                searchTerm = ViewBag.SearchTerm,
+                minPrice = ViewBag.MinPrice,
+                maxPrice = ViewBag.MaxPrice,
+                selectedYear = ViewBag.SelectedYear,
+                transmission = ViewBag.Transmission,
+                fuel = ViewBag.Fuel,
+                listingType = ViewBag.ListingType,
+                sortBy = ViewBag.SortBy,
+                makes = string.Join("&makes=", ViewBag.SelectedMakes ?? new string[] { })
+            })" class="p-2 rounded-lg border border-border-light dark:border-border-dark hover:bg-background-light dark:hover:bg-background-dark">
                                 <span class="material-symbols-outlined">chevron_right</span>
                             </a>
                         }

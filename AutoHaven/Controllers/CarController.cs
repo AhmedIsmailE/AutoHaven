@@ -1,5 +1,6 @@
 ﻿using AutoHaven.IRepository;
 using AutoHaven.Models;
+using AutoHaven.Services;
 using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +18,7 @@ namespace AutoHaven.Controllers
         private readonly IFavouriteModelRepository _favouriteRepo;
         private readonly ICarViewHistoryRepository _historyRepo;
 
-        public CarController (
+        public CarController(
             ICarListingModelRepository carListingRepo,
             ICarModelRepository carRepo,
             IUserSubscriptionModelRepository userSubscriptionRepo,
@@ -35,9 +36,9 @@ namespace AutoHaven.Controllers
 
         // ==================== GET: Browse All Listings ====================
         [HttpGet]
-        public IActionResult Index(string searchTerm = "", int? minPrice = null, int? maxPrice = null,
-        int? selectedYear = null, int? transmission = null, int? fuel = null,
-        int listingType = 0, string sortBy = "newest", int page = 1)
+        public IActionResult Index(string searchTerm = "", string[] makes = null, int? minPrice = null, int? maxPrice = null,
+            int? selectedYear = null, int? transmission = null, int? fuel = null,
+            int listingType = 0, string sortBy = "newest", int page = 1)
         {
             try
             {
@@ -60,10 +61,12 @@ namespace AutoHaven.Controllers
                     ViewBag.CurrentPage = page;
                     ViewBag.TotalPages = 1;
                     ViewBag.TotalCount = 0;
-                    ViewBag.Makes = new List<string>();
+                    ViewBag.AvailableMakes = new List<string>();
+                    ViewBag.SelectedMakes = makes ?? new string[] { };
                     ViewBag.Years = new List<int>();
                     ViewBag.Transmissions = Enum.GetValues(typeof(CarModel.Transmission)).Cast<CarModel.Transmission>().ToList();
                     ViewBag.Fuels = Enum.GetValues(typeof(CarModel.FuelType)).Cast<CarModel.FuelType>().ToList();
+                    ViewBag.Reviews = new List<ReviewModel>();
 
                     return View(new List<CarListingModel>());
                 }
@@ -74,9 +77,18 @@ namespace AutoHaven.Controllers
                 if (!string.IsNullOrEmpty(searchTerm))
                 {
                     query = query.Where(cl =>
-                            cl.Car.Manufacturer.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                            cl.Car.Model.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                        cl.Car.Manufacturer.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                        cl.Car.Model.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                         (cl.Description != null && cl.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                    ).AsQueryable();
+                }
+
+                // Make filter
+                if (makes != null && makes.Length > 0)
+                {
+                    var makesSet = new HashSet<string>(makes, StringComparer.OrdinalIgnoreCase);
+                    query = query.Where(cl =>
+                        cl.Car != null && makesSet.Contains(cl.Car.Manufacturer)
                     ).AsQueryable();
                 }
 
@@ -134,7 +146,7 @@ namespace AutoHaven.Controllers
                 var paginatedListings = listings.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
                 // Get filter options for dropdowns
-                var makes = allListings.Where(cl => cl.Car != null && !string.IsNullOrEmpty(cl.Car.Manufacturer))
+                var availableMakes = allListings.Where(cl => cl.Car != null && !string.IsNullOrEmpty(cl.Car.Manufacturer))
                     .Select(cl => cl.Car.Manufacturer)
                     .Distinct()
                     .OrderBy(m => m)
@@ -154,6 +166,9 @@ namespace AutoHaven.Controllers
                     .Cast<CarModel.FuelType>()
                     .ToList();
 
+                // Get all reviews for ratings
+                var allReviews = _reviewRepo.Get() ?? new List<ReviewModel>();
+
                 // ViewBag assignments
                 ViewBag.SearchTerm = searchTerm;
                 ViewBag.MinPrice = minPrice;
@@ -166,10 +181,12 @@ namespace AutoHaven.Controllers
                 ViewBag.CurrentPage = page;
                 ViewBag.TotalPages = totalPages;
                 ViewBag.TotalCount = totalCount;
-                ViewBag.Makes = makes ?? new List<string>();
+                ViewBag.AvailableMakes = availableMakes ?? new List<string>();
+                ViewBag.SelectedMakes = makes ?? new string[] { };
                 ViewBag.Years = years ?? new List<int>();
                 ViewBag.Transmissions = transmissions ?? new List<CarModel.Transmission>();
                 ViewBag.Fuels = fuels ?? new List<CarModel.FuelType>();
+                ViewBag.Reviews = allReviews;
 
                 return View(paginatedListings);
             }
@@ -188,10 +205,12 @@ namespace AutoHaven.Controllers
                 ViewBag.CurrentPage = page;
                 ViewBag.TotalPages = 1;
                 ViewBag.TotalCount = 0;
-                ViewBag.Makes = new List<string>();
+                ViewBag.AvailableMakes = new List<string>();
+                ViewBag.SelectedMakes = new string[] { };
                 ViewBag.Years = new List<int>();
                 ViewBag.Transmissions = Enum.GetValues(typeof(CarModel.Transmission)).Cast<CarModel.Transmission>().ToList();
                 ViewBag.Fuels = Enum.GetValues(typeof(CarModel.FuelType)).Cast<CarModel.FuelType>().ToList();
+                ViewBag.Reviews = new List<ReviewModel>();
 
                 return View(new List<CarListingModel>());
             }
@@ -210,10 +229,10 @@ namespace AutoHaven.Controllers
                 if (listing == null)
                     return NotFound("Listing not found.");
 
-
                 // ✅ INCREMENT VIEW COUNT
                 _carListingRepo.IncrementViews(id.Value);
-                // ================= For History Part =================
+
+                // ✅ HISTORY TRACKING
                 try
                 {
                     int uid = GetCurrentUserId();
@@ -249,8 +268,13 @@ namespace AutoHaven.Controllers
                 ViewBag.AverageRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
                 ViewBag.ReviewCount = reviews.Count();
 
-                // Check if user has favorited this listing
+                // ✅ CHECK IF CURRENT USER IS OWNER
                 int userId = GetCurrentUserId();
+                bool isOwner = (userId > 0 && listing.UserId == userId);
+                ViewBag.IsOwner = isOwner;
+                ViewBag.CurrentUserId = userId;
+
+                // Check if user has favorited this listing
                 if (userId > 0)
                 {
                     var isFavorited = _favouriteRepo.Get()
@@ -262,14 +286,11 @@ namespace AutoHaven.Controllers
             }
             catch (Exception ex)
             {
-                // 🔍 SHOW THE REAL ERROR
                 string errorMessage = ex.InnerException?.InnerException?.Message
                     ?? ex.InnerException?.Message
                     ?? ex.Message;
 
-                ModelState.AddModelError("", $"Error creating listing: {errorMessage}");
-
-                // Also log it
+                ModelState.AddModelError("", $"Error loading listing: {errorMessage}");
                 System.Diagnostics.Debug.WriteLine("FULL ERROR: " + ex.ToString());
 
                 return View("Error");
@@ -290,7 +311,6 @@ namespace AutoHaven.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles)
         {
-            // Validate ViewModel
             if (!viewModel.IsValid())
             {
                 ModelState.AddModelError("", "Please enter a valid price for the selected listing type.");
@@ -306,18 +326,46 @@ namespace AutoHaven.Controllers
                 if (userId == 0)
                     return Unauthorized();
 
-             /*   // Check subscription limits
-                var userSubscription = _userSubscriptionRepo.GetActiveForUser(userId);
-                var currentListingCount = _carListingRepo.Get()
-                    .Count(cl => cl.UserId == userId);
+                // ✅ VALIDATE SUBSCRIPTION
+                var subscription = _userSubscriptionRepo.GetActiveForUser(userId);
 
-                if (userSubscription != null && currentListingCount >= userSubscription.SubscriptionPlan.MaxCarListing)
+                if (subscription == null)
                 {
-                    ModelState.AddModelError("", "You've reached your listing limit. Please upgrade your subscription.");
+                    ModelState.AddModelError("", "❌ You need an active subscription to list cars. Please purchase a plan.");
                     return View(viewModel);
-                }*/
+                }
 
-                // Create Car
+                System.Diagnostics.Debug.WriteLine($"✨ DEBUG: User {userId} wants to feature: {viewModel.WantsFeatured}");
+                System.Diagnostics.Debug.WriteLine($"📋 Subscription: {subscription.SubscriptionPlan.SubscriptionName}, Featured slots: {subscription.SubscriptionPlan.FeatureSlots}");
+
+                // ✅ CHECK CAR LISTING COUNT
+                var carCount = _carListingRepo.Get()
+                    .Count(cl => cl.UserId == userId &&
+                                 cl.CurrentState != CarListingModel.State.Sold &&
+                                 cl.CurrentState != CarListingModel.State.Rented);
+
+                if (carCount >= subscription.SubscriptionPlan.MaxCarListing)
+                {
+                    ModelState.AddModelError("",
+                        $"❌ You've reached your car listing limit ({carCount}/{subscription.SubscriptionPlan.MaxCarListing})");
+                    return View(viewModel);
+                }
+
+                // ✅ CHECK FEATURED SLOTS (if user wants to feature)
+                if (viewModel.WantsFeatured)
+                {
+                    var featuredCount = _carListingRepo.Get()
+                        .Count(cl => cl.UserId == userId && cl.IsFeatured == true);
+
+                    if (featuredCount >= subscription.SubscriptionPlan.FeatureSlots)
+                    {
+                        ModelState.AddModelError("",
+                            $"❌ You've used all featured slots ({featuredCount}/{subscription.SubscriptionPlan.FeatureSlots})");
+                        return View(viewModel);
+                    }
+                }
+
+                // ✅ CREATE CAR
                 var car = new CarModel
                 {
                     Manufacturer = viewModel.Manufacturer,
@@ -332,34 +380,40 @@ namespace AutoHaven.Controllers
 
                 _carRepo.Insert(car);
 
-                // Create Listing
-          
+                // ✅ CREATE LISTING WITH FEATURED OPTION
                 var listing = new CarListingModel
                 {
                     CarId = car.CarId,
                     UserId = userId,
-                    Type = viewModel.ListingType,              
-                    NewPrice = viewModel.NewPrice ?? 0,        
-                    RentPrice = viewModel.RentPrice ?? 0,      
+                    Type = viewModel.ListingType,
+                    NewPrice = viewModel.NewPrice ?? 0,
+                    RentPrice = viewModel.RentPrice ?? 0,
                     Description = viewModel.Description ?? string.Empty,
                     Color = viewModel.Color ?? string.Empty,
-                    CurrentState = CarListingModel.State.Available,
-                    IsFeatured = false,
+                    CurrentState = CarListingModel.State.Available, // ✅ MUST BE AVAILABLE
+                    IsFeatured = viewModel.WantsFeatured, // ✅ SET FROM CHECKBOX
                     Discount = 0,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now
                 };
 
+                System.Diagnostics.Debug.WriteLine($"💾 Saving listing: Featured={listing.IsFeatured}, State={listing.CurrentState}");
+
                 // Insert listing with images
                 var validImages = imageFiles?
-                .Where(f => f != null && f.Length > 0)
-                .Take(7)
-                .ToList() ?? new List<IFormFile>();
+                    .Where(f => f != null && f.Length > 0)
+                    .Take(7)
+                    .ToList() ?? new List<IFormFile>();
 
                 _carListingRepo.Insert(listing, validImages);
 
+                System.Diagnostics.Debug.WriteLine($"✅ Listing saved with ID {listing.ListingId}, Featured={listing.IsFeatured}");
 
-                TempData["Notification.Message"] = "List Got Created!";
+                string message = viewModel.WantsFeatured
+                    ? "Listing created successfully and featured! 🌟"
+                    : "Listing created successfully!";
+
+                TempData["Notification.Message"] = message;
                 TempData["Notification.Type"] = "success";
                 return RedirectToAction(nameof(Details), new { id = listing.ListingId });
             }
@@ -375,7 +429,6 @@ namespace AutoHaven.Controllers
                 return View(viewModel);
             }
         }
-
         // ==================== GET: Edit Listing ====================
         [Authorize]
         [HttpGet]
@@ -426,7 +479,7 @@ namespace AutoHaven.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Update(int id, CreateCarListingViewModel viewModel, IEnumerable<IFormFile> newImages, int[] imageIdsToKeep)
+        public IActionResult Update(int id, CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles, int[] imageIdsToKeep)
         {
             if (!viewModel.IsValid())
             {
@@ -465,18 +518,65 @@ namespace AutoHaven.Controllers
                 listing.Color = viewModel.Color ?? string.Empty;
                 listing.UpdatedAt = DateTime.Now;
 
-                // Update listing and images
-                var filesToUpload = newImages?.Where(f => f.Length > 0).ToList();
-                _carListingRepo.Update(listing, imageIdsToKeep ?? new int[0], filesToUpload);
+                // Handle images
+                var newImages = imageFiles?.Where(f => f != null && f.Length > 0).ToList();
+                _carListingRepo.Update(listing, imageIdsToKeep ?? new int[0], newImages);
 
-                TempData["Notification.Message"] = "List Updated Successfully!";
+                TempData["Notification.Message"] = "Listing updated successfully!";
                 TempData["Notification.Type"] = "success";
                 return RedirectToAction(nameof(Details), new { id = listing.ListingId });
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine("UPDATE ERROR: " + ex.ToString());
                 ModelState.AddModelError("", $"Error updating listing: {ex.Message}");
                 return View("Create", viewModel);
+            }
+        }
+        // ====================  Feature/Unfeature Feature ====================
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ToggleFeatured(int listingId)
+        {
+            try
+            {
+                int userId = GetCurrentUserId();
+                var listing = _carListingRepo.GetById(listingId);
+
+                if (listing == null)
+                    return NotFound();
+
+                if (listing.UserId != userId)
+                    return Forbid();
+
+                // If trying to FEATURE
+                if (!listing.IsFeatured)
+                {
+                    var validationService = new CarListingValidationService(_userSubscriptionRepo, _carListingRepo);
+                    var (isValid, message) = validationService.ValidateCarCreation(userId, wantsFeatured: true);
+
+                    if (!isValid)
+                    {
+                        return BadRequest(new { success = false, message });
+                    }
+                }
+
+                // Toggle featured
+                listing.IsFeatured = !listing.IsFeatured;
+                listing.UpdatedAt = DateTime.Now;
+                _carListingRepo.Update(listing, new int[0], null);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = listing.IsFeatured ? "Listed as featured!" : "Removed from featured.",
+                    isFeatured = listing.IsFeatured
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -504,7 +604,8 @@ namespace AutoHaven.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error deleting listing: {ex.Message}";
+                TempData["Notification.Message"] = $"Error deleting listing: {ex.Message}";
+                TempData["Notification.Type"] = "error";
                 return RedirectToAction(nameof(Details), new { id });
             }
         }
@@ -544,7 +645,7 @@ namespace AutoHaven.Controllers
                 int userId = GetCurrentUserId();
                 if (userId == 0)
                     return Unauthorized();
-                
+
                 var listing = _carListingRepo.GetById(listingId);
                 if (listing == null)
                 {
@@ -630,79 +731,6 @@ namespace AutoHaven.Controllers
             }
         }
 
-        // ==================== POST: Add Review ====================
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult AddReview(int listingId, int rating, string comment)
-        {
-            try
-            {
-                if (rating < 1 || rating > 5)
-                    return BadRequest("Rating must be between 1 and 5.");
-
-                if (string.IsNullOrWhiteSpace(comment))
-                    return BadRequest("Comment is required.");
-
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
-
-                var listing = _carListingRepo.GetById(listingId);
-                if (listing == null)
-                    return NotFound("Listing not found.");
-
-                var review = new ReviewModel
-                {
-                    UserId = userId,
-                    ListingId = listingId,
-                    Rating = rating,
-                    Comment = comment,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                };
-
-                _reviewRepo.Insert(review);
-
-                TempData["Notification.Message"] = "Review added successfully!";
-                TempData["Notification.Type"] = "success";
-                return RedirectToAction(nameof(Details), new { id = listingId });
-            }
-            catch (Exception ex)
-            {
-                TempData["Notification.Message"] = $"Error adding review: {ex.Message}";
-                TempData["Notification.Type"] = "error";
-                return RedirectToAction(nameof(Details), new { id = listingId });
-            }
-        }
-
-        // ==================== POST: Delete Review ====================
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult DeleteReview(int reviewId, int listingId)
-        {
-            try
-            {
-                var review = _reviewRepo.GetById(reviewId);
-                if (review == null)
-                    return NotFound("Review not found.");
-
-                int userId = GetCurrentUserId();
-                if (review.UserId != userId)
-                    return Forbid("You don't have permission to delete this review.");
-
-                _reviewRepo.Delete(reviewId);
-
-                TempData["Success"] = "Review deleted successfully!";
-                return RedirectToAction(nameof(Details), new { id = listingId });
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = $"Error deleting review: {ex.Message}";
-                return RedirectToAction(nameof(Details), new { id = listingId });
-            }
-        }
 
         // ==================== GET: Filter by Type ====================
         [HttpGet]
