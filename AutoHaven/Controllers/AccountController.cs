@@ -49,6 +49,7 @@ namespace AutoHaven.Controllers
         [HttpGet]
         public IActionResult Register() => View();
 
+        // ==================== POST: Register ====================
         [HttpPost]
         public async Task<IActionResult> Register(RegisterUserViewModel userViewModel)
         {
@@ -168,6 +169,7 @@ namespace AutoHaven.Controllers
                 }
             }
 
+            // ✅ HANDLE AVATAR UPLOAD
             if (avatar != null && avatar.Length > 0)
             {
                 var allowed = new[] { "image/png", "image/jpeg", "image/jpg", "image/gif" };
@@ -223,7 +225,8 @@ namespace AutoHaven.Controllers
                     mem.CopyTo(fs);
 
                     var prev = user.AvatarUrl;
-                    if (!string.IsNullOrWhiteSpace(prev) && prev.StartsWith($"/images/{usernameSafe}/PFP/"))
+                    if (!string.IsNullOrWhiteSpace(prev) &&
+                        prev.StartsWith($"/images/{usernameSafe}/PFP/"))
                     {
                         var prevPath = Path.Combine(webRoot, prev.TrimStart('/'));
                         if (System.IO.File.Exists(prevPath)) System.IO.File.Delete(prevPath);
@@ -382,7 +385,7 @@ namespace AutoHaven.Controllers
             }
             catch { }
 
-            TempData["Notification.Message"] = "Avatar Resetted!";
+            TempData["Notification.Message"] = "Avatar reset!";
             TempData["Notification.Type"] = "success";
             return RedirectToAction(nameof(Profile));
         }

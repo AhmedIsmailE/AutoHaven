@@ -1,6 +1,7 @@
 ﻿using AutoHaven.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
+
 namespace AutoHaven.ViewModel
 {
     public class ProfileViewModel
