@@ -22,20 +22,36 @@ namespace AutoHaven.Repository
         }
         public List<CarListingModel> Get()
         {
-            List<CarListingModel> carslist = projectDbcontext.CarListings
-                .Include(c => c.Car)                   
-                .Include(c => c.CarImages)             
-                .Include(c => c.User)                  
-                .AsNoTracking()
-                .ToList();
-            return carslist;
+            try
+            {
+                var listings = projectDbcontext.CarListings
+                    .Include(cl => cl.Car)
+                    .Include(cl => cl.User)                    // ✅ MUST HAVE THIS
+                    .ThenInclude(u => u.UserSubscriptions) // ✅ AND THIS
+                    .ThenInclude(us => us.SubscriptionPlan)
+                    .Include(cl => cl.CarImages)
+                    .Include(cl => cl.Reviews)
+                    .AsNoTracking()
+                    .ToList();  // ✅ JUST LOAD LISTINGS, NO INCLUDES YET
+
+                System.Diagnostics.Debug.WriteLine($"📋 Loaded {listings.Count} listings from DB");
+
+                return listings;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ ERROR in Get(): {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack: {ex.StackTrace}");
+                return new List<CarListingModel>();
+            }
         }
+
         public CarListingModel GetById(int id)
         {
             CarListingModel car = projectDbcontext.CarListings
-                .Include(c => c.Car)                   
-                .Include(c => c.CarImages)             
-                .Include(c => c.User)                  
+                .Include(c => c.Car)
+                .Include(c => c.CarImages)
+                .Include(c => c.User)
                 .FirstOrDefault(s => s.ListingId == id);
             return car;
         }
@@ -84,7 +100,7 @@ namespace AutoHaven.Repository
                     throw;
                 }
             }
-         
+
         }
         public void Delete(int id)
         {
@@ -208,8 +224,38 @@ namespace AutoHaven.Repository
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error incrementing views: {ex.Message}");
-                
+
             }
         }
+        public int CountActiveListingsByUserId(int userId)
+        {
+            return projectDbcontext.CarListings
+                .Count(cl => cl.UserId == userId &&
+                             cl.CurrentState != CarListingModel.State.Sold &&
+                             cl.CurrentState != CarListingModel.State.Rented);
+        }
+
+        public int CountFeaturedByUserId(int userId)
+        {
+            return projectDbcontext.CarListings
+                .Count(cl => cl.UserId == userId && cl.IsFeatured == true);
+        }
+
+        public void HideListingsByUserId(int userId)
+        {
+            var userListings = projectDbcontext.CarListings
+                .Where(cl => cl.UserId == userId)
+                .ToList();
+
+            foreach (var listing in userListings)
+            {
+                listing.CurrentState = CarListingModel.State.Unavaliable;
+                listing.IsFeatured = false;
+            }
+
+            projectDbcontext.SaveChanges();
+        }
     }
+
+
 }
