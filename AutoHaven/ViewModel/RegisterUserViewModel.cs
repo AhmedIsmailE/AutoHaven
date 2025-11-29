@@ -22,6 +22,9 @@ namespace AutoHaven.ViewModel
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; }
+        [StringLength(100)]
+        [Display(Name = "Full Name")]
+        public string Name { get; set; }
 
         [StringLength(100)]
         [Display(Name = "Full Name")]
