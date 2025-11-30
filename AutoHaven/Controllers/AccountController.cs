@@ -125,6 +125,14 @@ namespace AutoHaven.Controllers
                     ModelState.AddModelError("UserName", "Username is already taken.");
                     return View(userViewModel);
                 }
+                //CHeck if Phone Number already exists
+                var existingPhone = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == userViewModel.PhoneNumber);
+                if (existingPhone != null)
+                {
+                    ModelState.AddModelError("PhoneNumber", "Phone Number is already in use.");
+                    return View(userViewModel);
+                }
 
                 // Handle ID Image
                 if (userViewModel.IdImage != null && userViewModel.IdImage.Length > 0)
@@ -243,15 +251,29 @@ namespace AutoHaven.Controllers
             return RedirectToAction("Login");
         }
 
-        [Authorize]
+        //[Authorize]
         public IActionResult About()
         {
             return View("About");
         }
+        public IActionResult AccessDenied()
+        {
+            TempData["Notification.Message"] = "Access Denied: You do not have permission to access this resource.";
+            TempData["Notification.Type"] = "error";
+
+            return View("Home"); 
+        }
+        //public IActionResult LoginCustom()
+        //{
+        //    TempData["Notification.Message"] = "You must be logged in to access this page.";
+        //    TempData["Notification.Type"] = "error";
+        //    return View("Login");
+        //}
         public IActionResult Home()
         {
             return View();
         }
+        [Authorize(Policy = "AdminOnly")]
         public IActionResult Admin()
         {
             return View("AdminDashboard");
