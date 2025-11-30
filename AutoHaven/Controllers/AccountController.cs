@@ -4,7 +4,6 @@ using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -939,13 +938,6 @@ namespace AutoHaven.Controllers
         }
 
         //=======================For Notifications to work globaly==================
-        public class BaseController : Controller
-        {
-            public override void OnActionExecuted(ActionExecutedContext context)
-            {
-                TempData.Keep();
-                base.OnActionExecuted(context);
-            }
-        }
+
     }
 }
