@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using static AutoHaven.IdVerificationModel;
 
 namespace AutoHaven.Controllers
 {
@@ -81,6 +82,7 @@ namespace AutoHaven.Controllers
                     if (existsNi)
                         ModelState.AddModelError(nameof(userViewModel.NationalId), "This National ID is already used.");
                 }
+
             }
 
             if (ModelState.IsValid)
@@ -145,13 +147,13 @@ namespace AutoHaven.Controllers
                         return View(userViewModel);
                     }
 
-                    if (userViewModel.IdImage.Length > 2 * 1024 * 1024) // 2 MB limit
+                    if (userViewModel.IdImage.Length > 2 * 1024 * 1024)
                     {
                         ModelState.AddModelError("IdImage", "Maximum file size is 2 MB.");
                         return View(userViewModel);
                     }
 
-                    // Save image to wwwroot/images/Providers/{username}/ID/
+                    // 1️⃣ Save the image to disk
                     var webRoot = _env.WebRootPath;
                     var usernameSafe = string.Concat(userViewModel.UserName.Split(Path.GetInvalidFileNameChars()));
                     var uploadDir = Path.Combine(webRoot, "images", "Providers", usernameSafe, "ID");
@@ -161,14 +163,27 @@ namespace AutoHaven.Controllers
                     if (string.IsNullOrWhiteSpace(ext)) ext = ".png";
 
                     var fileName = $"id_{Guid.NewGuid():N}{ext}";
-                    var filePath = Path.Combine(uploadDir, fileName);
+                    var absolutePath = Path.Combine(uploadDir, fileName);
 
-                    using (var fs = new FileStream(filePath, FileMode.Create))
+                    using (var fs = new FileStream(absolutePath, FileMode.Create))
                     {
                         await userViewModel.IdImage.CopyToAsync(fs);
                     }
 
-                    // store relative path if needed
+                    // 2️⃣ Run AI verification
+                    var mlResult = IdVerificationModel.PredictFromImage(absolutePath);
+
+                    // 3️⃣ If invalid → delete file + return error
+                    if (mlResult.PredictedLabel != "Valid")
+                    {
+                        if (System.IO.File.Exists(absolutePath))
+                            System.IO.File.Delete(absolutePath);
+
+                        ModelState.AddModelError("IdImage", "Invalid ID Image. Please upload a valid national ID.");
+                        return View(userViewModel);
+                    }
+
+                    // 4️⃣ If valid → store relative path in DB
                     applicationUser.IdImagePath = $"/images/Providers/{usernameSafe}/ID/{fileName}";
                 }
 
