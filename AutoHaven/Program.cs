@@ -39,6 +39,8 @@ builder.Services.AddAuthorization(options =>
         context.User.HasClaim("Role", "Admin") ||
         context.User.HasClaim("Role", "Provider")
     ));
+    options.AddPolicy("InternalOnly", policy =>
+    policy.RequireClaim("Role", "ThisRoleWillNeverExist"));
 
 });
 // ===== REPOSITORY REGISTRATIONS =====
