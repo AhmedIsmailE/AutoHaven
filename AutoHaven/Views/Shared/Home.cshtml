@@ -1,37 +1,37 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model List<AutoHaven.Models.CarListingModel>
+
+@{
+    ViewBag.Title = "AutoHaven - Premium Car Renting & Selling";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
 <!DOCTYPE html>
 <html class="light" lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>AutoHaven - Premium Car Renting & Selling</title>
+    <title>@ViewBag.Title</title>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" crossorigin href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-          rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
     <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
 
-        /* Custom CSS for animations and spacing */
         :root {
-            --section-gap: 6rem;
-            --section-gap-lg: 8rem;
+            --section-gap: 3rem;
+            --section-gap-lg: 4rem;
             --ease-anim: cubic-bezier(.2, .9, .2, 1);
         }
 
-        /* --- ANIMATION CSS START --- */
-
-        /* 1. Default state: VISIBLE (so if JS fails, content is still seen) */
+        /* Animation */
         .animate-on-scroll,
         .stagger > * {
             opacity: 1;
@@ -39,20 +39,12 @@
             transition: opacity 600ms var(--ease-anim), transform 600ms var(--ease-anim);
         }
 
-        /* 2. The class JS will add to hide elements initially */
         .start-hidden {
             opacity: 0 !important;
             transform: translateY(20px) !important;
         }
 
-        /* --- ANIMATION CSS END --- */
-
-        .hero-content {
-            position: relative;
-            z-index: 10;
-        }
-
-        /* Parallax hero */
+        /* Hero Parallax */
         .hero-parallax {
             position: relative;
             overflow: hidden;
@@ -69,7 +61,12 @@
                 filter: brightness(.55);
             }
 
-        /* Card micro-interactions */
+        .hero-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Card Animations */
         .car-card {
             transition: transform 300ms var(--ease-anim), box-shadow 300ms var(--ease-anim);
             will-change: transform, box-shadow;
@@ -79,6 +76,15 @@
                 transform: translateY(-8px) scale(1.01);
                 box-shadow: 0 18px 50px rgba(10, 25, 49, 0.12);
             }
+
+        .car-img {
+            transition: transform 650ms var(--ease-anim);
+            will-change: transform;
+        }
+
+        .car-card:hover .car-img {
+            transform: scale(1.03);
+        }
 
         /* Buttons */
         .btn-primary,
@@ -92,17 +98,25 @@
                 box-shadow: 0 8px 30px rgba(2, 6, 23, 0.08);
             }
 
-        /* Car images */
-        .car-img {
-            transition: transform 650ms var(--ease-anim);
-            will-change: transform;
+        /* Featured Badge */
+        .featured-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
         }
 
-        .car-card:hover .car-img {
-            transform: scale(1.03);
-        }
-
-        /* Utility */
+        /* Section Styling */
         .section {
             padding-top: var(--section-gap);
             padding-bottom: var(--section-gap);
@@ -116,15 +130,95 @@
             }
         }
 
-        .hero-content {
-            position: relative;
-            z-index: 2;
+        .no-featured {
+            text-align: center;
+            padding: 3rem;
         }
 
-        .focus-ring:focus {
-            outline: 3px solid rgba(0, 123, 255, 0.18);
-            outline-offset: 2px;
+        /* Why Card */
+        .why-card {
+            background: #fff;
+            border: 1px solid #cfd7e7;
+            transition: all 300ms var(--ease-anim);
+        }
+
+            .why-card:hover {
+                border-color: #007BFF;
+                box-shadow: 0 8px 24px rgba(0, 123, 255, 0.1);
+                transform: translateY(-4px);
+            }
+
+        .dark .why-card {
+            background: #1a2847;
+            border-color: #4a5f7f;
+        }
+
+            .dark .why-card:hover {
+                border-color: #007BFF;
+            }
+
+        /* How Steps */
+        .how-step {
+            padding: 2rem;
+            background: #f8f9fc;
+            border-radius: 12px;
+            border: 1px solid #e7ebf3;
+            transition: all 300ms var(--ease-anim);
+        }
+
+            .how-step:hover {
+                background: #f0f4fc;
+                box-shadow: 0 6px 20px rgba(0, 123, 255, 0.08);
+            }
+
+        .dark .how-step {
+            background: #1a2847;
+            border-color: #4a5f7f;
+        }
+
+            .dark .how-step:hover {
+                background: #253055;
+            }
+
+        .how-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;
+            height: 3.5rem;
+            border: 2px solid #007BFF;
             border-radius: 9999px;
+            font-weight: 700;
+            color: #007BFF;
+            font-size: 1.25rem;
+        }
+
+        /* Form Inputs */
+        .form-input,
+        .form-select,
+        .form-textarea {
+            background: #fff;
+            border: 1px solid #cfd7e7;
+            color: #0d121b;
+            border-radius: 8px;
+            padding: 0.875rem;
+            transition: border-color 200ms, box-shadow 200ms;
+        }
+
+            .form-input:focus,
+            .form-select:focus,
+            .form-textarea:focus {
+                outline: none;
+                border-color: #007BFF;
+                box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            }
+
+        .dark .form-input,
+        .dark .form-select,
+        .dark .form-textarea {
+            background: #1a2847;
+            border-color: #4a5f7f;
+            color: #fff;
         }
     </style>
 
@@ -132,22 +226,18 @@
         tailwind.config = {
             darkMode: "class",
             theme: {
-            extend: {
-                colors: {
-                "primary": "#007BFF",
-                "background-light": "#FFFFFF",
-                "background-dark": "#0A1931",
-                "navy": "#0A1931"
-                },
-                fontFamily: {
-                "display": ["Plus Jakarta Sans", "sans-serif"]
-                },
-                spacing: {
-                section: "6rem",
-                sectionLg: "8rem"
-                },
-            },
-            },
+                extend: {
+                    colors: {
+                        "primary": "#007BFF",
+                        "background-light": "#FFFFFF",
+                        "background-dark": "#0A1931",
+                        "navy": "#0A1931"
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    }
+                }
+            }
         }
     </script>
 </head>
@@ -155,132 +245,243 @@
 <body class="font-display bg-background-light text-navy dark:bg-background-dark dark:text-background-light">
 
     <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
-
         <main>
 
-            <section class="hero-parallax section bg-white dark:bg-navy">
+            <!-- ✅ HERO SECTION -->
+            <section class="hero-parallax section bg-white dark:bg-navy min-h-[600px] flex items-center">
                 <div id="heroBg" class="hero-bg" style='background-image: url("https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=3846&auto=format&fit=crop");'></div>
 
                 <div class="absolute inset-0"></div>
 
-                <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hero-content text-center text-white">
+                <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hero-content text-center w-full">
                     <div class="max-w-3xl mx-auto">
-                        <h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight animate-on-scroll">The Ultimate Driving Experience.</h1>
+                        <h1 class="text-5xl md:text-7xl font-black leading-tight tracking-tight text-white animate-on-scroll">
+                            The Ultimate Driving Experience.
+                        </h1>
 
-                        <div class="mt-12 flex justify-center animate-on-scroll">
-                            <a href="#featured" class="btn-primary h-14 px-8 text-lg flex items-center shadow-lg hover:shadow-xl">
-                                <span class="material-symbols-outlined mr-3 !text-3xl">directions_car</span>
-                                Browse Cars
+                        <p class="text-xl text-white/90 mt-6 animate-on-scroll">
+                            Premium cars for rent and sale. Find your perfect vehicle today.
+                        </p>
+
+                        <div class="mt-12 flex flex-col sm:flex-row justify-center gap-4 animate-on-scroll">
+                            <a href="#featured" class="flex max-w-[400px] mx-auto sm:mx-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-primary text-white text-base font-bold gap-2 hover:shadow-lg transition-all">
+                                <span class="material-symbols-outlined">directions_car</span>
+                                <span>Browse Featured Cars</span>
+                            </a>
+                            <a href="@Url.Action("Index", "Car")" class="flex max-w-[400px] mx-auto sm:mx-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-white dark:bg-gray-800 text-primary dark:text-white text-base font-bold gap-2 border-2 border-primary dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                                <span class="material-symbols-outlined">search</span>
+                                <span>View All Cars</span>
                             </a>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="why" class="section bg-background-light dark:bg-background-dark" style="padding-bottom: 20px;">
+            <!-- ✅ WHY CHOOSE SECTION -->
+            <section class="section bg-background-light dark:bg-background-dark">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-12 animate-on-scroll">
-                        <h1 class="text-3xl md:text-4xl font-bold">Why Choose AutoHaven?</h1>
-                        <p class="text-gray-600 dark:text-gray-300 mt-2">Premium experience from start to finish.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 stagger" id="whyGrid">
-
-                        <div class="why-card p-6 rounded-xl text-center">
-                            <div class="flex items-center justify-center text-primary mb-4">
-                                <span class="material-symbols-outlined !text-6xl !font-light">verified</span>
-                            </div>
-                            <h2 class="text-2xl font-bold">Verified Quality</h2>
-                            <p class="text-gray-600 dark:text-gray-400 mt-2">Every vehicle inspected for top performance.</p>
-                        </div>
-
-                        <div class="why-card p-6 rounded-xl text-center">
-                            <div class="flex items-center justify-center text-primary mb-4">
-                                <span class="material-symbols-outlined !text-6xl !font-light">schedule</span>
-                            </div>
-                            <h2 class="text-2xl font-bold">Flexible Booking</h2>
-                            <p class="text-gray-600 dark:text-gray-400 mt-2">Policies designed to fit your schedule.</p>
-                        </div>
-
-                        <div class="why-card p-6 rounded-xl text-center">
-                            <div class="flex items-center justify-center text-primary mb-4">
-                                <span class="material-symbols-outlined !text-6xl !font-light">workspace_premium</span>
-                            </div>
-                            <h2 class="text-2xl font-bold">Premium Experience</h2>
-                            <p class="text-gray-600 dark:text-gray-400 mt-2">Enjoy seamless, first-class service.</p>
-                        </div>
-
-                    </div>
-                </div>
-            </section>
-
-            <section id="featured" class="section bg-gray-50 dark:bg-navy/30">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-2xl md:text-4xl font-bold animate-on-scroll">Featured Vehicles</h2>
-
-                        <div class="flex gap-3">
-                            <button id="prevCar" class="carousel-btn p-3 rounded-full border border-gray-300 dark:border-navy/50 hover:bg-gray-200 dark:hover:bg-navy/50 transition"><span class="material-symbols-outlined">arrow_back</span></button>
-                            <button id="nextCar" class="carousel-btn p-3 rounded-full border border-gray-300 dark:border-navy/50 hover:bg-gray-200 dark:hover:bg-navy/50 transition"><span class="material-symbols-outlined">arrow_forward</span></button>
-                        </div>
-                    </div>
-
-                    <div id="carList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="car-card bg-background-light dark:bg-background-dark rounded-xl shadow-md overflow-hidden animate-on-scroll">
-                            <div class="car-img aspect-[4/3] bg-cover bg-center" style='background-image: url("https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=3870&auto=format&fit=crop");'></div>
-                            <div class="p-6">
-                                <h3 class="text-xl font-bold text-navy dark:text-white">Porsche 911 Carrera</h3>
-                                <p class="text-gray-500 dark:text-gray-400 mt-1">From <span class="text-primary font-semibold">$399</span> / day</p>
-                                <button class="btn-outline-primary mt-4 w-full">View Details</button>
-                            </div>
-                        </div>
-
-                        <div class="car-card bg-background-light dark:bg-background-dark rounded-xl shadow-md overflow-hidden animate-on-scroll">
-                            <div class="car-img aspect-[4/3] bg-cover bg-center" style='background-image: url("https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?q=80&w=3869&auto=format&fit=crop");'></div>
-                            <div class="p-6">
-                                <h3 class="text-xl font-bold text-navy dark:text-white">Audi RS7</h3>
-                                <p class="text-gray-500 dark:text-gray-400 mt-1">From <span class="text-primary font-semibold">$349</span> / day</p>
-                                <button class="btn-outline-primary mt-4 w-full">View Details</button>
-                            </div>
-                        </div>
-
-                        <div class="car-card bg-background-light dark:bg-background-dark rounded-xl shadow-md overflow-hidden animate-on-scroll">
-                            <div class="car-img aspect-[4/3] bg-cover bg-center" style='background-image: url("https://images.unsplash.com/photo-1606152421811-aa2b71d77631?q=80&w=3870&auto=format&fit=crop");'></div>
-                            <div class="p-6">
-                                <h3 class="text-xl font-bold text-navy dark:text-white">Range Rover Sport</h3>
-                                <p class="text-gray-500 dark:text-gray-400 mt-1">From <span class="text-primary font-semibold">$299</span> / day</p>
-                                <button class="btn-outline-primary mt-4 w-full">View Details</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="section bg-background-light dark:bg-background-dark" style="padding-top : 20px">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="text-center mb-12 animate-on-scroll">
-                        <h2 class="text-3xl md:text-4xl font-bold">How It Works</h2>
-                        <p class="text-gray-600 dark:text-gray-300 mt-3">3 simple steps to your dream car.</p>
+                    <div class="text-center mb-16 animate-on-scroll">
+                        <h2 class="text-4xl md:text-5xl font-bold text-navy dark:text-white">Why Choose AutoHaven?</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mt-4 text-lg">Premium experience from start to finish.</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="how-step animate-on-scroll text-center">
-                            <div class="how-circle inline-flex items-center justify-center w-16 h-16 border-2 border-primary rounded-full mb-4 text-primary font-bold">1</div>
-                            <h3 class="text-xl font-bold">Find Your Car</h3>
-                            <p class="text-gray-600 dark:text-gray-400 mt-2">Browse our luxury car collection.</p>
+
+                        <!-- Card 1 -->
+                        <div class="why-card p-8 rounded-xl text-center animate-on-scroll">
+                            <div class="flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 mx-auto mb-6">
+                                <span class="material-symbols-outlined text-4xl text-primary">verified</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-navy dark:text-white mb-3">Verified Quality</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Every vehicle inspected and certified for top performance and reliability.</p>
                         </div>
 
-                        <div class="how-step animate-on-scroll text-center">
-                            <div class="how-circle inline-flex items-center justify-center w-16 h-16 border-2 border-primary rounded-full mb-4 text-primary font-bold">2</div>
-                            <h3 class="text-xl font-bold">Book or Inquire</h3>
-                            <p class="text-gray-600 dark:text-gray-400 mt-2">Select dates or ask about buying.</p>
+                        <!-- Card 2 -->
+                        <div class="why-card p-8 rounded-xl text-center animate-on-scroll">
+                            <div class="flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 mx-auto mb-6">
+                                <span class="material-symbols-outlined text-4xl text-primary">schedule</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-navy dark:text-white mb-3">Flexible Booking</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Customizable rental periods and purchase options designed to fit your schedule.</p>
                         </div>
 
-                        <div class="how-step animate-on-scroll text-center">
-                            <div class="how-circle inline-flex items-center justify-center w-16 h-16 border-2 border-primary rounded-full mb-4 text-primary font-bold">3</div>
-                            <h3 class="text-xl font-bold">Enjoy the Drive</h3>
-                            <p class="text-gray-600 dark:text-gray-400 mt-2">Pickup or white-glove delivery.</p>
+                        <!-- Card 3 -->
+                        <div class="why-card p-8 rounded-xl text-center animate-on-scroll">
+                            <div class="flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 mx-auto mb-6">
+                                <span class="material-symbols-outlined text-4xl text-primary">workspace_premium</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-navy dark:text-white mb-3">Premium Experience</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Seamless service, professional support, and first-class treatment throughout.</p>
                         </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- ✅ FEATURED CARS SECTION -->
+            <section id="featured" class="section bg-gray-50 dark:bg-navy/30">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center mb-12">
+                        <div>
+                            <h2 class="text-4xl md:text-5xl font-bold text-navy dark:text-white animate-on-scroll">
+                                ⭐ Featured Vehicles
+                            </h2>
+                            @if (Model != null && Model.Count > 0)
+                            {
+                                <p class="text-gray-600 dark:text-gray-400 mt-2 animate-on-scroll">@Model.Count premium listings</p>
+                            }
+                        </div>
+
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            <div class="flex gap-3 animate-on-scroll">
+                                <button id="prevCar" class="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 dark:border-gray-600 hover:border-primary dark:hover:border-primary hover:text-primary dark:hover:text-primary transition-all text-gray-600 dark:text-gray-400">
+                                    <span class="material-symbols-outlined">arrow_back</span>
+                                </button>
+                                <button id="nextCar" class="flex items-center justify-center w-12 h-12 rounded-full border-2 border-gray-300 dark:border-gray-600 hover:border-primary dark:hover:border-primary hover:text-primary dark:hover:text-primary transition-all text-gray-600 dark:text-gray-400">
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        <div id="carList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                            @foreach (var car in Model)
+                            {
+                                var carImages = car.CarImages != null && car.CarImages.Count > 0
+                                ? car.CarImages.First().Path
+                                : "https://via.placeholder.com/400x300?text=No+Image";
+
+                                var price = car.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling
+                                ? car.NewPrice.ToString("C0")
+                                : $"${car.RentPrice:F2}/day";
+
+                                <div class="car-card bg-white dark:bg-background-dark rounded-xl shadow-sm hover:shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 animate-on-scroll relative">
+                                    <!-- Featured Badge -->
+                                    <div class="featured-badge">
+                                        <span class="material-symbols-outlined !text-lg">star</span>
+                                        Featured
+                                    </div>
+
+                                    <!-- Image -->
+                                    <div class="car-img aspect-[4/3] bg-cover bg-center" style='background-image: url("@carImages");'></div>
+
+                                    <!-- Content -->
+                                    <div class="p-6">
+                                        <!-- Title -->
+                                        <h3 class="text-xl font-bold text-navy dark:text-white">
+                                            @car.Car.Manufacturer @car.Car.Model
+                                        </h3>
+
+                                        <!-- Year & Type -->
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            <span class="material-symbols-outlined inline !text-lg align-middle">calendar_today</span>
+                                            @car.Car.ModelYear •
+                                            @(car.Type == AutoHaven.Models.CarListingModel.ListingType.ForSelling ? "For Sale" : "For Rent")
+                                        </p>
+
+                                        <!-- Price -->
+                                        <p class="text-lg font-bold text-primary mt-4">@price</p>
+
+                                        <!-- Description -->
+                                        @if (!string.IsNullOrEmpty(car.Description))
+                                        {
+                                            <p class="text-gray-600 dark:text-gray-400 mt-3 text-sm line-clamp-2">
+                                                @car.Description
+                                            </p>
+                                        }
+
+                                        <!-- Stats -->
+                                        <div class="flex gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+                                            <span class="flex items-center gap-1">
+                                                <span class="material-symbols-outlined !text-lg">visibility</span>
+                                                @car.Views
+                                            </span>
+                                            @if (car.Reviews != null && car.Reviews.Count > 0)
+                                            {
+                                                <span class="flex items-center gap-1">
+                                                    <span class="material-symbols-outlined !text-lg text-yellow-500">star</span>
+                                                    @car.Reviews.Average(r => r.Rating).ToString("F1")
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <!-- Button -->
+                                        <a href="@Url.Action("Details", "Car", new { id = car.ListingId })"
+                                           class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-6 bg-primary text-white text-sm font-bold gap-2 mt-6 hover:shadow-lg transition-all w-full">
+                                            <span>View Details</span>
+                                            <span class="material-symbols-outlined">arrow_forward</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- No Featured -->
+                        <div class="no-featured bg-white dark:bg-background-dark rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 py-12">
+                            <span class="material-symbols-outlined !text-7xl text-gray-300 dark:text-gray-600 mb-4 block">directions_car</span>
+                            <h3 class="text-2xl font-bold text-gray-600 dark:text-gray-400 mt-4">No Featured Vehicles Yet</h3>
+                            <p class="text-gray-500 dark:text-gray-500 mt-2">Check back soon for premium featured listings!</p>
+                            <a href="@Url.Action("Index", "Car")" class="flex max-w-[300px] mx-auto cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-sm font-bold gap-2 mt-6 hover:shadow-lg transition-all">
+                                <span class="material-symbols-outlined">arrow_forward</span>
+                                <span>Browse All Cars</span>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <!-- ✅ HOW IT WORKS SECTION -->
+            <section class="section bg-background-light dark:bg-background-dark">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-16 animate-on-scroll">
+                        <h2 class="text-4xl md:text-5xl font-bold text-navy dark:text-white">How It Works</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mt-4 text-lg">3 simple steps to find your dream car</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Step 1 -->
+                        <div class="how-step animate-on-scroll">
+                            <div class="how-circle mb-6">1</div>
+                            <h3 class="text-2xl font-bold text-navy dark:text-white mb-3">Find Your Car</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Browse our extensive collection of luxury vehicles and filter by your preferences.</p>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="how-step animate-on-scroll">
+                            <div class="how-circle mb-6">2</div>
+                            <h3 class="text-2xl font-bold text-navy dark:text-white mb-3">Book or Inquire</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Select your dates for rental or contact the seller for purchase inquiries.</p>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="how-step animate-on-scroll">
+                            <div class="how-circle mb-6">3</div>
+                            <h3 class="text-2xl font-bold text-navy dark:text-white mb-3">Enjoy the Drive</h3>
+                            <p class="text-gray-600 dark:text-gray-400">Pickup your rental or complete your purchase with seamless white-glove service.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ✅ CTA SECTION -->
+            <section class="section bg-gradient-to-r from-primary/5 to-blue-100 dark:from-primary/10 dark:to-blue-900/20">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center animate-on-scroll">
+                    <h2 class="text-3xl md:text-4xl font-bold text-navy dark:text-white mb-4">Ready to Find Your Perfect Car?</h2>
+                    <p class="text-gray-600 dark:text-gray-400 text-lg mb-8 max-w-2xl mx-auto">Join thousands of satisfied customers who found their ideal vehicle on AutoHaven.</p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4">
+                        <a href="@Url.Action("Index", "Car")" class="flex max-w-[300px] mx-auto sm:mx-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-primary text-white text-base font-bold gap-2 hover:shadow-lg transition-all">
+                            <span class="material-symbols-outlined">directions_car</span>
+                            <span>Start Browsing</span>
+                        </a>
+                        <a href="@Url.Action("Index", "Subscription")" class="flex max-w-[300px] mx-auto sm:mx-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-white dark:bg-gray-800 text-primary dark:text-white text-base font-bold gap-2 border-2 border-primary dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                            <span class="material-symbols-outlined">sell</span>
+                            <span>Become a Provider</span>
+                        </a>
                     </div>
                 </div>
             </section>
@@ -290,8 +491,7 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-
-            // ====== ANIMATION LOGIC ======
+            // ===== ANIMATION LOGIC =====
             const simpleElements = document.querySelectorAll('.animate-on-scroll');
             const staggerContainers = document.querySelectorAll('.stagger');
 
@@ -305,8 +505,6 @@
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         const target = entry.target;
-
-                        // Case A: Stagger Container
                         if (target.classList.contains('stagger')) {
                             const children = Array.from(target.children);
                             children.forEach((child, index) => {
@@ -315,9 +513,7 @@
                                 }, index * 150);
                             });
                             observer.unobserve(target);
-                        }
-                        // Case B: Simple Element
-                        else {
+                        } else {
                             target.classList.remove('start-hidden');
                             observer.unobserve(target);
                         }
@@ -325,78 +521,19 @@
                 });
             }, observerOptions);
 
-            // Initialize: Apply hidden class and start observing
             simpleElements.forEach(el => {
                 el.classList.add('start-hidden');
                 observer.observe(el);
             });
 
             staggerContainers.forEach(container => {
-                // Hide children initially
                 Array.from(container.children).forEach(child => {
                     child.classList.add('start-hidden');
                 });
                 observer.observe(container);
             });
 
-            // ====== Theme toggle (dark/light) ======
-            const themeToggle = document.getElementById("theme-toggle");
-            if(themeToggle) {
-                themeToggle.addEventListener("click", () => {
-                    document.documentElement.classList.toggle("dark");
-                });
-            }
-
-            // ====== Tabs: Rent / Buy toggle visual only ======
-            // NOTE: These elements were removed from the HTML, but the script handles their absence gracefully.
-            const tabRent = document.getElementById("tabRent");
-            const tabBuy = document.getElementById("tabBuy");
-
-            if(tabRent && tabBuy) {
-                tabRent.addEventListener("click", () => {
-                    // 1. Make Rent ACTIVE
-                    // Remove inactive styles
-                    tabRent.classList.remove("text-white/80", "hover:bg-white/10");
-                    // Add active styles (Solid White)
-                    tabRent.classList.add("bg-white", "text-navy", "font-bold");
-
-                    // 2. Make Buy INACTIVE
-                    // Remove active styles
-                    tabBuy.classList.remove("bg-white", "text-navy", "font-bold");
-                    // Add inactive styles (Transparent with Hover effect)
-                    tabBuy.classList.add("text-white/80", "hover:bg-white/10");
-                });
-
-                tabBuy.addEventListener("click", () => {
-                    // 1. Make Buy ACTIVE
-                    tabBuy.classList.remove("text-white/80", "hover:bg-white/10");
-                    tabBuy.classList.add("bg-white", "text-navy", "font-bold");
-
-                    // 2. Make Rent INACTIVE
-                    tabRent.classList.remove("bg-white", "text-navy", "font-bold");
-                    tabRent.classList.add("text-white/80", "hover:bg-white/10");
-                });
-            }
-
-            // ====== Simple carousel ======
-            const carList = document.getElementById("carList");
-            const nextBtn = document.getElementById("nextCar");
-            const prevBtn = document.getElementById("prevCar");
-
-            if(nextBtn) {
-                nextBtn.addEventListener("click", () => {
-                    if (!carList) return;
-                    carList.appendChild(carList.firstElementChild);
-                });
-            }
-            if(prevBtn) {
-                prevBtn.addEventListener("click", () => {
-                    if (!carList) return;
-                    carList.insertBefore(carList.lastElementChild, carList.firstElementChild);
-                });
-            }
-
-            // ====== Parallax ======
+            // ===== PARALLAX =====
             const heroBg = document.getElementById('heroBg');
             if (heroBg) {
                 let latestY = 0;
@@ -417,7 +554,23 @@
                 onScroll();
             }
 
-            // ====== Smooth scroll ======
+            // ===== CAROUSEL =====
+            const carList = document.getElementById("carList");
+            const nextBtn = document.getElementById("nextCar");
+            const prevBtn = document.getElementById("prevCar");
+
+            if (nextBtn && carList) {
+                nextBtn.addEventListener("click", () => {
+                    carList.appendChild(carList.firstElementChild);
+                });
+            }
+            if (prevBtn && carList) {
+                prevBtn.addEventListener("click", () => {
+                    carList.insertBefore(carList.lastElementChild, carList.firstElementChild);
+                });
+            }
+
+            // ===== SMOOTH SCROLL =====
             document.querySelectorAll('a[href^="#"]').forEach(a => {
                 a.addEventListener('click', function (e) {
                     const href = this.getAttribute('href');
@@ -428,39 +581,9 @@
                     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
             });
-
         });
     </script>
 
-    <style>
-        .btn-primary {
-            background: var(--tw-prose-invert, #007BFF);
-            color: white;
-            border-radius: 9999px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center; /* Added center alignment */
-            gap: .5rem;
-        }
-
-        .btn-outline {
-            border: 1px solid rgba(10,25,49,.08);
-            background: transparent;
-            color: inherit;
-            padding: 0.5rem 1.25rem;
-            border-radius: 9999px;
-            font-weight: 700;
-        }
-
-        .btn-outline-primary {
-            color: #007BFF;
-            border: 2px solid #007BFF;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-weight: 700;
-        }
-    </style>
 </body>
 
 </html>

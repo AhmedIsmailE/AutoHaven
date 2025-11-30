@@ -1,8 +1,10 @@
 @model AutoHaven.ViewModel.CreateCarListingViewModel
 
 @{
-    ViewBag.Title = "List Your Vehicle on AutoHaven";
+    ViewBag.Title = ViewBag.ListingId != null ? "Edit Your Listing" : "List Your Vehicle on AutoHaven";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    int? listingId = ViewBag.ListingId as int?;
+    var currentImages = ViewBag.CurrentImages as List<AutoHaven.Models.CarImageModel> ?? new List<AutoHaven.Models.CarImageModel>();
 }
 
 <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
@@ -10,11 +12,9 @@
 
         <!-- Main Content with Sidebar -->
         <div class="flex flex-1">
-         
+
             <!-- Main Content -->
             <main class="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-
-           
 
                 <!-- Step Progress Indicator -->
                 <div class="flex flex-wrap gap-2 p-4 border-b border-gray-200 dark:border-gray-700 mb-8">
@@ -22,13 +22,19 @@
                     <span class="text-[#4c669a] dark:text-gray-500 text-base font-medium leading-normal">/</span>
                     <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">2. Media & Description</span>
                     <span class="text-[#4c669a] dark:text-gray-500 text-base font-medium leading-normal">/</span>
-                    <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">3. Pricing </span>
-                    <span class="text-[#4c669a] dark:text-gray-500 text-base font-medium leading-normal">/</span>
-                    <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">4. Review & Publish</span>
+                    <span class="text-[#4c669a] dark:text-gray-400 text-base font-medium leading-normal">3. Pricing</span>
                 </div>
 
                 <!-- Form -->
-                @using (Html.BeginForm("Create", "Car", FormMethod.Post,
+                @{
+                    listingId = ViewBag.ListingId as int?;
+                    currentImages = ViewBag.CurrentImages as List<AutoHaven.Models.CarImageModel> ?? new List<AutoHaven.Models.CarImageModel>();
+                }
+
+                @using (Html.BeginForm(
+                listingId != null ? "Update" : "Create",  // ✅ CHOOSE ACTION
+                "Car",
+                FormMethod.Post,
                 new
                 {
                    @class = "bg-white dark:bg-background-dark dark:border dark:border-gray-700 rounded-xl shadow-sm p-6 md:p-8",
@@ -36,7 +42,17 @@
                    id = "carListingForm"
                 }))
                 {
-                    @Html.AntiForgeryToken()
+                      @Html.AntiForgeryToken()
+                    @if (listingId != null)
+                    {
+                        <input type="hidden" name="id" value="@listingId" />
+                        <input type="hidden" name="imageIdsToKeep" id="imageIdsToKeep" value="" />
+                    }
+    <!-- ✅ HIDDEN ID FOR UPDATE -->
+    @if (listingId != null)
+    {
+        <input type="hidden" name="id" value="@listingId" />
+    }
 
                     <!-- Alert Messages -->
                     @if (!ViewData.ModelState.IsValid)
@@ -253,54 +269,147 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- ✅ FEATURED CHECKBOX - STEP 3 -->
+                        <!-- ✅ FEATURED LISTING SECTION -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-6">
+                            <button type="button" class="step-header w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-step="featured">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-white font-bold">✓</span>
+                                    <div class="text-left">
+                                        <h3 class="text-xl font-bold text-[#0d121b] dark:text-white">Featured Listing</h3>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Make your car stand out on the homepage</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined step-icon text-[#4c669a] dark:text-gray-400 transition-transform">expand_more</span>
+                            </button>
 
-                        <!-- Pricing -->
-                        <div>
-                            <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-4">Pricing</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="step-content hidden p-6 space-y-4 border-t border-gray-200 dark:border-gray-700">
+                                <!-- Info Box -->
+                                <div class="flex items-start gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 mt-1">info</span>
+                                    <div>
+                                        <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Featured Listing Benefits</p>
+                                        <ul class="text-sm text-blue-800 dark:text-blue-400 mt-2 space-y-1">
+                                            <li>✓ Appears on homepage in featured section</li>
+                                            <li>✓ Gets priority visibility</li>
+                                            <li>✓ Increases chances of inquiries</li>
+                                        </ul>
+                                    </div>
+                                </div>
 
-                                <!-- Sale Price -->
-                                <div id="salePriceContainer" class="price-container">
-                                    <label class="flex flex-col">
-                                        <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                                            Sale Price <span class="text-red-500">*</span>
+                                <!-- ✅ CHECKBOX WITH ASP.NET HELPER (NO HIDDEN INPUT!) -->
+                                <div class="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer group">
+                                    <!-- ✅ REMOVED the hidden input with value="false" -->
+                                    <!-- ✅ Use ASP.NET CheckBoxFor instead -->
+                                    @Html.CheckBoxFor(m => m.WantsFeatured, new
+                                        {
+                                            @class = "w-5 h-5 text-primary rounded cursor-pointer focus:ring-2 focus:ring-primary",
+                                            id = "wantsFeatured"
+                                        })
+
+                                    <label for="wantsFeatured" class="flex-1 cursor-pointer">
+                                        <p class="font-semibold text-[#0d121b] dark:text-white group-hover:text-primary transition-colors">
+                                            🌟 Feature This Listing
                                         </p>
-                                        @Html.TextBoxFor(m => m.NewPrice, new
-                                            {
-                                                @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal",
-                                                type = "number",
-                                                step = "0.01",
-                                                placeholder = "e.g., 25000.00",
-                                                min = "0.01",
-                                                max = "999999999",
-                                                id = "NewPriceInput"
-                                            })
-                                        @Html.ValidationMessageFor(m => m.NewPrice, "", new { @class = "text-red-500 text-sm mt-1" })
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">
+                                            Your subscription allows featured listings. Featured cars get more visibility!
+                                        </p>
                                     </label>
                                 </div>
 
-                                <!-- Rental Price -->
-                                <div id="rentalPriceContainer" class="price-container hidden">
-                                    <label class="flex flex-col">
-                                        <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
-                                            Rental Price (Per Day) <span class="text-red-500">*</span>
-                                        </p>
-                                        @Html.TextBoxFor(m => m.RentPrice, new
-                                            {
-                                                @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal",
-                                                type = "number",
-                                                step = "0.01",
-                                                placeholder = "e.g., 75.00",
-                                                min = "0.01",
-                                                max = "999999",
-                                                id = "RentPriceInput"
-                                            })
-                                        @Html.ValidationMessageFor(m => m.RentPrice, "", new { @class = "text-red-500 text-sm mt-1" })
-                                    </label>
+                                <!-- Subscription Status Info -->
+                                <div id="subscriptionInfo" class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm text-[#4c669a] dark:text-gray-400">
+                                        <span class="material-symbols-outlined align-middle !text-base">check_circle</span>
+                                        Your subscription allows featured listings
+                                    </p>
                                 </div>
-
                             </div>
                         </div>
+                        <!-- ✅ SHOW EXISTING IMAGES WHEN EDITING -->
+                        @if (currentImages.Any())
+                        {
+                            <div>
+                                <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-3">Current Images</h4>
+                                <p class="text-sm text-[#4c669a] dark:text-gray-400 mb-4">Uncheck images to remove them</p>
+
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                    @foreach (var img in currentImages)
+                                    {
+                                        <div class="relative">
+                                            <img src="/@img.Path" alt="@img.AltText" class="w-full h-24 object-cover rounded-lg border border-gray-300 dark:border-gray-600">
+                                            <label class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg hover:bg-black/60 transition-all cursor-pointer group">
+                                                <input type="checkbox" name="imageIdsToKeep" value="@img.CarImageId" checked class="w-4 h-4">
+                                                <span class="text-white text-xs font-bold ml-2">Keep</span>
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        <!-- ========== STEP 3: PRICING ========== -->
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <button type="button" class="step-header w-full flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" data-step="3">
+                                <div class="flex items-center gap-3">
+                                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 text-white font-bold">3</span>
+                                    <div class="text-left">
+                                        <h3 class="text-xl font-bold text-[#0d121b] dark:text-white">Pricing</h3>
+                                        <p class="text-sm text-[#4c669a] dark:text-gray-400">Set your price</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined step-icon text-[#4c669a] dark:text-gray-400 transition-transform">expand_more</span>
+                            </button>
+
+                            <div class="step-content hidden p-6 space-y-6 border-t border-gray-200 dark:border-gray-700">
+                                <div>
+                                    <h4 class="text-lg font-bold text-[#0d121b] dark:text-white mb-4">Pricing</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                        <!-- Sale Price -->
+                                        <div id="salePriceContainer" class="price-container">
+                                            <label class="flex flex-col">
+                                                <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                    Sale Price <span class="text-red-500">*</span>
+                                                </p>
+                                                @Html.TextBoxFor(m => m.NewPrice, new
+                                                    {
+                                                        @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal",
+                                                        type = "number",
+                                                        step = "0.01",
+                                                        placeholder = "e.g., 25000.00",
+                                                        min = "0.01",
+                                                        max = "999999999",
+                                                        id = "NewPriceInput"
+                                                    })
+                                                @Html.ValidationMessageFor(m => m.NewPrice, "", new { @class = "text-red-500 text-sm mt-1" })
+                                            </label>
+                                        </div>
+
+                                        <!-- Rental Price -->
+                                        <div id="rentalPriceContainer" class="price-container hidden">
+                                            <label class="flex flex-col">
+                                                <p class="text-[#0d121b] dark:text-gray-200 text-base font-medium leading-normal pb-2">
+                                                    Rental Price (Per Day) <span class="text-red-500">*</span>
+                                                </p>
+                                                @Html.TextBoxFor(m => m.RentPrice, new
+                                                    {
+                                                        @class = "form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#cfd7e7] dark:border-gray-600 bg-background-light dark:bg-gray-800 h-14 placeholder:text-[#4c669a] dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal",
+                                                        type = "number",
+                                                        step = "0.01",
+                                                        placeholder = "e.g., 75.00",
+                                                        min = "0.01",
+                                                        max = "999999",
+                                                        id = "RentPriceInput"
+                                                    })
+                                                @Html.ValidationMessageFor(m => m.RentPrice, "", new { @class = "text-red-500 text-sm mt-1" })
+                                            </label>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Action Buttons -->
@@ -309,8 +418,8 @@
                             <span class="truncate">Cancel</span>
                         </a>
                         <button type="submit" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] gap-2">
-                            <span class="truncate">Publish Listing</span>
-                            <span class="material-symbols-outlined">check_circle</span>
+                            <span class="truncate">@(listingId != null ? "Update Listing" : "Publish Listing")</span>
+                            <span class="material-symbols-outlined">@(listingId != null ? "edit" : "check_circle")</span>
                         </button>
                     </div>
                 }
@@ -328,7 +437,7 @@
             const dropZone = document.getElementById('dropZone');
             const imageInput = document.getElementById('imageInput');
             const imageList = document.getElementById('imageList');
-            const listingTypeRadios = document.querySelectorAll('input[name="ListingType"]');  // ✅ ListingType
+            const listingTypeRadios = document.querySelectorAll('input[name="ListingType"]');
             const salePriceContainer = document.getElementById('salePriceContainer');
             const rentalPriceContainer = document.getElementById('rentalPriceContainer');
             const newPriceInput = document.getElementById('NewPriceInput');
@@ -362,11 +471,13 @@
                 });
 
                 function handleFiles(files) {
-                    const availableSlots = 7 - uploadedFiles.length;
+                    const maxImages = 7;
+                    const existingCount = @Html.Raw(currentImages.Count);
+                    const availableSlots = maxImages - existingCount;
                     const filesToAdd = files.slice(0, availableSlots);
 
                     if (filesToAdd.length < files.length) {
-                        alert(`You can only upload a maximum of 7 images. ${7 - uploadedFiles.length} slot(s) remaining.`);
+                        alert(`You can only upload a maximum of ${maxImages - existingCount} more images. ${availableSlots} slot(s) remaining.`);
                     }
 
                     uploadedFiles = [...uploadedFiles, ...filesToAdd];
@@ -443,7 +554,7 @@
             });
 
             // Trigger initial state
-            const checkedRadio = document.querySelector('input[name="ListingType"]:checked');  // ✅ ListingType
+            const checkedRadio = document.querySelector('input[name="ListingType"]:checked');
             if (checkedRadio) {
                 console.log('🚀 Initial ListingType value:', checkedRadio.value);
                 updatePriceVisibility(checkedRadio.value);
@@ -452,33 +563,43 @@
                 updatePriceVisibility("1");
             }
 
-            // ===== ACCORDION FUNCTIONALITY =====
+            // ===== ACCORDION FUNCTIONALITY - ALL STEP HEADERS =====
+            // ✅ FIXED: Universal handler for ALL accordion sections
             stepHeaders.forEach(header => {
-                header.addEventListener('click', (e) => {
+                header.addEventListener('click', function (e) {
+                    // ✅ IMPORTANT: Prevent default to ensure button doesn't try to submit
                     e.preventDefault();
-                    const content = header.nextElementSibling;
-                    const icon = header.querySelector('.step-icon');
+                    e.stopPropagation();
 
-                    document.querySelectorAll('.step-content').forEach(el => {
-                        if (el !== content) {
-                            el.classList.add('hidden');
-                        }
-                    });
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('.step-icon');
 
-                    document.querySelectorAll('.step-icon').forEach(el => {
-                        if (el !== icon) {
-                            el.style.transform = 'rotate(0deg)';
-                        }
-                    });
-
+                    // Toggle hidden class
+                    const isHidden = content.classList.contains('hidden');
                     content.classList.toggle('hidden');
-                    icon.style.transform = content.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+
+                    // Rotate icon
+                    if (isHidden) {
+                        icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+
+                    console.log('🔄 Accordion toggled:', this.getAttribute('data-step'), 'Hidden:', !isHidden);
                 });
             });
 
+            // ===== CHECKBOX VALUE HANDLING =====
+            const wantsFeaturedCheckbox = document.getElementById('wantsFeatured');
+            if (wantsFeaturedCheckbox) {
+                wantsFeaturedCheckbox.addEventListener('change', function () {
+                    console.log('✨ Featured checkbox:', this.checked ? 'CHECKED' : 'UNCHECKED');
+                });
+            }
+
             // ===== FORM VALIDATION ON SUBMIT =====
             form.addEventListener('submit', function (e) {
-                const selectedRadio = document.querySelector('input[name="ListingType"]:checked');  // ✅ ListingType
+                const selectedRadio = document.querySelector('input[name="ListingType"]:checked');
 
                 if (!selectedRadio) {
                     e.preventDefault();
@@ -506,10 +627,19 @@
                     return false;
                 }
 
+                // ===== COLLECT IMAGE IDS TO KEEP =====
+                const checkboxes = document.querySelectorAll('input[name="imageIdsToKeep"]:checked');
+                const imageIdsToKeep = Array.from(checkboxes).map(cb => cb.value);
+
+                // Store in hidden input
+                const hiddenInput = document.getElementById('imageIdsToKeep');
+                if (hiddenInput) {
+                    hiddenInput.value = imageIdsToKeep.join(',');
+                }
+
                 console.log('✅ Form validation passed - submitting...');
                 return true;
             });
-
-        }); // ✅ END DOMContentLoaded
+        });
     </script>
-}}
+}
