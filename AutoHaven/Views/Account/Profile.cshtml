@@ -31,6 +31,10 @@
 
             <div class="flex-1">
                 <h1 class="text-2xl font-bold">@(!string.IsNullOrWhiteSpace(Model?.Name) ? Model.Name : Model?.UserName)</h1>
+                @if (!string.IsNullOrWhiteSpace(Model?.Name))
+                {
+                    <p class="text-sm text-gray-500">@Model?.UserName</p>
+                }
                 <p class="text-sm text-gray-500">@Model?.Email</p>
                 <p class="text-sm text-gray-500">Joined @Model?.CreatedAt.ToString("MMM d, yyyy")</p>
                 <p class="text-sm text-gray-500">Role: <strong>@Model?.Role</strong></p>
@@ -54,7 +58,10 @@
                         <div><dt class="font-medium inline">Username:</dt> <dd class="inline ml-2">@Model?.UserName</dd></div>
                         <div><dt class="font-medium inline">Email:</dt> <dd class="inline ml-2">@Model?.Email</dd></div>
                         <div><dt class="font-medium inline">Phone:</dt> <dd class="inline ml-2">@Model?.PhoneNumber</dd></div>
-                        <div><dt class="font-medium inline">Company:</dt> <dd class="inline ml-2">@Model?.CompanyName</dd></div>
+                        @if (Model.Role == AutoHaven.Models.ApplicationUserModel.RoleEnum.Provider)
+                        {
+                            <div><dt class="font-medium inline">Company:</dt> <dd class="inline ml-2">@Model?.CompanyName</dd></div>
+                        }
                         <div class="mt-3"><dt class="font-medium inline">Last Edit:</dt> <dd class="inline ml-2">@Model?.UpdatedAt.ToString("f")</dd></div>
                     </dl>
                 </div>
@@ -109,11 +116,6 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium">Username (cannot change)</label>
-                            <input asp-for="UserName" class="form-input mt-1 w-full rounded border p-2 bg-gray-100" disabled />
-                        </div>
-
-                        <div>
                             <label class="block text-sm font-medium">Email</label>
                             <input asp-for="Email" class="form-input mt-1 w-full rounded border p-2" />
                             <span asp-validation-for="Email" class="text-red-600 text-sm"></span>
@@ -125,15 +127,13 @@
                             <span asp-validation-for="PhoneNumber" class="text-red-600 text-sm"></span>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium">Company Name</label>
-                            <input asp-for="CompanyName" class="form-input mt-1 w-full rounded border p-2" />
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium">Role (cannot change)</label>
-                            <input value="@Model?.Role" class="form-input mt-1 w-full rounded border p-2 bg-gray-100" disabled />
-                        </div>
+                        @if (Model.Role == AutoHaven.Models.ApplicationUserModel.RoleEnum.Provider)
+                        {
+                            <div>
+                                <label class="block text-sm font-medium">Company Name</label>
+                                <input asp-for="CompanyName" class="form-input mt-1 w-full rounded border p-2" />
+                            </div>
+                        }
                     </div>
 
                     <h3 class="text-lg font-semibold mt-4">Address</h3>
@@ -234,6 +234,13 @@
 }
 
 @await Html.PartialAsync("_Notification")
+
+
+
+
+
+
+
 
 
 

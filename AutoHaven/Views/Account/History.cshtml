@@ -204,7 +204,7 @@
                                 <noscript>
                                     @if (isFavorited)
                                     {
-                                        <form method="post" action="@Url.Action("RemoveFromFavorite", "Account")">
+                                        <form method="post" action="@Url.Action("RemoveFromFavoriteInHistory", "Account")">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="listingId" value="@listing.ListingId" />
                                             <input type="hidden" name="url" value="Account/History" />
@@ -215,7 +215,7 @@
                                     }
                                     else
                                     {
-                                        <form method="post" action="@Url.Action("AddToFavorite", "Account")">
+                                        <form method="post" action="@Url.Action("AddToFavoriteInHistory", "Account")">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="listingId" value="@listing.ListingId" />
                                             <input type="hidden" name="url" value="Account/History" />
@@ -388,3 +388,4 @@
         })();
     </script>
 }
+@await Html.PartialAsync("_Notification")
