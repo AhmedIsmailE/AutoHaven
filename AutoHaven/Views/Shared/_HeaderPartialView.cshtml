@@ -1,6 +1,8 @@
 ﻿@using AutoHaven.Models
 @inject Microsoft.AspNetCore.Identity.UserManager<ApplicationUserModel> UserManager
-
+@{
+    var role = User.FindFirst("Role")?.Value;
+}
 <header class="sticky top-0 z-50 w-full border-b border-gray-200/50 dark:border-gray-800/50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
     <div class="container mx-auto px-4">
         <div class="flex items-center justify-between whitespace-nowrap h-16">
@@ -15,9 +17,20 @@
                     <h2 class="text-xl font-bold tracking-tight">AutoHaven</h2>
                 </div>
                 <nav class="hidden md:flex items-center gap-8">
-                    <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Buy</a>
-                    <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Rent</a>
-                    <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Sell</a>
+                    @if (!User.Identity.IsAuthenticated)
+                    {
+                        @* <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Car" asp-action="Create">Sell</a> *@
+                        <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Home" asp-action="Home">Home</a>
+                    }
+                    @if (role != "Customer" && User.Identity.IsAuthenticated)
+                    {
+                        @* <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Car" asp-action="Create">Sell</a> *@
+                        <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Car" asp-action="Create">Create Listing</a>
+                    }
+
+                    @* <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Buy</a>
+                    <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" href="#">Rent</a> *@
+                    <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Car" asp-action="Index">Browse Cars</a>
                     <a class="text-sm font-medium hover:text-primary dark:hover:text-white transition-colors" asp-controller="Account" asp-action="About">About Us</a>
                 </nav>
             </div>
