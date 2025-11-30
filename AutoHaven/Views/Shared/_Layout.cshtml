@@ -114,6 +114,9 @@
     </script>
 
     @RenderSection("Scripts", required: false)
-    @await Html.PartialAsync("_Notification")
+    @if (ViewBag.SuppressNotifications == null)
+    {
+        @await Html.PartialAsync("_Notification")
+    }
 </body>
 </html>

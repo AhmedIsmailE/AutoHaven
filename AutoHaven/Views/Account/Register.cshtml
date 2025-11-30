@@ -80,6 +80,15 @@
 
                         <!-- ASP.NET FORM -->
                         <form asp-action="Register" method="post" class="space-y-6" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+
+                            <!-- Show TempData notification (set by controller) -->
+                            @if (TempData["Notification.Message"] != null)
+                            {
+                                <div class="rounded p-3 mb-2 @((TempData["Notification.Type"]?.ToString() == "error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700")">
+                                    @Html.Raw(TempData["Notification.Message"])
+                                </div>
+                            }
 
                             <!-- SUMMARY -->
                             @* <div asp-validation-summary="All" class="text-red-600 text-sm"></div> *@
@@ -185,7 +194,7 @@
                                         <span asp-validation-for="NationalId" class="text-red-600 text-sm"></span>
                                     </label>
 
-                                      <label class="flex flex-col">
+                                    <label class="flex flex-col">
                                         <p class="pb-2 text-sm font-medium">ID Image</p>
                                         <input asp-for="IdImage" type="file" class="form-input rounded-lg border border-[#cfd7e7] dark:border-gray-600 p-[15px] h-12 bg-background-light dark:bg-background-dark" />
                                         <span asp-validation-for="IdImage" class="text-red-600 text-sm"></span>
@@ -235,6 +244,7 @@
     </script>
 </body>
 </html>
+
 
 
 

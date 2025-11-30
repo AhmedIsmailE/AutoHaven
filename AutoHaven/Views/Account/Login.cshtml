@@ -1,6 +1,7 @@
 ﻿@model AutoHaven.ViewModel.LoginUserViewModel
 @{
     ViewData["Title"] = "Login";
+    ViewBag.SuppressNotifications = true; // <- prevents _Notification.cshtml from rendering on this page
 }
 
 <div class="relative flex min-h-screen w-full flex-col items-center justify-center bg-background-light dark:bg-background-dark overflow-x-hidden"
@@ -35,6 +36,34 @@
 
             <h1 class="text-3xl font-bold text-center text-zinc-900 dark:text-white pb-2">Welcome Back</h1>
             <p class="text-center text-zinc-500 dark:text-zinc-400 pb-8">Log in to continue to your account.</p>
+
+            <!-- Show TempData notification (e.g. "account pending approval") -->
+            @{
+                var message = TempData["Notification.Message"] as string;
+                var type = (TempData["Notification.Type"] as string ?? "info").ToLowerInvariant();
+                var isError = string.Equals(type, "error", StringComparison.OrdinalIgnoreCase);
+            }
+            @if (!string.IsNullOrWhiteSpace(message))
+            {
+                <div class="mb-4 rounded-lg px-4 py-3 @(isError ? "bg-red-50 border border-red-200 text-red-800" : "bg-green-50 border border-green-200 text-green-800")">
+                    <div class="flex items-start gap-3">
+                        <div class="mt-0.5">
+                            @if (isError)
+                            {
+                                <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.68-1.36 3.445 0l6.518 11.59A1.75 1.75 0 0 1 16.61 17H3.39a1.75 1.75 0 0 1-1.61-2.312L8.257 3.1zM10 12a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-.75-6.5a.75.75 0 0 0-1.5 0v4a.75.75 0 0 0 1.5 0v-4z" clip-rule="evenodd"></path></svg>
+                            }
+                            else
+                            {
+                                <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 0 0-1.414 0L8 12.586 4.707 9.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l8-8a1 1 0 0 0 0-1.414z" clip-rule="evenodd" /></svg>
+                            }
+                        </div>
+
+                        <div class="text-sm leading-tight">
+                            @Html.Raw(Html.Encode(message).Replace("\n", "<br />"))
+                        </div>
+                    </div>
+                </div>
+            }
 
             <!-- ASP.NET LOGIN FORM -->
             <form asp-action="Login" method="post" class="flex flex-col gap-4">
