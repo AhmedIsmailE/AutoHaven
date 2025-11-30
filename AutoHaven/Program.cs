@@ -1,7 +1,8 @@
-﻿using AutoHaven.Models;
-using AutoHaven.IRepository;
+﻿using AutoHaven.IRepository;
+using AutoHaven.Models;
 using AutoHaven.Repository;
 using AutoHaven.Storage;  // ← ADD THIS
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,29 @@ builder.Services.AddDbContext<ProjectDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUserModel, IdentityRole<int>>()
     .AddEntityFrameworkStores<ProjectDbContext>()
     .AddDefaultTokenProviders();
+// 1️ Add services
+builder.Services.AddControllersWithViews();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        //options.LoginPath = "/Account/LoginCustom";
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Home/AccessDenied";
+    });
 
+// 2️ Add Authorization policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Role", "Admin"));
+    options.AddPolicy("ProviderOnly", policy => policy.RequireClaim("Role", "Provider"));
+    options.AddPolicy("CustomerOnly", policy => policy.RequireClaim("Role", "Customer"));
+    options.AddPolicy("AdminOrProvider", policy =>
+    policy.RequireAssertion(context =>
+        context.User.HasClaim("Role", "Admin") ||
+        context.User.HasClaim("Role", "Provider")
+    ));
+
+});
 // ===== REPOSITORY REGISTRATIONS =====
 builder.Services.AddScoped<ICarListingModelRepository, CarListingModelRepository>();
 builder.Services.AddScoped<ICarModelRepository, CarModelRepository>();

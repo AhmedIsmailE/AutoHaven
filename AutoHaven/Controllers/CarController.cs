@@ -218,6 +218,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== GET: Listing Details ====================
+        [Authorize]
         [HttpGet]
         public IActionResult Details(int? id)
         {
@@ -299,7 +300,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== GET: Create Listing Form ====================
-        [Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
         public IActionResult Create()
         {
@@ -307,7 +308,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== POST: Create Listing ====================
-        [Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles)
@@ -431,7 +432,7 @@ namespace AutoHaven.Controllers
             }
         }
         // ==================== GET: Edit Listing ====================
-        [Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
         public IActionResult Edit(int? id)
         {
@@ -477,7 +478,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== POST: Update Listing ====================
-        [Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Update(int id, CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles, int[] imageIdsToKeep)
@@ -535,7 +536,8 @@ namespace AutoHaven.Controllers
             }
         }
         // ====================  Feature/Unfeature Feature ====================
-        [Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
+        //[Authorize(Policy = "ProviderOnly")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult ToggleFeatured(int listingId)
@@ -582,7 +584,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== POST: Delete Listing ====================
-        [Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Delete(int id)
@@ -612,7 +614,7 @@ namespace AutoHaven.Controllers
         }
 
         // ==================== GET: User's Own Listings ====================
-        [Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
         public IActionResult MyListings()
         {
