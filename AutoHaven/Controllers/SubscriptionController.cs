@@ -31,7 +31,8 @@ namespace AutoHaven.Controllers
         private string PaypalClientId { get; set; } = "";
         private string PaypalSecret { get; set; } = "";
         private string PaypalUrl { get; set; } = "";
-        [Authorize]
+        //[Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         private async Task<string> GetPaypalAccessToken()
         {
 
@@ -62,7 +63,8 @@ namespace AutoHaven.Controllers
             return accessToken;
         }
 
-        [Authorize]
+        //[Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpPost]
         public async Task<JsonResult> CreateOrder([FromBody] JsonObject data)
         {
@@ -112,9 +114,9 @@ namespace AutoHaven.Controllers
             }
             return new JsonResult(new { Id = "" });
         }
-        [Authorize]
-        [HttpPost]
-        [Authorize]
+
+        //[Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpPost]
         public async Task<JsonResult> CompleteOrder([FromBody] JsonObject data)
         {
@@ -168,21 +170,23 @@ namespace AutoHaven.Controllers
         }
 
         // Add this Action so the redirect works!
-        [Authorize]
+        //[Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
         public IActionResult PurchaseSuccess()
         {
             // Pass '1' to the view to indicate success (for the green theme)
             return View("PurchaseView", 1);
         }
-
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
         public IActionResult Index()
         {
             var subscriptions = _subscriptionPlanRepo.Get().Skip(1).ToList();
             return View("IndexView",subscriptions);
         }
-        [Authorize]
+        //[Authorize]
+        [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
         public IActionResult Payment(int planId)
         {

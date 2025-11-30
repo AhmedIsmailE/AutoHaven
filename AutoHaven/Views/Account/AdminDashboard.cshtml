@@ -1,10 +1,15 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+﻿@model IEnumerable<AutoHaven.ViewModel.PendingUserViewModel>
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@*
+    Admin dashboard — single file that includes pending accounts table and JS
 *@
+
 <!-- Dashboard Content -->
 <div class="p-10 bg-background-light">
     <!-- HeadlineText -->
     <h1 class="text-[#101418] tracking-light text-[32px] font-bold leading-tight pb-3">Welcome back, Admin.</h1>
+
     <!-- Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
@@ -24,5 +29,264 @@
             <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">89</p>
         </div>
     </div>
-
 </div>
+
+<!-- Pending accounts rendered server-side inside the same view -->
+<div class="px-10 mt-6">
+    <input type="hidden" id="__RequestVerificationToken" value="@(Antiforgery.GetAndStoreTokens(ViewContext.HttpContext).RequestToken)" />
+
+    <div id="pending-wrapper" class="p-6 bg-white rounded-xl border border-[#dae0e7] mt-6 shadow-sm">
+        <h2 class="text-xl font-bold mb-4 text-[#101418]">Pending User Approvals</h2>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div id="no-pending" class="p-4 text-gray-600 text-sm">
+                No pending accounts for approval.
+            </div>
+        }
+        else
+        {
+            <div id="pending-table-container" class="overflow-x-auto">
+                <table id="pending-table" class="w-full border-collapse">
+                    <thead>
+                        <tr class="text-left text-sm text-gray-600 border-b">
+                            <th class="p-2">ID</th>
+                            <th class="p-2">User</th>
+                            <th class="p-2">Email</th>
+                            <th class="p-2">Phone</th>
+                            <th class="p-2">National ID</th>
+                            <th class="p-2">ID Image</th>   <!-- added -->
+                            <th class="p-2">Registered</th>
+                            <th class="p-2 text-right">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var u in Model)
+                        {
+                            <tr id="pending-row-@u.Id" class="border-b hover:bg-gray-50">
+                                <td class="p-2 text-sm">@u.Id</td>
+                                <td class="p-2 text-sm">
+                                    <div class="font-medium">@u.UserName</div>
+                                    <div class="text-xs text-gray-500">@u.Name</div>
+                                </td>
+                                <td class="p-2 text-sm">@u.Email</td>
+                                <td class="p-2 text-sm">@u.PhoneNumber</td>
+                                <td class="p-2 text-sm">@u.NationalId</td>
+
+                                <td class="p-2 text-sm">
+                                    @if (!string.IsNullOrWhiteSpace(u.IdImagePath))
+                                    {
+                                        <button onclick="previewIdImage('@u.IdImagePath')"
+                                                class="inline-flex items-center bg-primary text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:bg-primary/90">
+                                            View
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-400 text-xs">No image</span>
+                                    }
+                                </td>
+
+
+                                <td class="p-2 text-sm">@u.CreatedAt.ToString("yyyy-MM-dd")</td>
+
+                                <td class="p-2 text-right space-x-2">
+                                    <!-- blue pill (matches Edit Profile style) -->
+                                    <button class="approve-btn inline-flex items-center bg-primary text-white px-5 py-2 rounded-full text-sm font-semibold"
+                                            data-id="@u.Id">
+                                        Approve
+                                    </button>
+
+                                    <!-- red pill (matches Delete Account style) -->
+                                    <button class="reject-btn inline-flex items-center bg-red-600 text-white px-5 py-2 rounded-full text-sm font-semibold ml-2"
+                                            data-id="@u.Id">
+                                        Reject
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- include SweetAlert2 once (if not included globally already) -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // helper: show toast using SweetAlert2
+    function showToast(type, message) {
+        // map types if needed (info -> info, error -> error, success -> success)
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: type || 'info',
+            title: message || '',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+
+    // helper: show "no pending" UI
+    function showNoPendingMessage() {
+        const wrapper = document.getElementById('pending-wrapper');
+        if (!wrapper) return;
+        wrapper.innerHTML = `
+            <h2 class="text-xl font-bold mb-4 text-[#101418]">Pending User Approvals</h2>
+            <div id="no-pending" class="p-4 text-gray-600 text-sm">
+                No pending accounts for approval.
+            </div>`;
+    }
+
+    function checkAndMaybeShowEmpty() {
+        const tbody = document.querySelector('#pending-table tbody');
+        if (!tbody) {
+            showNoPendingMessage();
+            return;
+        }
+        const rows = tbody.querySelectorAll('tr');
+        if (!rows || rows.length === 0) showNoPendingMessage();
+    }
+
+    // Use event delegation for approve/reject buttons
+    document.addEventListener("click", async function (e) {
+        // APPROVE
+        if (e.target.matches('.approve-btn')) {
+            const id = e.target.dataset.id;
+            // optional: non-blocking confirm using Swal.fire (if you want a confirm modal instead of browser confirm)
+            const confirmResult = await Swal.fire({
+                title: 'Approve user?',
+                text: 'This will allow the user to log in.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Approve',
+                cancelButtonText: 'Cancel'
+            });
+            if (!confirmResult.isConfirmed) return;
+
+            const token = document.getElementById('__RequestVerificationToken').value;
+            const form = new FormData();
+            form.append('id', id);
+            form.append('__RequestVerificationToken', token);
+
+            try {
+                const res = await fetch('@Url.Action("ApproveUser", "Account")', {
+                    method: 'POST',
+                    body: form,
+                    credentials: 'same-origin'
+                });
+
+                let payload;
+                try { payload = await res.json(); } catch { payload = null; }
+
+                if (res.ok && payload && payload.success) {
+                    // remove row and show toast
+                    document.getElementById('pending-row-' + id)?.remove();
+                    checkAndMaybeShowEmpty();
+                    showToast(payload.type || 'success', payload.message || 'User approved.');
+                } else {
+                    const msg = payload?.message || 'Failed to approve user.';
+                    showToast('error', msg);
+                    console.error('Approve error', res.status, payload);
+                }
+            } catch (err) {
+                showToast('error', 'Network error while approving user.');
+                console.error(err);
+            }
+        }
+
+        // REJECT
+        if (e.target.matches('.reject-btn')) {
+            const id = e.target.dataset.id;
+            const confirmResult = await Swal.fire({
+                title: 'Reject and delete user?',
+                text: 'This will remove their account and related data.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Reject',
+                cancelButtonText: 'Cancel'
+            });
+            if (!confirmResult.isConfirmed) return;
+
+            const token = document.getElementById('__RequestVerificationToken').value;
+            const form = new FormData();
+            form.append('id', id);
+            form.append('__RequestVerificationToken', token);
+
+            try {
+                const res = await fetch('@Url.Action("RejectUser", "Account")', {
+                    method: 'POST',
+                    body: form,
+                    credentials: 'same-origin'
+                });
+
+                let payload;
+                try { payload = await res.json(); } catch { payload = null; }
+
+                if (res.ok && payload && payload.success) {
+                    document.getElementById('pending-row-' + id)?.remove();
+                    checkAndMaybeShowEmpty();
+                    showToast(payload.type || 'success', payload.message || 'User rejected and removed.');
+                } else {
+                    const msg = payload?.message || 'Failed to reject user.';
+                    showToast('error', msg);
+                    console.error('Reject error', res.status, payload);
+                }
+            } catch (err) {
+                showToast('error', 'Network error while rejecting user.');
+                console.error(err);
+            }
+        }
+    });
+
+    function previewIdImage(path) {
+        Swal.fire({
+            title: 'ID Image',
+            width: '600px',
+            padding: '1.5rem',
+            html: `
+                <div style="
+                    display:flex;
+                    flex-direction:column;
+                    align-items:center;
+                    justify-content:center;
+                ">
+                    <img src="${path}"
+                         style="
+                            max-width:100%;
+                            max-height:400px;
+                            object-fit:contain;
+                            display:block;
+                            margin:0 auto;
+                            border-radius:10px;
+                         "/>
+
+                    <a href="${path}" download
+                       style="
+                           margin-top:15px;
+                           background:#0ea5e9;
+                           color:white;
+                           padding:10px 28px;
+                           border-radius:9999px;
+                           font-weight:600;
+                           text-decoration:none;
+                           display:inline-block;
+                       ">
+                        Download
+                    </a>
+                </div>
+            `,
+            showConfirmButton: false,
+            customClass: {
+                popup: 'swal-center-image'
+            }
+        });
+    }
+
+
+</script>
+
