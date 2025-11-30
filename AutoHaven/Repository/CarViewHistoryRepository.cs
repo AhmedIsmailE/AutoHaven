@@ -26,7 +26,22 @@ namespace AutoHaven.Repository
                 .OrderByDescending(h => h.ViewedAt)
                 .ToList();
         }
-
+        
+        public bool HasViewedBefore(int listingId, int? userId, string ipAddress)
+        {
+            if (userId.HasValue && userId > 0)
+            {
+                // Logged-in user
+                return _context.CarViewHistories
+                    .Any(h => h.ListingId == listingId && h.UserId == userId);
+            }
+            else
+            {
+                // Anonymous user (by IP)
+                return _context.CarViewHistories
+                    .Any(h => h.ListingId == listingId && h.IpAddress == ipAddress);
+            }
+        }
         public IEnumerable<CarViewHistoryModel> GetByUserId(int userId)
         {
             return _context.CarViewHistories

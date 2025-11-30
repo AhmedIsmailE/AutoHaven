@@ -1,0 +1,256 @@
+﻿@model List<CarListingModel>
+
+@{
+    ViewData["Title"] = "Listing Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var statusFilter = ViewBag.StatusFilter as string ?? "all";
+    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var totalCount = ViewBag.TotalCount ?? 0;
+    var states = ViewBag.States as List<CarListingModel.State> ?? new List<CarListingModel.State>();
+}
+
+<div class="max-w-7xl mx-auto py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">🚗 Listing Management</h1>
+        <p class="text-gray-600 dark:text-gray-400">Approve feature, or delete car listings</p>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Search Listings</label>
+                    <input type="text" name="searchTerm" value="@searchTerm" 
+                           placeholder="Car make, model, owner..." 
+                           class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">Status Filter</label>
+                    <select name="statusFilter" class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                        <option value="all" selected="@(statusFilter == "all")">All Status</option>
+                        @foreach (var state in states)
+                        {
+                            <option value="@state" selected="@(statusFilter == state.ToString())">
+                                @state
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        🔍 Search
+                    </button>
+                    <a href="@Url.Action("Listings", "Admin")" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-center">
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Listings Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-100 dark:bg-gray-900 border-b">
+                <tr>
+                    <th class="px-4 py-3 text-left font-semibold">Vehicle</th>
+                    <th class="px-4 py-3 text-left font-semibold">Owner</th>
+                    <th class="px-4 py-3 text-left font-semibold">Type</th>
+                    <th class="px-4 py-3 text-left font-semibold">Price</th>
+                    <th class="px-4 py-3 text-left font-semibold">Status</th>
+                    <th class="px-4 py-3 text-left font-semibold">Featured</th>
+                    <th class="px-4 py-3 text-left font-semibold">Views</th>
+                    <th class="px-4 py-3 text-left font-semibold">Created</th>
+                    <th class="px-4 py-3 text-center font-semibold">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y dark:divide-gray-700">
+                @if (Model.Any())
+                {
+                    @foreach (var listing in Model)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-4 py-3">
+                                <p class="font-medium">@listing.Car?.Manufacturer @listing.Car?.Model</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">@listing.Car?.ModelYear</p>
+                            </td>
+                            <td class="px-4 py-3">
+                                <p class="font-medium">@listing.User?.UserName</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">@listing.User?.Email</p>
+                            </td>
+                            <td class="px-4 py-3">
+                                @if (listing.Type == CarListingModel.ListingType.ForSelling)
+                                {
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 text-xs rounded">
+                                        💰 For Sale
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 text-xs rounded">
+                                        🔑 For Rent
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-4 py-3 font-semibold">
+                                @if (listing.Type == CarListingModel.ListingType.ForSelling)
+                                {
+                                    @listing.NewPrice.ToString("C")
+                                }
+                                else
+                                {
+                                    <span>@listing.RentPrice.ToString("C")<span class="text-xs text-gray-600">/day</span></span>
+                                }
+                            </td>
+                            <td class="px-4 py-3">
+                                @switch (listing.CurrentState)
+                                {
+                                    case CarListingModel.State.Available:
+                                        <span class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs rounded font-semibold">
+                                            ✅ Available
+                                        </span>
+                                        break;
+                                    case CarListingModel.State.Sold:
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 text-xs rounded">
+                                            ⬜ Sold
+                                        </span>
+                                        break;
+                                    case CarListingModel.State.Rented:
+                                        <span class="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 text-xs rounded">
+                                            🟠 Rented
+                                        </span>
+                                        break;
+                                    case CarListingModel.State.Unavaliable:
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 text-xs rounded">
+                                            🔴 Unavailable
+                                        </span>
+                                        break;
+                                }
+                            </td>
+                            <td class="px-4 py-3">
+                                @if (listing.IsFeatured)
+                                {
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs rounded">
+                                        ⭐ Featured
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-xs text-gray-500">-</span>
+                                }
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-sm font-medium">@listing.Views 👁️</span>
+                            </td>
+                            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">
+                                @listing.CreatedAt.ToString("MMM dd")
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center justify-center gap-1 flex-wrap">
+                                    <a href="@Url.Action("EditListing", "Admin", new { id = listing.ListingId })"
+                                       class="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition">
+                                        ✏️ Edit Listing
+                                    </a>
+                                    <!-- Approve Button -->
+                                    @if (listing.CurrentState != CarListingModel.State.Available)
+                                    {
+                                        <form method="post" action="@Url.Action("ApproveListing", "Admin", new { id = listing.ListingId })" 
+                                              style="display:inline;"
+                                              onsubmit="return confirm('Approve this listing?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition">
+                                                ✅ Approve
+                                            </button>
+                                        </form>
+                                    }
+
+                                    <!-- Feature Button -->
+                                    <form method="post" action="@Url.Action("FeatureListing", "Admin", new { id = listing.ListingId })" 
+                                          style="display:inline;"
+                                          onsubmit="return confirm('@(listing.IsFeatured ? "Remove from featured?" : "Feature this listing?")');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="px-2 py-1 @(listing.IsFeatured ? "bg-gray-500 hover:bg-gray-600" : "bg-yellow-500 hover:bg-yellow-600") text-white text-xs rounded transition">
+                                            @(listing.IsFeatured ? "⭐ Unfeature" : "⭐ Feature")
+                                        </button>
+                                    </form>
+
+                                 
+
+                                    <!-- Delete Button -->
+                                    <form method="post" action="@Url.Action("DeleteListing", "Admin", new { id = listing.ListingId })" 
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Delete this listing?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition">
+                                            🗑️ Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                            No listings found
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6 flex items-center justify-between">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+            Showing page @currentPage of @totalPages (@totalCount total listings)
+        </p>
+
+        <div class="flex gap-2">
+            @if (currentPage > 1)
+            {
+                <a href="@Url.Action("Listings", "Admin", new { statusFilter = statusFilter, searchTerm = searchTerm, page = currentPage - 1 })" 
+                   class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                    ← Previous
+                </a>
+            }
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                @if (i == currentPage)
+                {
+                    <span class="px-4 py-2 bg-blue-600 text-white rounded">@i</span>
+                }
+                else if (i <= 3 || i > totalPages - 2 || Math.Abs(i - currentPage) <= 1)
+                {
+                    <a href="@Url.Action("Listings", "Admin", new { statusFilter = statusFilter, searchTerm = searchTerm, page = i })" 
+                       class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        @i
+                    </a>
+                }
+                else if (i == 4 || i == totalPages - 2)
+                {
+                    <span class="px-4 py-2">...</span>
+                }
+            }
+
+            @if (currentPage < totalPages)
+            {
+                <a href="@Url.Action("Listings", "Admin", new { statusFilter = statusFilter, searchTerm = searchTerm, page = currentPage + 1 })" 
+                   class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                    Next →
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_Notification")
