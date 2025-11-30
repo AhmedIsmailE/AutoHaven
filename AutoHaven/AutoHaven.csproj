@@ -26,5 +26,12 @@
     <None Include="IdVerificationModel.mlnet">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="wwwroot\images\AboutImgs\Ahmed.jpg" />
+    <None Include="wwwroot\images\AboutImgs\Arsany.jpg" />
+    <None Include="wwwroot\images\AboutImgs\Mohamed.jpg" />
+    <None Include="wwwroot\images\AboutImgs\Omar.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\images\AboutImgs\" />
   </ItemGroup>
 </Project>

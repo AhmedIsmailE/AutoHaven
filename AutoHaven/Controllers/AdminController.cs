@@ -1,11 +1,13 @@
 ﻿using AutoHaven.IRepository;
 using AutoHaven.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace AutoHaven.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     public class AdminController : Controller
     {
         private readonly UserManager<ApplicationUserModel> _userManager;

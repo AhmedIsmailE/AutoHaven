@@ -283,6 +283,7 @@ namespace AutoHaven.Controllers
         //======================Approving Admin Part=============================
 
         [HttpGet]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> PendingAccounts()
         {
             var pending = await _userManager.Users
