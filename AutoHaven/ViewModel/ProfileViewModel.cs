@@ -45,7 +45,8 @@ namespace AutoHaven.ViewModel
                     City = user.City,
                     State = user.State,
                     Role = user.Role,
-                    CreatedAt = user.CreatedAt
+                    CreatedAt = user.CreatedAt,
+                    UpdatedAt = user.UpdatedAt
                 };
             }
 

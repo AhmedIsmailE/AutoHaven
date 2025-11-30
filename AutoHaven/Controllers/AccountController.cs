@@ -4,6 +4,7 @@ using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -87,6 +88,7 @@ namespace AutoHaven.Controllers
                 // Create new ApplicationUser
                 ApplicationUserModel applicationUser = new ApplicationUserModel();
                 applicationUser.UserName = userViewModel.UserName;
+                applicationUser.Name = userViewModel.Name;
                 applicationUser.Email = userViewModel.Email;
                 applicationUser.PhoneNumber = userViewModel.PhoneNumber;
                 applicationUser.Role = userViewModel.Role;
@@ -263,26 +265,69 @@ namespace AutoHaven.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
+            // Keep the UI in edit mode when returning the view
             ViewData["EditMode"] = true;
+
             if (!ModelState.IsValid)
             {
-                TempData["Notification.Message"] = "Unable to determine user id.";
-                TempData["Notification.Type"] = "error";
+                // keep edit mode and show inline validation only (do NOT set TempData)
+                ViewBag.ForceEdit = true;
                 return View("Profile", model);
             }
 
+            // ----------------------------
+            // Uniqueness checks (INLINE only)
+            // ----------------------------
+            // Email uniqueness
+            if (!string.IsNullOrWhiteSpace(model.Email) &&
+                !string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var userWithEmail = await _userManager.FindByEmailAsync(model.Email);
+                if (userWithEmail != null && userWithEmail.Id != user.Id)
+                {
+                    // Show inline error under Email input
+                    // Instead of returning View("Profile", model) on error
+                    ViewData["EditMode"] = true;  // or just rely on query string
+                    TempData["Notification.Message"] = "E-mail is used already.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
+                }
+            }
+
+            // Phone uniqueness
+            if (!string.IsNullOrWhiteSpace(model.PhoneNumber) &&
+                !string.Equals(user.PhoneNumber, model.PhoneNumber, StringComparison.OrdinalIgnoreCase))
+            {
+                var userWithPhone = await _userManager.Users
+                                     .FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
+
+                if (userWithPhone != null && userWithPhone.Id != user.Id)
+                {
+                    // Instead of returning View("Profile", model) on error
+                    ViewData["EditMode"] = true;  // or just rely on query string
+                    TempData["Notification.Message"] = "Phone Number is used already.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
+                }
+            }
+
+            // ----------------------------
+            // Apply updates (existing logic)
+            // ----------------------------
             user.Name = model.Name;
             user.CompanyName = model.CompanyName;
             user.Street = model.Street;
             user.City = model.City;
             user.State = model.State;
             user.UpdatedAt = DateTime.Now;
+
             if (!string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase))
             {
                 var setEmail = await _userManager.SetEmailAsync(user, model.Email ?? string.Empty);
                 if (!setEmail.Succeeded)
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Failed to set email.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
@@ -293,25 +338,29 @@ namespace AutoHaven.Controllers
                 var setPhone = await _userManager.SetPhoneNumberAsync(user, model.PhoneNumber);
                 if (!setPhone.Succeeded)
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Failed to set phone number.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
             }
 
+            // Avatar processing (keeps your existing checks and TempData on errors)
             if (avatar != null && avatar.Length > 0)
             {
                 var allowed = new[] { "image/png", "image/jpeg", "image/jpg", "image/gif" };
                 if (!allowed.Contains(avatar.ContentType.ToLower()))
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Invalid avatar file type.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
 
                 if (avatar.Length > MaxFileBytes)
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Avatar file too large.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
@@ -327,7 +376,8 @@ namespace AutoHaven.Controllers
                         using var img = System.Drawing.Image.FromStream(mem);
                         if (img.Width > MaxWidth || img.Height > MaxHeight)
                         {
-                            TempData["Notification.Message"] = "Unable to determine user id.";
+                            ViewBag.ForceEdit = true;
+                            TempData["Notification.Message"] = "Avatar dimensions too large.";
                             TempData["Notification.Type"] = "error";
                             return View("Profile", model);
                         }
@@ -364,7 +414,8 @@ namespace AutoHaven.Controllers
                 }
                 catch
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Failed to process avatar.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
@@ -373,7 +424,8 @@ namespace AutoHaven.Controllers
             var update = await _userManager.UpdateAsync(user);
             if (!update.Succeeded)
             {
-                TempData["Notification.Message"] = "Unable to determine user id.";
+                ViewBag.ForceEdit = true;
+                TempData["Notification.Message"] = "Unable to update profile.";
                 TempData["Notification.Type"] = "error";
                 return View("Profile", model);
             }
@@ -382,6 +434,10 @@ namespace AutoHaven.Controllers
             TempData["Notification.Type"] = "success";
             return RedirectToAction(nameof(Profile));
         }
+
+
+
+
 
         [Authorize]
         [HttpPost]
@@ -880,6 +936,16 @@ namespace AutoHaven.Controllers
 
             // otherwise treat as an action name
             return RedirectToAction(actionOrControllerAndAction);
+        }
+
+        //=======================For Notifications to work globaly==================
+        public class BaseController : Controller
+        {
+            public override void OnActionExecuted(ActionExecutedContext context)
+            {
+                TempData.Keep();
+                base.OnActionExecuted(context);
+            }
         }
     }
 }
