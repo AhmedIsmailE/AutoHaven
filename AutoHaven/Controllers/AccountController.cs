@@ -418,25 +418,111 @@ namespace AutoHaven.Controllers
         [HttpGet]
         public async Task<IActionResult> Admin()
         {
-            var pending = await _userManager.Users
-                .Where(u => !u.IsApproved)
-                .OrderBy(u => u.CreatedAt)
-                .Select(u => new AutoHaven.ViewModel.PendingUserViewModel
+            // Cars counts
+            int carsForSale = 0;
+            int carsForRent = 0;
+            try
+            {
+                carsForSale = await _projectDbContext.CarListings
+                    .CountAsync(c => c.Type == CarListingModel.ListingType.ForSelling);
+                carsForRent = await _projectDbContext.CarListings
+                    .CountAsync(c => c.Type == CarListingModel.ListingType.ForRenting);
+            }
+            catch
+            {
+                // fallback to in-memory if EF translation fails (rare)
+                try
                 {
-                    Id = u.Id,
-                    UserName = u.UserName,
-                    Email = u.Email,
-                    PhoneNumber = u.PhoneNumber,
-                    Name = u.Name,
-                    CreatedAt = u.CreatedAt,
-                    Role = u.Role.ToString(),
-                    NationalId = u.NationalId,
-                    IdImagePath = u.IdImagePath
-                })
-                .ToListAsync();
+                    carsForSale = _projectDbContext.CarListings
+                        .AsEnumerable().Count(c => c.Type == CarListingModel.ListingType.ForSelling);
+                    carsForRent = _projectDbContext.CarListings
+                        .AsEnumerable().Count(c => c.Type == CarListingModel.ListingType.ForRenting);
+                }
+                catch
+                {
+                    carsForSale = 0;
+                    carsForRent = 0;
+                }
+            }
 
-            return View("AdminDashboard", pending);
+            // Users count (exclude Admin role stored in ApplicationUserModel.Role enum)
+            int totalUsers = 0;
+            try
+            {
+                totalUsers = await _userManager.Users
+                    .Where(u => u.Role != ApplicationUserModel.RoleEnum.Admin)
+                    .CountAsync();
+            }
+            catch
+            {
+                // fallback
+                try
+                {
+                    totalUsers = _userManager.Users
+                        .Where(u => u.Role != ApplicationUserModel.RoleEnum.Admin)
+                        .Count();
+                }
+                catch
+                {
+                    totalUsers = 0;
+                }
+            }
+
+            // Total revenue (monthly) computed from SubscriptionPlan.PricePerMonth
+            // Note: this sums price-per-month across all UserSubscriptions.
+            // If you want only ACTIVE subscriptions, see commented examples below.
+            decimal totalRevenueMonthly = 0m;
+            try
+            {
+                // Preferred: include the navigation property if available
+                totalRevenueMonthly = await _projectDbContext.UserSubscriptions
+                    .Where(us => us.UserSubscriptionId != 0) // guard
+                    .Join(_projectDbContext.SubscriptionPlans,
+                          us => us.UserSubscriptionId,
+                          sp => sp.SubscriptionPlanId,
+                          (us, sp) => sp.PricePerMonth)
+                    .SumAsync();
+            }
+            catch
+            {
+                // fallback attempt using Include (if navigation exists)
+                try
+                {
+                    totalRevenueMonthly = await _projectDbContext.UserSubscriptions
+                        .Include(us => us.SubscriptionPlan)
+                        .Where(us => us.SubscriptionPlan != null)
+                        .Select(us => us.SubscriptionPlan.PricePerMonth)
+                        .SumAsync();
+                }
+                catch
+                {
+                    totalRevenueMonthly = 0m;
+                }
+            }
+
+            // --- OPTIONAL: examples of filters you might want ---
+            // 1) Sum only active subscriptions if your UserSubscriptionModel has an IsActive flag:
+            // totalRevenueMonthly = await _projectDbContext.UserSubscriptions
+            //     .Where(us => us.IsActive) // property must exist
+            //     .Join(_projectDbContext.SubscriptionPlans, us => us.SubscriptionPlanId, sp => sp.SubscriptionPlanId, (us, sp) => sp.PricePerMonth)
+            //     .SumAsync();
+            //
+            // 2) Annual revenue:
+            // var totalRevenueAnnual = totalRevenueMonthly * 12m;
+
+            // Provide values to view
+            ViewBag.CarsForSale = carsForSale;
+            ViewBag.CarsForRent = carsForRent;
+            ViewBag.TotalUsers = totalUsers;
+            ViewBag.TotalRevenueMonthly = totalRevenueMonthly;
+
+            // You could also format here and pass a string:
+            ViewBag.TotalRevenueMonthlyFormatted = totalRevenueMonthly.ToString("C0"); // culture-based currency
+
+            return View("AdminDashboard");
         }
+
+
 
 
         [Authorize]

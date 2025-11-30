@@ -10,26 +10,33 @@
     <!-- HeadlineText -->
     <h1 class="text-[#101418] tracking-light text-[32px] font-bold leading-tight pb-3">Welcome back, Admin.</h1>
 
-    <!-- Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Cars for Rent</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">1,204</p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
+                @(ViewBag.CarsForRent ?? 0)
+            </p>
         </div>
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Cars for Sale</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">350</p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
+                @(ViewBag.CarsForSale ?? 0)
+            </p>
         </div>
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Total Revenue</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">$54,820</p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
+                @((ViewBag.TotalRevenue ?? 0m).ToString("C0"))
+            </p>
         </div>
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Number of Users</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">89</p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
+                @(ViewBag.TotalUsers ?? 0)
+            </p>
         </div>
     </div>
-</div>
+
 
 <!-- Pending accounts rendered server-side inside the same view -->
 <div class="px-10 mt-6">
