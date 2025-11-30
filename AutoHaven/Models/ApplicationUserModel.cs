@@ -10,11 +10,11 @@ namespace AutoHaven.Models
     {
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
         [MaxLength(100)]
         [Column(TypeName = "nvarchar(100)")]
         public string? CompanyName { get; set; }
 
+        public bool IsApproved { get; set; } = false;
         [MaxLength(100)]
         [Column(TypeName = "nvarchar(100)")]
         public string? Name { get; set; }

@@ -78,28 +78,38 @@
         </div>
     </div>
 
-    <form id="antiForgeryForm" method="post">
+    <form id="antiForgeryForm" method="post" style="display:none">
         @Html.AntiForgeryToken()
     </form>
 
-    @if (!Model?.Any() ?? true)
-    {
-        <div class="mt-10 flex flex-col items-center justify-center text-center">
-            <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                <span class="material-symbols-outlined text-3xl">history</span>
+    @* --- Empty state (Favorites-style centered UI) --- *@
+    <div id="historyEmpty" class="w-full mt-10" style="@(totalCount > 0 ? "display:none" : "")">
+        <div class="max-w-2xl mx-auto flex flex-col items-center justify-center text-center gap-4 py-20">
+            <div class="flex items-center justify-center h-20 w-20 rounded-full bg-gray-100 text-gray-400">
+                <span class="material-symbols-outlined text-4xl">history</span>
             </div>
-            <h2 class="text-lg font-semibold text-gray-900">No browsing history</h2>
-            <p class="mt-1 text-sm text-gray-500 max-w-md">Browse car listings and they'll appear here for quick access later.</p>
-            <a asp-controller="Car" asp-action="Home" class="mt-4 inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">No browsing history</h2>
+                <p class="text-sm text-gray-500 max-w-md mx-auto">
+                    Browse car listings and they'll appear here for quick access later.
+                </p>
+            </div>
+
+            <a href="@Url.Action("Index", "Car")"
+               class="mt-3 inline-flex items-center rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
                 Browse Cars
             </a>
         </div>
+    </div>
+
+    @if (!Model?.Any() ?? true)
+    {
+        @* nothing else when empty (pagination & grid are hidden by server render) *@
     }
     else
     {
         <div id="historyGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            @* ... top of file unchanged ... *@
-
             @foreach (var entry in Model)
             {
                 var listing = entry?.CarListing;
@@ -113,9 +123,7 @@
                 string priceLabel = listing.Type == CarListingModel.ListingType.ForSelling ? "" : "/day";
                 var viewedTicks = entry.ViewedAt.ToUniversalTime().Ticks;
 
-                // -------------------------
                 // Determine favourited state (authoritative)
-                // -------------------------
                 var favSet = ViewBag.FavouritedIds as System.Collections.Generic.HashSet<int>;
                 bool isFavorited = false;
                 if (favSet != null)
@@ -124,7 +132,6 @@
                 }
                 else
                 {
-                    // Fallback: previous reflection based logic
                     try
                     {
                         var entryProp = entry.GetType().GetProperty("IsFavorited");
@@ -134,52 +141,36 @@
                         }
                         else
                         {
-                            var listingProp = listing.GetType().GetProperty("IsFavorited");
-                            if (listingProp != null)
+                            var favsProp = listing.GetType().GetProperty("Favourites");
+                            if (favsProp != null)
                             {
-                                isFavorited = (bool)listingProp.GetValue(listing);
-                            }
-                            else
-                            {
-                                var favsProp = listing.GetType().GetProperty("Favourites");
-                                if (favsProp != null)
+                                var favsVal = favsProp.GetValue(listing) as System.Collections.IEnumerable;
+                                if (favsVal != null)
                                 {
-                                    var favsVal = favsProp.GetValue(listing) as System.Collections.IEnumerable;
-                                    if (favsVal != null)
-                                    {
-                                        var en = favsVal.GetEnumerator();
-                                        isFavorited = en.MoveNext();
-                                    }
+                                    var en = favsVal.GetEnumerator();
+                                    isFavorited = en.MoveNext();
                                 }
                             }
                         }
                     }
-                    catch
-                    {
-                        isFavorited = false;
-                    }
+                    catch { isFavorited = false; }
                 }
 
-            <div class="js-history-card group flex flex-col rounded-2xl bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border border-gray-100"
-                 data-price="@price"
-                 data-date="@viewedTicks">
-                <!-- Image -->
-                <div class="relative h-48 w-full overflow-hidden rounded-t-2xl bg-gray-100">
-                    <img src="@imageUrl" alt="@title" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                <div class="js-history-card group flex flex-col rounded-2xl bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border border-gray-100"
+                     data-price="@price"
+                     data-date="@viewedTicks">
+                    <div class="relative h-48 w-full overflow-hidden rounded-t-2xl bg-gray-100">
+                        <img src="@imageUrl" alt="@title" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
 
-                    <div class="absolute left-3 top-3 z-20">
-                        <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm bg-white/20 border
-                        @(listing.Type == CarListingModel.ListingType.ForRenting
-                                                                                                      ? "border-green-400 text-green-700"
-                                                                                                      : "border-blue-400 text-blue-700")">
-                        @(listing.Type == CarListingModel.ListingType.ForRenting ? "For Rent" : "For Sale")
-                    </span>
-                </div>
+                        <div class="absolute left-3 top-3 z-20">
+                            <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm bg-white/20 border
+                                    @(listing.Type == CarListingModel.ListingType.ForRenting ? "border-green-400 text-green-700" : "border-blue-400 text-blue-700")">
+                                @(listing.Type == CarListingModel.ListingType.ForRenting ? "For Rent" : "For Sale")
+                            </span>
+                        </div>
 
-                        <!-- Favourite toggle (single button + noscript fallback) -->
                         <div class="absolute right-3 top-14">
-                            @* Determine initial state already computed above in isFavorited variable *@
-                    @if (!User.Identity.IsAuthenticated)
+                            @if (!User.Identity.IsAuthenticated)
                             {
                                 <a href="@Url.Action("Login", "Account")"
                                    class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white"
@@ -199,36 +190,9 @@
                                         @(isFavorited ? "favorite" : "favorite_border")
                                     </span>
                                 </button>
-
-                                @* Non-JS fallback: posts to AddToFavorite/RemoveFromFavorite and controller will redirect *@
-                                <noscript>
-                                    @if (isFavorited)
-                                    {
-                                        <form method="post" action="@Url.Action("RemoveFromFavorite", "Account")">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="listingId" value="@listing.ListingId" />
-                                            <input type="hidden" name="url" value="Account/History" />
-                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white" title="Remove from favourites">
-                                                <span class="material-symbols-outlined text-lg text-red-600">favorite</span>
-                                            </button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <form method="post" action="@Url.Action("AddToFavorite", "Account")">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="listingId" value="@listing.ListingId" />
-                                            <input type="hidden" name="url" value="Account/History" />
-                                            <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white" title="Add to favourites">
-                                                <span class="material-symbols-outlined text-lg text-gray-700">favorite_border</span>
-                                            </button>
-                                        </form>
-                                    }
-                                </noscript>
                             }
                         </div>
 
-                        <!-- Remove from history (X) -->
                         <form method="post" asp-action="RemoveFromHistory" asp-controller="Account" asp-route-id="@entry.Id" onsubmit="return confirm('Remove this entry from your history?');" class="absolute right-3 top-3">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white" title="Remove from history">
@@ -237,7 +201,6 @@
                         </form>
                     </div>
 
-                    <!-- Content -->
                     <div class="flex flex-1 flex-col px-4 pt-4 pb-4">
                         <h3 class="text-base font-semibold text-gray-900 line-clamp-2">@title</h3>
                         <p class="mt-1 text-xs text-gray-500">
@@ -293,14 +256,27 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
+        // small toast helper (SweetAlert2)
+        function showToast(type, message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: type || 'info',
+                title: message || '',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true
+            });
+        }
+
         (function () {
-            // Grab the antiforgery token value from the hidden form rendered earlier
             const antiForm = document.getElementById('antiForgeryForm');
             const tokenInput = antiForm ? antiForm.querySelector('input[name="__RequestVerificationToken"]') : null;
             const token = tokenInput ? tokenInput.value : '';
 
-            // Delegate click for favorite buttons (uses event delegation for cards)
             document.addEventListener('click', function (e) {
                 const btn = e.target.closest && e.target.closest('.js-fav-btn');
                 if (!btn) return;
@@ -313,10 +289,8 @@
                 const removeUrl = '/Account/RemoveFromFavoriteInHistory';
                 const url = currently ? removeUrl : addUrl;
 
-                // optimistic UI: flip immediately
+                // optimistic UI
                 toggleButtonUI(btn, !currently);
-
-                // disable while request in flight
                 btn.disabled = true;
 
                 fetch(url, {
@@ -328,40 +302,41 @@
                     body: new URLSearchParams({ listingId: listingId })
                 })
                 .then(async (resp) => {
+                    // try parse json if available
+                    let json = null;
+                    try { json = await resp.json(); } catch { json = null; }
+
                     if (!resp.ok) {
-                        let msg = resp.statusText || 'Server error';
-                        try {
-                            const json = await resp.json();
-                            msg = json && json.message ? json.message : msg;
-                        } catch { }
+                        // server error: show message returned by server if any
+                        const msg = (json && json.message) ? json.message : ('Server error: ' + resp.status);
                         throw new Error(msg);
                     }
-                    return resp.json().catch(() => ({ success: true, isFavorite: !currently }));
+
+                    // success: return parsed json (or fallback)
+                    return json ?? { success: true, isFavorite: !currently };
                 })
                 .then((data) => {
-                    // If server says failure, rollback and show message
                     if (data && data.success === false) {
+                        // server says failure -> rollback UI and show error
                         toggleButtonUI(btn, currently); // rollback
-                        alert(data.message || 'Failed to update favourites');
+                        showToast('error', data.message || 'Failed to update favourites');
                     } else {
-                        // Use isFavorite if server sent explicit state, otherwise invert
+                        // success -> pick server-provided state or invert
                         const newState = (typeof data.isFavorite !== 'undefined') ? Boolean(data.isFavorite) : !currently;
                         setButtonState(btn, newState);
+                        showToast('success', newState ? 'Added to favourites' : 'Removed from favourites');
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    // rollback UI
+                    // rollback UI and show toast
                     toggleButtonUI(btn, currently);
-                    alert('Failed to update favourites: ' + (err && err.message ? err.message : 'Unknown error'));
+                    showToast('error', err && err.message ? err.message : 'Failed to update favourites');
                 })
-                .finally(() => {
-                    btn.disabled = false;
-                });
+                .finally(() => { btn.disabled = false; });
             });
 
             function toggleButtonUI(btn, isFav) {
-                // quick local swap for immediate feedback (no ARIA/state commit)
                 const icon = btn.querySelector('.material-symbols-outlined');
                 if (!icon) return;
                 if (isFav) {
@@ -381,10 +356,8 @@
                 }
             }
 
-            function setButtonState(btn, isFav) {
-                // ensure full consistent state (called after successful server response)
-                toggleButtonUI(btn, isFav);
-            }
+            function setButtonState(btn, isFav) { toggleButtonUI(btn, isFav); }
         })();
     </script>
 }
+

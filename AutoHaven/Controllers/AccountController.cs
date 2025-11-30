@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using static AutoHaven.IdVerificationModel;
 
 namespace AutoHaven.Controllers
 {
@@ -51,6 +52,7 @@ namespace AutoHaven.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterUserViewModel userViewModel)
         {
             // only validate provider-specific rules
@@ -80,6 +82,7 @@ namespace AutoHaven.Controllers
                     if (existsNi)
                         ModelState.AddModelError(nameof(userViewModel.NationalId), "This National ID is already used.");
                 }
+
             }
 
             if (ModelState.IsValid)
@@ -93,6 +96,10 @@ namespace AutoHaven.Controllers
                 applicationUser.Role = userViewModel.Role;
                 applicationUser.CreatedAt = DateTime.Now;
                 applicationUser.UpdatedAt = DateTime.Now;
+
+                // NEW: set IsApproved depending on role (providers require admin approval)
+                applicationUser.IsApproved = (userViewModel.Role == ApplicationUserModel.RoleEnum.Provider) ? false : true;
+
                 if (userViewModel.Role == ApplicationUserModel.RoleEnum.Provider)
                 {
                     applicationUser.State = userViewModel.State;
@@ -100,10 +107,8 @@ namespace AutoHaven.Controllers
                     applicationUser.CompanyName = userViewModel.CompanyName;
                     applicationUser.NationalId = userViewModel.NationalId;
                     applicationUser.City = userViewModel.City;
-
-
                 }
-                //  applicationUser.PasswordHash=userViewModel.Password;  
+
                 // Check if Email already exists
                 var existingEmail = await _userManager.Users
                     .FirstOrDefaultAsync(u => u.Email == userViewModel.Email);
@@ -123,6 +128,14 @@ namespace AutoHaven.Controllers
                     ModelState.AddModelError("UserName", "Username is already taken.");
                     return View(userViewModel);
                 }
+                //CHeck if Phone Number already exists
+                var existingPhone = await _userManager.Users
+                    .FirstOrDefaultAsync(u => u.PhoneNumber == userViewModel.PhoneNumber);
+                if (existingPhone != null)
+                {
+                    ModelState.AddModelError("PhoneNumber", "Phone Number is already in use.");
+                    return View(userViewModel);
+                }
 
                 // Handle ID Image
                 if (userViewModel.IdImage != null && userViewModel.IdImage.Length > 0)
@@ -134,13 +147,13 @@ namespace AutoHaven.Controllers
                         return View(userViewModel);
                     }
 
-                    if (userViewModel.IdImage.Length > 2 * 1024 * 1024) // 2 MB limit
+                    if (userViewModel.IdImage.Length > 2 * 1024 * 1024)
                     {
                         ModelState.AddModelError("IdImage", "Maximum file size is 2 MB.");
                         return View(userViewModel);
                     }
 
-                    // Save image to wwwroot/images/Providers/{username}/ID/
+                    // 1️⃣ Save the image to disk
                     var webRoot = _env.WebRootPath;
                     var usernameSafe = string.Concat(userViewModel.UserName.Split(Path.GetInvalidFileNameChars()));
                     var uploadDir = Path.Combine(webRoot, "images", "Providers", usernameSafe, "ID");
@@ -150,19 +163,45 @@ namespace AutoHaven.Controllers
                     if (string.IsNullOrWhiteSpace(ext)) ext = ".png";
 
                     var fileName = $"id_{Guid.NewGuid():N}{ext}";
-                    var filePath = Path.Combine(uploadDir, fileName);
+                    var absolutePath = Path.Combine(uploadDir, fileName);
 
-                    using (var fs = new FileStream(filePath, FileMode.Create))
+                    using (var fs = new FileStream(absolutePath, FileMode.Create))
                     {
                         await userViewModel.IdImage.CopyToAsync(fs);
                     }
 
-                    // store relative path if needed
+                    // 2️⃣ Run AI verification
+                    var mlResult = IdVerificationModel.PredictFromImage(absolutePath);
+
+                    // 3️⃣ If invalid → delete file + return error
+                    if (mlResult.PredictedLabel != "Valid")
+                    {
+                        if (System.IO.File.Exists(absolutePath))
+                            System.IO.File.Delete(absolutePath);
+
+                        ModelState.AddModelError("IdImage", "Invalid ID Image. Please upload a valid national ID.");
+                        return View(userViewModel);
+                    }
+
+                    // 4️⃣ If valid → store relative path in DB
                     applicationUser.IdImagePath = $"/images/Providers/{usernameSafe}/ID/{fileName}";
                 }
+
                 IdentityResult result = await _userManager.CreateAsync(applicationUser, userViewModel.Password);
                 if (result.Succeeded)
                 {
+                    // If provider -> tell them account is pending approval; else show success message
+                    if (userViewModel.Role == ApplicationUserModel.RoleEnum.Provider)
+                    {
+                        TempData["Notification.Message"] = "Registration successful. Your account is pending admin approval.";
+                        TempData["Notification.Type"] = "info";
+                    }
+                    else
+                    {
+                        TempData["Notification.Message"] = "Registration successful. You can now log in.";
+                        TempData["Notification.Type"] = "success";
+                    }
+
                     return RedirectToAction("Login");
                 }
                 else
@@ -176,18 +215,22 @@ namespace AutoHaven.Controllers
             }
             return View(userViewModel);
         }
+        // ==================== GET: Login ====================
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
         [HttpPost]
+        // ==================== POST: Login (with approval check) ====================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginUserViewModel loginUserViewModel)
         {
             if (ModelState.IsValid)
             {
-                // Search user by Email or Phone
-                ApplicationUserModel user = await _userManager.Users
+                // find user by email or phone
+                var user = await _userManager.Users
                     .FirstOrDefaultAsync(u => u.Email == loginUserViewModel.EmailOrPhone
                                            || u.PhoneNumber == loginUserViewModel.EmailOrPhone);
 
@@ -205,6 +248,15 @@ namespace AutoHaven.Controllers
 
                     if (result)
                     {
+                        // block sign-in if not approved
+                        if (!user.IsApproved && (user.Role == ApplicationUserModel.RoleEnum.Provider))
+                        {
+                            // set TempData so the view shows the red rounded rectangle
+                            TempData["Notification.Message"] = "Your account is awaiting admin approval.";
+                            TempData["Notification.Type"] = "error";
+                            return View(loginUserViewModel);
+                        }
+
                         user.UpdatedAt = DateTime.Now;
                         await _userManager.UpdateAsync(user);
                         List<Claim> claims = new List<Claim>
@@ -215,9 +267,7 @@ namespace AutoHaven.Controllers
 
                         };
 
-                        await _signInManager.SignInWithClaimsAsync(user, isPersistent: loginUserViewModel.RememberMe, claims); // Create Cookies
-
-
+                        await _signInManager.SignInWithClaimsAsync(user, isPersistent: loginUserViewModel.RememberMe, claims);
                         return RedirectToAction("Home");
                     }
                 }
@@ -226,29 +276,167 @@ namespace AutoHaven.Controllers
                 return View(loginUserViewModel);
             }
 
-
             ModelState.AddModelError(string.Empty, "Invalid Credentials");
             return View(loginUserViewModel);
         }
+
+        //======================Approving Admin Part=============================
+
+        [HttpGet]
+        public async Task<IActionResult> PendingAccounts()
+        {
+            var pending = await _userManager.Users
+                .Where(u => !u.IsApproved)
+                .OrderBy(u => u.CreatedAt)
+                .Select(u => new {
+                    u.Id,
+                    u.UserName,
+                    u.Email,
+                    u.PhoneNumber,
+                    u.Name,
+                    u.CreatedAt,
+                    u.Role,
+                    u.NationalId,
+                    u.IdImagePath
+                })
+                .ToListAsync();
+
+            // Return partial view HTML (we'll create _PendingAccountsTable)
+            return PartialView("_PendingAccountsTable", pending);
+        }
+
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveUser([FromForm] int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null) return NotFound(new { success = false, message = "User not found.", type = "error" });
+
+            user.IsApproved = true;
+            user.UpdatedAt = DateTime.Now;
+            var up = await _userManager.UpdateAsync(user);
+            if (!up.Succeeded)
+            {
+                var errors = string.Join("; ", up.Errors.Select(e => e.Description));
+                return BadRequest(new { success = false, message = "Failed to approve user: " + errors, type = "error" });
+            }
+
+            // optional: send email/notification
+
+            return Ok(new { success = true, message = "User approved successfully.", type = "success" });
+        }
+
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectUser([FromForm] int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null) return NotFound(new { success = false, message = "User not found.", type = "error" });
+
+            using var tx = await _projectDbContext.Database.BeginTransactionAsync();
+            try
+            {
+                var uid = user.Id;
+
+                try
+                {
+                    var favs = _favouriteRepo.Get().Where(f => f.UserId == uid).ToList();
+                    foreach (var f in favs) _favouriteRepo.Delete(f.FavouriteId);
+                }
+                catch { }
+
+                try { _historyRepo.DeleteByUser(uid); } catch { }
+
+                try
+                {
+                    var reviews = _reviewRepo.Get().Where(r => r.UserId == uid).ToList();
+                    foreach (var r in reviews) _reviewRepo.Delete(r.ReviewId);
+                }
+                catch { }
+
+                try
+                {
+                    var listings = _carListingRepo.Get().Where(c => c.UserId == uid).ToList();
+                    foreach (var l in listings) _carListingRepo.Delete(l.ListingId);
+                }
+                catch { }
+
+                await _projectDbContext.SaveChangesAsync();
+
+                var delRes = await _userManager.DeleteAsync(user);
+                if (!delRes.Succeeded)
+                {
+                    await tx.RollbackAsync();
+                    var err = string.Join("; ", delRes.Errors.Select(e => e.Description));
+                    return BadRequest(new { success = false, message = "Failed to delete user: " + err, type = "error" });
+                }
+
+                await tx.CommitAsync();
+                return Ok(new { success = true, message = "User rejected and removed.", type = "success" });
+            }
+            catch (Exception ex)
+            {
+                try { await tx.RollbackAsync(); } catch { }
+                return StatusCode(500, new { success = false, message = "Error: " + ex.Message, type = "error" });
+            }
+        }
+
+
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
 
-        [Authorize]
+        //[Authorize]
         public IActionResult About()
         {
             return View("About");
         }
+        public IActionResult AccessDenied()
+        {
+            TempData["Notification.Message"] = "Access Denied: You do not have permission to access this resource.";
+            TempData["Notification.Type"] = "error";
+
+            return View("Home"); 
+        }
+        //public IActionResult LoginCustom()
+        //{
+        //    TempData["Notification.Message"] = "You must be logged in to access this page.";
+        //    TempData["Notification.Type"] = "error";
+        //    return View("Login");
+        //}
         public IActionResult Home()
         {
             return View();
         }
-        public IActionResult Admin()
+
+        [Authorize(Policy = "AdminOnly")]
+        [HttpGet]
+        public async Task<IActionResult> Admin()
         {
-            return View("AdminDashboard");
+            var pending = await _userManager.Users
+                .Where(u => !u.IsApproved)
+                .OrderBy(u => u.CreatedAt)
+                .Select(u => new AutoHaven.ViewModel.PendingUserViewModel
+                {
+                    Id = u.Id,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    Name = u.Name,
+                    CreatedAt = u.CreatedAt,
+                    Role = u.Role.ToString(),
+                    NationalId = u.NationalId,
+                    IdImagePath = u.IdImagePath
+                })
+                .ToListAsync();
+
+            return View("AdminDashboard", pending);
         }
+
 
         [Authorize]
         [HttpGet]
@@ -273,26 +461,69 @@ namespace AutoHaven.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
+            // Keep the UI in edit mode when returning the view
             ViewData["EditMode"] = true;
+
             if (!ModelState.IsValid)
             {
-                TempData["Notification.Message"] = "Unable to determine user id.";
-                TempData["Notification.Type"] = "error";
+                // keep edit mode and show inline validation only (do NOT set TempData)
+                ViewBag.ForceEdit = true;
                 return View("Profile", model);
             }
 
+            // ----------------------------
+            // Uniqueness checks (INLINE only)
+            // ----------------------------
+            // Email uniqueness
+            if (!string.IsNullOrWhiteSpace(model.Email) &&
+                !string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var userWithEmail = await _userManager.FindByEmailAsync(model.Email);
+                if (userWithEmail != null && userWithEmail.Id != user.Id)
+                {
+                    // Show inline error under Email input
+                    // Instead of returning View("Profile", model) on error
+                    ViewData["EditMode"] = true;  // or just rely on query string
+                    TempData["Notification.Message"] = "E-mail is used already.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
+                }
+            }
+
+            // Phone uniqueness
+            if (!string.IsNullOrWhiteSpace(model.PhoneNumber) &&
+                !string.Equals(user.PhoneNumber, model.PhoneNumber, StringComparison.OrdinalIgnoreCase))
+            {
+                var userWithPhone = await _userManager.Users
+                                     .FirstOrDefaultAsync(u => u.PhoneNumber == model.PhoneNumber);
+
+                if (userWithPhone != null && userWithPhone.Id != user.Id)
+                {
+                    // Instead of returning View("Profile", model) on error
+                    ViewData["EditMode"] = true;  // or just rely on query string
+                    TempData["Notification.Message"] = "Phone Number is used already.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
+                }
+            }
+
+            // ----------------------------
+            // Apply updates (existing logic)
+            // ----------------------------
             user.Name = model.Name;
             user.CompanyName = model.CompanyName;
             user.Street = model.Street;
             user.City = model.City;
             user.State = model.State;
             user.UpdatedAt = DateTime.Now;
+
             if (!string.Equals(user.Email, model.Email, StringComparison.OrdinalIgnoreCase))
             {
                 var setEmail = await _userManager.SetEmailAsync(user, model.Email ?? string.Empty);
                 if (!setEmail.Succeeded)
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Failed to set email.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
@@ -303,25 +534,29 @@ namespace AutoHaven.Controllers
                 var setPhone = await _userManager.SetPhoneNumberAsync(user, model.PhoneNumber);
                 if (!setPhone.Succeeded)
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Failed to set phone number.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
             }
 
+            // Avatar processing (keeps your existing checks and TempData on errors)
             if (avatar != null && avatar.Length > 0)
             {
                 var allowed = new[] { "image/png", "image/jpeg", "image/jpg", "image/gif" };
                 if (!allowed.Contains(avatar.ContentType.ToLower()))
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Invalid avatar file type.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
 
                 if (avatar.Length > MaxFileBytes)
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Avatar file too large.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
@@ -337,7 +572,8 @@ namespace AutoHaven.Controllers
                         using var img = System.Drawing.Image.FromStream(mem);
                         if (img.Width > MaxWidth || img.Height > MaxHeight)
                         {
-                            TempData["Notification.Message"] = "Unable to determine user id.";
+                            ViewBag.ForceEdit = true;
+                            TempData["Notification.Message"] = "Avatar dimensions too large.";
                             TempData["Notification.Type"] = "error";
                             return View("Profile", model);
                         }
@@ -374,7 +610,8 @@ namespace AutoHaven.Controllers
                 }
                 catch
                 {
-                    TempData["Notification.Message"] = "Unable to determine user id.";
+                    ViewBag.ForceEdit = true;
+                    TempData["Notification.Message"] = "Failed to process avatar.";
                     TempData["Notification.Type"] = "error";
                     return View("Profile", model);
                 }
@@ -383,7 +620,8 @@ namespace AutoHaven.Controllers
             var update = await _userManager.UpdateAsync(user);
             if (!update.Succeeded)
             {
-                TempData["Notification.Message"] = "Unable to determine user id.";
+                ViewBag.ForceEdit = true;
+                TempData["Notification.Message"] = "Unable to update profile.";
                 TempData["Notification.Type"] = "error";
                 return View("Profile", model);
             }
@@ -392,6 +630,10 @@ namespace AutoHaven.Controllers
             TempData["Notification.Type"] = "success";
             return RedirectToAction(nameof(Profile));
         }
+
+
+
+
 
         [Authorize]
         [HttpPost]

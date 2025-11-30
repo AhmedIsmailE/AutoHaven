@@ -94,6 +94,11 @@ namespace AutoHaven.Models
                 .IsUnique()
                 .HasFilter("[NationalId] IS NOT NULL") // فقط تحقق الفريد للقيم غير null
                 .HasDatabaseName("IX_AspNetUsers_NationalId_Unique");
+            // Unique index on PhoneNumber allowing multiple NULLs
+            modelBuilder.Entity<ApplicationUserModel>()
+            .HasIndex(u => u.PhoneNumber)
+            .IsUnique();
+
             // Create password hasher
             var hasher = new PasswordHasher<ApplicationUserModel>();
 

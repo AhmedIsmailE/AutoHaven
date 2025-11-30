@@ -220,7 +220,7 @@
         </div>
 
         <!-- Pagination -->
-        <div class="mt-8 flex justify-center items-center gap-3">
+        <div id="paginationContainer" class="mt-8 flex justify-center items-center gap-3">
             <nav class="inline-flex items-center gap-2" aria-label="Pagination">
                 <a class="px-3 py-2 rounded-md border border-gray-200 bg-white"
                    asp-action="Favorites" asp-controller="Account"
@@ -255,7 +255,22 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
+        // small toast helper (SweetAlert2)
+        function showToast(type, message) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: type || 'info',
+                title: message || '',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true
+            });
+        }
+
         // Sorting logic (unchanged)
         (function () {
             const sortSelect = document.getElementById('sortSelect');
@@ -306,30 +321,42 @@
                     body: new URLSearchParams(data),
                     credentials: 'same-origin'
                 }).then(async r => {
+                    // return both raw response and parsed json (if any)
+                    const ret = { ok: r.ok, status: r.status, json: null, text: null };
                     try {
-                        const json = await r.json();
-                        return { ok: r.ok, status: r.status, json };
+                        ret.json = await r.json();
                     } catch (e) {
-                        return { ok: r.ok, status: r.status, json: null };
+                        // not JSON
+                        try { ret.text = await r.text(); } catch {}
                     }
+                    return ret;
                 });
             }
 
-            function updateFavoritesCount(delta) {
-                const el = document.getElementById('favoritesCount');
-                if (!el) return;
-                const current = parseInt(el.textContent || '0', 10);
-                const next = Math.max(0, current + delta);
-                el.textContent = next;
+        function updateFavoritesCount(delta) {
+            const el = document.getElementById('favoritesCount');
+            if (!el) return;
+            const current = parseInt(el.textContent || '0', 10);
+            const next = Math.max(0, current + delta);
+            el.textContent = next;
 
-                // If zero, show empty state and remove grid
-                if (next === 0) {
-                    const emptyState = document.getElementById('emptyState');
-                    const grid = document.getElementById('favoritesGrid');
-                    if (grid) grid.remove();
-                    if (emptyState) emptyState.style.display = 'block';
-                }
+            // pagination container (server-rendered)
+            const pagination = document.getElementById('paginationContainer');
+
+            // If zero, show empty state and remove/hide grid + pagination
+            if (next === 0) {
+                const emptyState = document.getElementById('emptyState');
+                const grid = document.getElementById('favoritesGrid');
+                if (grid) grid.remove();
+                if (emptyState) emptyState.style.display = 'block';
+                if (pagination) pagination.remove();
+                return;
             }
+
+            // If we still have items > 0, ensure pagination is visible (in case you re-populate it)
+            if (pagination) pagination.style.display = 'flex';
+        }
+
 
             function setButtonRemoving(btn, removing) {
                 btn.disabled = removing;
@@ -346,40 +373,64 @@
                 const listingId = btn.getAttribute('data-listing-id');
                 if (!listingId) return;
 
-                // currently favorited (on this page) -> remove
-                const removeUrl = '@Url.Action("RemoveFromFavorite", "Account")';
+                // Use the AJAX-friendly endpoint for favorites page
+                const removeUrl = '@Url.Action("RemoveFromFavoriteInFavorites", "Account")';
 
                 setButtonRemoving(btn, true);
 
                 postFormUrlEncoded(removeUrl, { listingId: listingId })
                     .then(resp => {
-                        if (resp.ok && (resp.json === null || resp.json === undefined || resp.json.success || resp.json.success === true)) {
-                            // success: remove the card from DOM
-                            const card = btn.closest('.js-favorite-card');
-                            if (card) card.remove();
-                            updateFavoritesCount(-1);
-                        } else if (resp.json && !resp.ok) {
-                            // server returned JSON error
-                            console.error('Remove failed', resp.json);
-                            alert(resp.json.message || 'Failed to remove favorite.');
-                        } else if (!resp.ok) {
-                            // non-json error
-                            console.error('Remove failed status', resp.status);
-                            alert('Server error: ' + resp.status);
-                        } else {
-                            // fallback if server returned { success: true } inside json
-                            if (resp.json && resp.json.success) {
-                                const card = btn.closest('.js-favorite-card');
-                                if (card) card.remove();
-                                updateFavoritesCount(-1);
-                            } else {
-                                console.error('Unexpected response', resp);
+                        console.log('Remove favorite response:', resp); // <<-- helpful debug
+                        // success (200-299)
+                        if (resp.ok) {
+                            // Prefer JSON success flag if available
+                            if (resp.json && typeof resp.json === 'object') {
+                                if (resp.json.success === true || resp.json.success === undefined) {
+                                    // remove card and show toast with server message (if provided)
+                                    const card = btn.closest('.js-favorite-card');
+                                    if (card) {
+                                        // smooth fade-out then remove
+                                        card.style.transition = 'opacity 220ms, transform 220ms';
+                                        card.style.opacity = '0';
+                                        card.style.transform = 'scale(0.98)';
+                                        setTimeout(() => card.remove(), 240);
+                                    }
+                                    updateFavoritesCount(-1);
+                                    showToast('success', resp.json.message || 'Removed from favourites');
+                                    return;
+                                } else {
+                                    showToast('error', resp.json.message || 'Failed to remove favorite.');
+                                    return;
+                                }
                             }
+
+                            // If no JSON body, treat 200 as success
+                            {
+                                const card = btn.closest('.js-favorite-card');
+                                if (card) {
+                                    card.style.transition = 'opacity 220ms, transform 220ms';
+                                    card.style.opacity = '0';
+                                    card.style.transform = 'scale(0.98)';
+                                    setTimeout(() => card.remove(), 240);
+                                }
+                                updateFavoritesCount(-1);
+                                showToast('success', 'Removed from favourites');
+                                return;
+                            }
+                        }
+
+                        // non-ok (server error). Show message from JSON or fallback to status/text
+                        if (resp.json && resp.json.message) {
+                            showToast('error', resp.json.message);
+                        } else if (resp.text) {
+                            showToast('error', 'Server: ' + resp.text.substring(0, 120));
+                        } else {
+                            showToast('error', 'Server error: ' + resp.status);
                         }
                     })
                     .catch(err => {
                         console.error('Request error', err);
-                        alert('Request failed. Check console for details.');
+                        showToast('error', 'Request failed. Check console.');
                     })
                     .finally(() => {
                         setButtonRemoving(btn, false);
@@ -388,3 +439,4 @@
         })();
     </script>
 }
+
