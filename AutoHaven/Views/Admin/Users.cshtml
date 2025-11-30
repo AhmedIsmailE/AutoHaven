@@ -1,0 +1,205 @@
+﻿@model List<ApplicationUserModel>
+
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var searchTerm = ViewBag.SearchTerm as string ?? "";
+    var roleFilter = ViewBag.RoleFilter as string ?? "";
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var totalPages = ViewBag.TotalPages ?? 1;
+    var totalCount = ViewBag.TotalCount ?? 0;
+}
+
+<div class="max-w-7xl mx-auto py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold">👥 User Management</h1>
+        <p class="text-gray-600 dark:text-gray-400">Manage all users, ban/unban, edit, and delete accounts</p>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+        <form method="get" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Search Users</label>
+                    <input type="text" name="searchTerm" value="@searchTerm"
+                           placeholder="Name, email, or username..."
+                           class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">Role Filter</label>
+                    <select name="roleFilter" class="w-full px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                        <option value="">All Roles</option>
+                        <option value="Customer" selected="@(roleFilter == "Customer")">Customer</option>
+                        <option value="Provider" selected="@(roleFilter == "Provider")">Provider</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700">
+                        🔍 Search
+                    </button>
+                    <a href="@Url.Action("Users", "Admin")" class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 text-center">
+                        Clear
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Users Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-100 dark:bg-gray-900 border-b">
+                <tr>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">User</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Email</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Role</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Status</th>
+                    <th class="px-6 py-3 text-left text-sm font-semibold">Joined</th>
+                    <th class="px-6 py-3 text-center text-sm font-semibold">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y dark:divide-gray-700">
+                @if (Model.Any())
+                {
+                    @foreach (var user in Model)
+                    {
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4">
+                                <div>
+                                    <p class="font-medium">@user.UserName</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">@(user.Name ?? "N/A")</p>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm">@user.Email</td>
+                            <td class="px-6 py-4 text-sm">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                    @(user.Role == ApplicationUserModel.RoleEnum.Customer ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" : "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400")">
+                                    @user.Role
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                @if (user.IsBanned)
+                                {
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                        🚫 Banned
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                        ✅ Active
+                                    </span>
+                                }
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                                @user.CreatedAt.ToString("MMM dd, yyyy")
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2 flex-wrap">
+                                    <!-- Edit Button -->
+                                    <a href="@Url.Action("EditUser", "Admin", new { id = user.Id })"
+                                       class="px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition">
+                                        ✏️ Edit Profile
+                                    </a>
+
+                                    <!-- Ban/Unban Button -->
+                                    @if (user.IsBanned)
+                                    {
+                                        <form method="post" action="@Url.Action("UnbanUser", "Admin", new { id = user.Id })"
+                                              style="display:inline;"
+                                              onsubmit="return confirm('Unban this user? They will be able to login again.');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition">
+                                                ✅ Unban
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" action="@Url.Action("BanUser", "Admin", new { id = user.Id })"
+                                              style="display:inline;"
+                                              onsubmit="return confirm('Ban this user? They will not be able to login.');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="reason" value="Banned by admin" />
+                                            <button type="submit" class="px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition">
+                                                🚫 Ban
+                                            </button>
+                                        </form>
+                                    }
+
+                                    <!-- Delete Button -->
+                                    <form method="post" action="@Url.Action("DeleteUser", "Admin", new { id = user.Id })"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Delete this user and ALL their listings? This cannot be undone!');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition">
+                                            🗑️ Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            No users found
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6 flex items-center justify-between">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+            Showing page @currentPage of @totalPages (@totalCount total users)
+        </p>
+
+        <div class="flex gap-2">
+            @if (currentPage > 1)
+            {
+                <a href="@Url.Action("Users", "Admin", new { searchTerm = searchTerm, roleFilter = roleFilter, page = currentPage - 1 })"
+                   class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                    ← Previous
+                </a>
+            }
+
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                @if (i == currentPage)
+                {
+                    <span class="px-4 py-2 bg-primary text-white rounded">@i</span>
+                }
+                else if (i <= 3 || i > totalPages - 2 || Math.Abs(i - currentPage) <= 1)
+                {
+                    <a href="@Url.Action("Users", "Admin", new { searchTerm = searchTerm, roleFilter = roleFilter, page = i })"
+                       class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        @i
+                    </a>
+                }
+                else if (i == 4 || i == totalPages - 2)
+                {
+                    <span class="px-4 py-2">...</span>
+                }
+            }
+
+            @if (currentPage < totalPages)
+            {
+                <a href="@Url.Action("Users", "Admin", new { searchTerm = searchTerm, roleFilter = roleFilter, page = currentPage + 1 })"
+                   class="px-4 py-2 border rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                    Next →
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_Notification")

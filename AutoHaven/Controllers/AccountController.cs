@@ -191,8 +191,15 @@ namespace AutoHaven.Controllers
                     .FirstOrDefaultAsync(u => u.Email == loginUserViewModel.EmailOrPhone
                                            || u.PhoneNumber == loginUserViewModel.EmailOrPhone);
 
+
                 if (user != null)
                 {
+                    if (user.IsBanned)
+                    {
+                        ModelState.AddModelError(string.Empty,
+                            $"❌ Your account has been banned. Reason: {user.BanReason ?? "No reason provided"}");
+                        return View(loginUserViewModel);
+                    }
                     // التحقق من كلمة المرور
                     bool result = await _userManager.CheckPasswordAsync(user, loginUserViewModel.Password);
 
@@ -201,10 +208,12 @@ namespace AutoHaven.Controllers
                         user.UpdatedAt = DateTime.Now;
                         await _userManager.UpdateAsync(user);
                         List<Claim> claims = new List<Claim>
-                            {
-                                new Claim("Role", user.Role.ToString())
+                        {
+                              new Claim("UserId", user.Id.ToString()),  // ✅ ADD THIS
+                              new Claim("Role", user.Role.ToString()),
+                              new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
 
-                            };
+                        };
 
                         await _signInManager.SignInWithClaimsAsync(user, isPersistent: loginUserViewModel.RememberMe, claims); // Create Cookies
 
@@ -881,6 +890,10 @@ namespace AutoHaven.Controllers
 
             // otherwise treat as an action name
             return RedirectToAction(actionOrControllerAndAction);
+        }
+        public IActionResult Index()
+        {
+            return RedirectToAction("Home", "Home");
         }
     }
 }

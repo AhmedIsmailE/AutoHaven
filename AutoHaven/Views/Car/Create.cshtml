@@ -32,7 +32,7 @@
                 }
 
                 @using (Html.BeginForm(
-                listingId != null ? "Update" : "Create",  // ✅ CHOOSE ACTION
+                listingId != null ? "Update" : "Create",  // ✅ CORRECT
                 "Car",
                 FormMethod.Post,
                 new
@@ -42,7 +42,9 @@
                    id = "carListingForm"
                 }))
                 {
-                      @Html.AntiForgeryToken()
+                    @Html.AntiForgeryToken()
+
+                    <!-- ✅ HIDDEN INPUTS - ALL IN ONE PLACE -->
                     @if (listingId != null)
                     {
                         <input type="hidden" name="id" value="@listingId" />

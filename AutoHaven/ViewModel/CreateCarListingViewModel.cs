@@ -82,23 +82,11 @@ namespace AutoHaven.ViewModel
         // This property will be checked in the controller to ensure the correct price is filled.
         public bool IsValid()
         {
+            if (ListingType == ListingType.ForSelling && (NewPrice == null || NewPrice <= 0))
+                return false;
 
-            if (ListingType == ListingType.ForSelling)
-            {
-                if (!NewPrice.HasValue || NewPrice <= 0)
-                {
-                    return false;
-                }
-            }
-
-
-            if (ListingType == ListingType.ForRenting)
-            {
-                if (!RentPrice.HasValue || RentPrice <= 0)
-                {
-                    return false;
-                }
-            }
+            if (ListingType == ListingType.ForRenting && (RentPrice == null || RentPrice <= 0))
+                return false;
 
             return true;
         }

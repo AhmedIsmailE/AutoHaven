@@ -230,38 +230,46 @@ namespace AutoHaven.Controllers
                 if (listing == null)
                     return NotFound("Listing not found.");
 
-                // ✅ INCREMENT VIEW COUNT
-                _carListingRepo.IncrementViews(id.Value);
+                // 🎯 GET USER INFO
+                int userId = GetCurrentUserId();
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-                // ✅ HISTORY TRACKING
-                try
+                // 🎯 CHECK IF USER ALREADY VIEWED THIS LISTING (ever)
+                bool hasViewedBefore = _historyRepo.HasViewedBefore(
+                    listingId: id.Value,
+                    userId: userId > 0 ? userId : null,
+                    ipAddress: ipAddress
+                );
+
+                // ✅ ONLY INCREMENT IF NEVER VIEWED BEFORE
+                if (!hasViewedBefore)
                 {
-                    int uid = GetCurrentUserId();
+                    System.Diagnostics.Debug.WriteLine($"📈 Incrementing view for listing {id.Value}");
+                    _carListingRepo.IncrementViews(id.Value);
 
+                    // ✅ INSERT VIEW RECORD
                     var history = new CarViewHistoryModel
                     {
                         ListingId = id.Value,
-                        UserId = uid > 0 ? uid : null,
+                        UserId = userId > 0 ? userId : null,
                         ViewedAt = DateTime.UtcNow,
                         UserAgent = Request.Headers["User-Agent"].ToString(),
-                        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                        IpAddress = ipAddress
                     };
 
-                    if (uid > 0)
+                    try
                     {
-                        var old = _historyRepo
-                            .GetByUserId(uid)
-                            .FirstOrDefault(h => h.ListingId == id.Value);
-
-                        if (old != null)
-                        {
-                            _historyRepo.Delete(old.Id);
-                        }
+                        _historyRepo.Insert(history);
                     }
-
-                    _historyRepo.Insert(history);
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"⚠️ Error inserting view history: {ex.Message}");
+                    }
                 }
-                catch { }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"🔄 User already viewed listing {id.Value} - no increment");
+                }
 
                 // Get reviews for this listing
                 var reviews = _reviewRepo.GetByListingId(id.Value);
@@ -270,7 +278,7 @@ namespace AutoHaven.Controllers
                 ViewBag.ReviewCount = reviews.Count();
 
                 // ✅ CHECK IF CURRENT USER IS OWNER
-                int userId = GetCurrentUserId();
+                 userId = GetCurrentUserId();
                 bool isOwner = (userId > 0 && listing.UserId == userId);
                 ViewBag.IsOwner = isOwner;
                 ViewBag.CurrentUserId = userId;
@@ -462,7 +470,8 @@ namespace AutoHaven.Controllers
                     ListingType = listing.Type,
                     NewPrice = listing.NewPrice,
                     RentPrice = listing.RentPrice,
-                    Description = listing.Description
+                    Description = listing.Description,
+                    WantsFeatured = listing.IsFeatured
                 };
 
                 ViewBag.ListingId = id;
@@ -480,16 +489,23 @@ namespace AutoHaven.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Update(int id, CreateCarListingViewModel viewModel, IEnumerable<IFormFile> imageFiles, int[] imageIdsToKeep)
+        public IActionResult Update(int id, CreateCarListingViewModel viewModel,
+                IEnumerable<IFormFile> imageFiles, string imageIdsToKeep)
         {
             if (!viewModel.IsValid())
             {
                 ModelState.AddModelError("", "Please enter a valid price for the selected listing type.");
+                ViewBag.ListingId = id;
+                ViewBag.CurrentImages = _carListingRepo.GetById(id)?.CarImages ?? new List<CarImageModel>();
                 return View("Create", viewModel);
             }
 
             if (!ModelState.IsValid)
+            {
+                ViewBag.ListingId = id;
+                ViewBag.CurrentImages = _carListingRepo.GetById(id)?.CarImages ?? new List<CarImageModel>();
                 return View("Create", viewModel);
+            }
 
             try
             {
@@ -500,6 +516,27 @@ namespace AutoHaven.Controllers
                 int userId = GetCurrentUserId();
                 if (listing.UserId != userId)
                     return Forbid("You don't have permission to edit this listing.");
+
+                // ✅ SIMPLIFIED - Parse imageIdsToKeep from comma-separated string to int[]
+                int[] imageIdsArray = new int[0];
+
+                if (!string.IsNullOrEmpty(imageIdsToKeep))
+                {
+                    try
+                    {
+                        imageIdsArray = imageIdsToKeep
+                            .Split(',')
+                            .Where(s => !string.IsNullOrWhiteSpace(s))
+                            .Select(int.Parse)
+                            .ToArray();
+                    }
+                    catch
+                    {
+                        imageIdsArray = new int[0];
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"📋 Image IDs to keep: {(imageIdsArray.Length > 0 ? string.Join(", ", imageIdsArray) : "NONE")}");
 
                 // Update car info
                 listing.Car.Manufacturer = viewModel.Manufacturer;
@@ -518,10 +555,15 @@ namespace AutoHaven.Controllers
                 listing.Description = viewModel.Description ?? string.Empty;
                 listing.Color = viewModel.Color ?? string.Empty;
                 listing.UpdatedAt = DateTime.Now;
+                listing.IsFeatured = viewModel.WantsFeatured;
 
                 // Handle images
-                var newImages = imageFiles?.Where(f => f != null && f.Length > 0).ToList();
-                _carListingRepo.Update(listing, imageIdsToKeep ?? new int[0], newImages);
+                var newImages = imageFiles?
+                    .Where(f => f != null && f.Length > 0)
+                    .Take(7)
+                    .ToList();
+
+                _carListingRepo.Update(listing, imageIdsArray, newImages);
 
                 TempData["Notification.Message"] = "Listing updated successfully!";
                 TempData["Notification.Type"] = "success";
@@ -531,6 +573,9 @@ namespace AutoHaven.Controllers
             {
                 System.Diagnostics.Debug.WriteLine("UPDATE ERROR: " + ex.ToString());
                 ModelState.AddModelError("", $"Error updating listing: {ex.Message}");
+
+                ViewBag.ListingId = id;
+                ViewBag.CurrentImages = _carListingRepo.GetById(id)?.CarImages ?? new List<CarImageModel>();
                 return View("Create", viewModel);
             }
         }
@@ -546,10 +591,10 @@ namespace AutoHaven.Controllers
                 var listing = _carListingRepo.GetById(listingId);
 
                 if (listing == null)
-                    return NotFound();
+                    return NotFound(new { success = false, message = "Listing not found" });
 
                 if (listing.UserId != userId)
-                    return Forbid();
+                    return StatusCode(403, new { success = false, message = "Not authorized" });
 
                 // If trying to FEATURE
                 if (!listing.IsFeatured)
@@ -566,17 +611,27 @@ namespace AutoHaven.Controllers
                 // Toggle featured
                 listing.IsFeatured = !listing.IsFeatured;
                 listing.UpdatedAt = DateTime.Now;
-                _carListingRepo.Update(listing, new int[0], null);
+
+                // ✅ KEEP ALL EXISTING IMAGES - Extract their IDs
+                int[] existingImageIds = listing.CarImages
+                    ?.Select(img => img.CarImageId)
+                    .ToArray() ?? new int[0];
+
+                System.Diagnostics.Debug.WriteLine($"📋 Keeping {existingImageIds.Length} images when toggling featured");
+
+                // Update without modifying images
+                _carListingRepo.Update(listing, existingImageIds, null);
 
                 return Ok(new
                 {
                     success = true,
-                    message = listing.IsFeatured ? "Listed as featured!" : "Removed from featured.",
+                    message = listing.IsFeatured ? "Listed as featured! 🌟" : "Removed from featured.",
                     isFeatured = listing.IsFeatured
                 });
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"❌ ToggleFeatured Error: {ex.ToString()}");
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
@@ -589,25 +644,47 @@ namespace AutoHaven.Controllers
         {
             try
             {
+                // ✅ Check authentication FIRST
+                int userId = GetCurrentUserId();
+                if (userId == 0)
+                {
+                    TempData["Notification.Message"] = "You must be logged in to delete listings.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction(nameof(Index), "Car");
+                }
+
                 var listing = _carListingRepo.GetById(id);
                 if (listing == null)
-                    return NotFound("Listing not found.");
+                {
+                    TempData["Notification.Message"] = "Listing not found.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction(nameof(Index), "Car");
+                }
 
-                int userId = GetCurrentUserId();
+                // ✅ Check ownership
                 if (listing.UserId != userId)
-                    return Forbid("You don't have permission to delete this listing.");
+                {
+                    TempData["Notification.Message"] = "You don't have permission to delete this listing.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction(nameof(Index), "Car");
+                }
 
+                // ✅ Delete the listing
                 _carListingRepo.Delete(id);
+
+                System.Diagnostics.Debug.WriteLine($"✅ Listing {id} deleted by user {userId}");
 
                 TempData["Notification.Message"] = "Listing deleted successfully!";
                 TempData["Notification.Type"] = "success";
-                return RedirectToAction(nameof(MyListings));
+                return RedirectToAction(nameof(Index), "Car");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"❌ Delete Error: {ex.ToString()}");
+
                 TempData["Notification.Message"] = $"Error deleting listing: {ex.Message}";
                 TempData["Notification.Type"] = "error";
-                return RedirectToAction(nameof(Details), new { id });
+                return RedirectToAction(nameof(Index), "Car");
             }
         }
 

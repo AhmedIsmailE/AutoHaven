@@ -44,6 +44,16 @@ namespace AutoHaven.Models
         [NotMapped]
         public IFormFile? IdImage { get; set; }
 
+        [Column(TypeName = "bit")]
+        public bool IsBanned { get; set; } = false;
+
+        [Column(TypeName = "datetime2")]
+        public DateTime? BannedAt { get; set; }
+
+        [MaxLength(500)]
+        [Column(TypeName = "nvarchar(500)")]
+        public string? BanReason { get; set; }
+
         public enum RoleEnum { Customer = 0, Provider = 1, Admin = 2 }
         public RoleEnum Role { get; set; } = RoleEnum.Customer;
 
