@@ -1,10 +1,12 @@
 ﻿@model IEnumerable<AutoHaven.ViewModel.PendingUserViewModel>
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
-@*
-    Admin dashboard — single file that includes pending accounts table and JS
-*@
-
+@{
+    var carsForRent = ViewBag.CarsForRent as int? ?? 0;
+    var carsForSale = ViewBag.CarsForSale as int? ?? 0;
+    var totalUsers = ViewBag.TotalUsers as int? ?? 0;
+    var totalRevenue = ViewBag.TotalRevenueMonthlyFormatted as string ?? ((ViewBag.TotalRevenueMonthly as decimal?)?.ToString() ?? "$0");
+}
 <!-- Dashboard Content -->
 <div class="p-10 bg-background-light">
     <!-- HeadlineText -->
@@ -13,27 +15,22 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-6">
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Cars for Rent</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
-                @(ViewBag.CarsForRent ?? 0)
-            </p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">@carsForRent</p>
         </div>
+
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Cars for Sale</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
-                @(ViewBag.CarsForSale ?? 0)
-            </p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">@carsForSale</p>
         </div>
+
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Total Revenue</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
-                @((ViewBag.TotalRevenue ?? 0m).ToString("C0"))
-            </p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">$@totalRevenue</p>
         </div>
+
         <div class="flex flex-col gap-2 rounded-xl p-6 border border-[#dae0e7] bg-white">
             <p class="text-base font-medium leading-normal text-[#5e758d]">Number of Users</p>
-            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">
-                @(ViewBag.TotalUsers ?? 0)
-            </p>
+            <p class="text-electric-blue tracking-light text-4xl font-bold leading-tight">@totalUsers</p>
         </div>
     </div>
 
