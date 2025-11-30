@@ -410,7 +410,7 @@ namespace AutoHaven.Controllers
         //}
         public IActionResult Home()
         {
-            return View();
+            return View("Home");
         }
 
         [Authorize(Policy = "AdminOnly")]

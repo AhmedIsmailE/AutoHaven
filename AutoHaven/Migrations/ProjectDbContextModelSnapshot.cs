@@ -36,6 +36,13 @@ namespace AutoHaven.Migrations
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("BanReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("BannedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -60,6 +67,12 @@ namespace AutoHaven.Migrations
 
                     b.Property<string>("IdImagePath")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -144,80 +157,88 @@ namespace AutoHaven.Migrations
                         {
                             Id = 1,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "3c832667-fdd7-4f11-bbaa-ebbd0c43bf09",
-                            CreatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 460, DateTimeKind.Local).AddTicks(3599),
+                            ConcurrencyStamp = "f6c46e1f-9400-47be-898b-d0f2046419f6",
+                            CreatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 49, DateTimeKind.Local).AddTicks(6323),
                             Email = "ahmed@gmail.com",
                             EmailConfirmed = false,
+                            IsApproved = false,
+                            IsBanned = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "AHMED@GMAIL.COM",
                             NormalizedUserName = "MADPIXEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAELpRzVkRrR5c0twDH7Z69OrJT917W2Kcnk12Z1lhKiJSv7gvTwgaGDEG73GqdgUSjQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN4U/dujMLRzhWSvF5OJeERwVz32lfiBbLCwBixzqIkicUQtRzgEwu8kCgjjb5yskw==",
                             PhoneNumber = "01121386733",
                             PhoneNumberConfirmed = false,
                             Role = 2,
-                            SecurityStamp = "d7eb2556-175a-446a-8b0d-bbd393ff532c",
+                            SecurityStamp = "09f9fc49-dc93-419f-9b5b-1b509a811cd9",
                             TwoFactorEnabled = false,
-                            UpdatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 460, DateTimeKind.Local).AddTicks(3634),
+                            UpdatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 49, DateTimeKind.Local).AddTicks(6351),
                             UserName = "MadPixel"
                         },
                         new
                         {
                             Id = 2,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0f73a6fa-0e28-4aff-bcd2-d89455b16c94",
-                            CreatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 561, DateTimeKind.Local).AddTicks(9426),
+                            ConcurrencyStamp = "823a1988-639c-43b9-bb81-c6a06f3cd10b",
+                            CreatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 141, DateTimeKind.Local).AddTicks(6680),
                             Email = "arsany@gmail.com",
                             EmailConfirmed = false,
+                            IsApproved = false,
+                            IsBanned = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ARSANY@GMAIL.COM",
                             NormalizedUserName = "ARSANY",
-                            PasswordHash = "AQAAAAIAAYagAAAAENRPSQ2IuqSHWWbpMS2QUpafNh1L+TVSG6I95dxvt2bR8XEj4oxpl0iMKqaLBtutmw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIt2weFIe2pzdU3vJWuo51YwQhJb5ETVa8CKMG+YhCfZHKHcdBJ5lepSbeU1/m7U4g==",
                             PhoneNumber = "01289938194",
                             PhoneNumberConfirmed = false,
                             Role = 2,
-                            SecurityStamp = "52c1d2f5-5625-4e8b-82c5-23b44309153c",
+                            SecurityStamp = "201580a4-b807-4384-9d77-7aa397b6a118",
                             TwoFactorEnabled = false,
-                            UpdatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 561, DateTimeKind.Local).AddTicks(9433),
+                            UpdatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 141, DateTimeKind.Local).AddTicks(6684),
                             UserName = "Arsany"
                         },
                         new
                         {
                             Id = 3,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a07c4f55-243f-4ea6-ba77-f8f701420cdc",
-                            CreatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 662, DateTimeKind.Local).AddTicks(6568),
+                            ConcurrencyStamp = "af0dc4ba-4529-469d-964f-9589d9e2e16f",
+                            CreatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 251, DateTimeKind.Local).AddTicks(7636),
                             Email = "mohamed@gmail.com",
                             EmailConfirmed = false,
+                            IsApproved = false,
+                            IsBanned = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "MOHAMED@GMAIL.COM",
                             NormalizedUserName = "MOHAMED",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDXox/4+2pXYeVb8q1IvPLsrvr98zIUxtmp1THyyBUsaYFUAuDypZ+FBJUixmiKW+Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKwe3YtSSCrs+GYc9YNlU0mJSWyxW6IfClA5dn4fOnDzK2BXB3XOBV4EfATaDS6gBQ==",
                             PhoneNumber = "01012488360",
                             PhoneNumberConfirmed = false,
                             Role = 2,
-                            SecurityStamp = "040bf9c6-747e-47e8-9722-438af12e5221",
+                            SecurityStamp = "eef6be3b-0e69-47b4-b398-ab57a179b1dd",
                             TwoFactorEnabled = false,
-                            UpdatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 662, DateTimeKind.Local).AddTicks(6574),
+                            UpdatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 251, DateTimeKind.Local).AddTicks(7642),
                             UserName = "Mohamed"
                         },
                         new
                         {
                             Id = 4,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e8f05ace-4cae-43bc-b425-2a3f24a4a259",
-                            CreatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 763, DateTimeKind.Local).AddTicks(26),
+                            ConcurrencyStamp = "bf1f34db-b52a-4b73-b628-015ebfff6dc3",
+                            CreatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 369, DateTimeKind.Local).AddTicks(2789),
                             Email = "omar@gmail.com",
                             EmailConfirmed = false,
+                            IsApproved = false,
+                            IsBanned = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "OMAR@GMAIL.COM",
                             NormalizedUserName = "OMAR",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH6rHuMS+l5gjC23+trEfzBBAtNB1No2TfNaJShyMvkmljrVDz2/TzT55L1HFLTtpw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECt1OwkX3rY33mrHkSvQKSJknxQ7EM5jndRoa6458RFtrLSn/eimViFZjlha5bFmsw==",
                             PhoneNumber = "01111031724",
                             PhoneNumberConfirmed = false,
                             Role = 2,
-                            SecurityStamp = "7e9cf261-15bc-4cfc-b3b2-08d1d65d2c5c",
+                            SecurityStamp = "b493f5ff-f502-4b30-9306-851569e525eb",
                             TwoFactorEnabled = false,
-                            UpdatedAt = new DateTime(2025, 11, 29, 23, 46, 46, 763, DateTimeKind.Local).AddTicks(31),
+                            UpdatedAt = new DateTime(2025, 11, 30, 17, 54, 14, 369, DateTimeKind.Local).AddTicks(2794),
                             UserName = "Omar"
                         });
                 });
@@ -550,36 +571,36 @@ namespace AutoHaven.Migrations
                         {
                             UserSubscriptionId = 1,
                             CurrentStatus = 0,
-                            EndDate = new DateTime(2026, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(524),
+                            EndDate = new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6665),
                             PlanId = 4,
-                            StartDate = new DateTime(2025, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(441),
+                            StartDate = new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6567),
                             UserId = 1
                         },
                         new
                         {
                             UserSubscriptionId = 2,
                             CurrentStatus = 0,
-                            EndDate = new DateTime(2026, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(573),
+                            EndDate = new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6736),
                             PlanId = 4,
-                            StartDate = new DateTime(2025, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(569),
+                            StartDate = new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6731),
                             UserId = 2
                         },
                         new
                         {
                             UserSubscriptionId = 3,
                             CurrentStatus = 0,
-                            EndDate = new DateTime(2026, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(581),
+                            EndDate = new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6744),
                             PlanId = 4,
-                            StartDate = new DateTime(2025, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(578),
+                            StartDate = new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6740),
                             UserId = 3
                         },
                         new
                         {
                             UserSubscriptionId = 4,
                             CurrentStatus = 0,
-                            EndDate = new DateTime(2026, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(589),
+                            EndDate = new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6751),
                             PlanId = 4,
-                            StartDate = new DateTime(2025, 11, 29, 23, 46, 46, 866, DateTimeKind.Local).AddTicks(586),
+                            StartDate = new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6748),
                             UserId = 4
                         });
                 });

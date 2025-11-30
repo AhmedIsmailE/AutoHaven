@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AutoHaven.Migrations
 {
     /// <inheritdoc />
-    public partial class admins : Migration
+    public partial class final : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,6 +37,7 @@ namespace AutoHaven.Migrations
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CompanyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Street = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -44,6 +45,9 @@ namespace AutoHaven.Migrations
                     AvatarUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     NationalId = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
                     IdImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsBanned = table.Column<bool>(type: "bit", nullable: false),
+                    BannedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    BanReason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Role = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -53,7 +57,7 @@ namespace AutoHaven.Migrations
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
@@ -377,13 +381,13 @@ namespace AutoHaven.Migrations
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "AvatarUrl", "City", "CompanyName", "ConcurrencyStamp", "CreatedAt", "Email", "EmailConfirmed", "IdImagePath", "LockoutEnabled", "LockoutEnd", "Name", "NationalId", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "Role", "SecurityStamp", "State", "Street", "TwoFactorEnabled", "UpdatedAt", "UserName" },
+                columns: new[] { "Id", "AccessFailedCount", "AvatarUrl", "BanReason", "BannedAt", "City", "CompanyName", "ConcurrencyStamp", "CreatedAt", "Email", "EmailConfirmed", "IdImagePath", "IsApproved", "IsBanned", "LockoutEnabled", "LockoutEnd", "Name", "NationalId", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "Role", "SecurityStamp", "State", "Street", "TwoFactorEnabled", "UpdatedAt", "UserName" },
                 values: new object[,]
                 {
-                    { 1, 0, null, null, null, "23322f47-553e-47f8-9b8c-99af700e4208", new DateTime(2025, 11, 29, 22, 49, 25, 192, DateTimeKind.Local).AddTicks(4422), "ahmed@gmail.com", false, null, false, null, null, null, "AHMED@GMAIL.COM", "MADPIXEL", "AQAAAAIAAYagAAAAEFfvOSgekG+TrqaY1iBLyA2lFPYSM5c/1ZVwTWWdFGyRpYoXPZJZqANn0yf/bb0brw==", "01121386733", false, 2, "f4100d11-aafd-48ec-b673-6e00051150f8", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 192, DateTimeKind.Local).AddTicks(4459), "MadPixel" },
-                    { 2, 0, null, null, null, "42c39b07-c2a2-44d2-b27d-eda104a9467d", new DateTime(2025, 11, 29, 22, 49, 25, 263, DateTimeKind.Local).AddTicks(7107), "arsany@gmail.com", false, null, false, null, null, null, "ARSANY@GMAIL.COM", "ARSANY", "AQAAAAIAAYagAAAAEMLlVDZsymXHA3Q/FDNijZcPEm/zrBii/ztila7E+pJWHWbPbbD9raFm4L1u4/+rtA==", "01289938194", false, 2, "90d616f7-013b-4f76-94fd-8b0fe9c8550d", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 263, DateTimeKind.Local).AddTicks(7110), "Arsany" },
-                    { 3, 0, null, null, null, "cd7778ed-c809-4b8f-9cae-aff5c594bfbb", new DateTime(2025, 11, 29, 22, 49, 25, 342, DateTimeKind.Local).AddTicks(4948), "mohamed@gmail.com", false, null, false, null, null, null, "MOHAMED@GMAIL.COM", "MOHAMED", "AQAAAAIAAYagAAAAEMZRqJ43Gtgu2IWz2p1Jp2OyL8Xadg8rxz6MoPnR4137fYN3Z9Sl8Xc07UZI5dKjKA==", "01012488360", false, 2, "3e496a25-b10f-473a-a831-e732f8b38333", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 342, DateTimeKind.Local).AddTicks(4951), "Mohamed" },
-                    { 4, 0, null, null, null, "2e50d3d6-d455-4626-815b-6cd8f049dad4", new DateTime(2025, 11, 29, 22, 49, 25, 430, DateTimeKind.Local).AddTicks(8933), "omar@gmail.com", false, null, false, null, null, null, "OMAR@GMAIL.COM", "OMAR", "AQAAAAIAAYagAAAAEFFppWYNgAgUK+DMXipateqk46Zb4lDyaWkZAnRtl0/VYuAj0RrL+86JqgBgcdwM+Q==", "01111031724", false, 2, "da8ff12e-5d5f-45b2-ba3d-6565d755d74c", null, null, false, new DateTime(2025, 11, 29, 22, 49, 25, 430, DateTimeKind.Local).AddTicks(8950), "Omar" }
+                    { 1, 0, null, null, null, null, null, "f6c46e1f-9400-47be-898b-d0f2046419f6", new DateTime(2025, 11, 30, 17, 54, 14, 49, DateTimeKind.Local).AddTicks(6323), "ahmed@gmail.com", false, null, false, false, false, null, null, null, "AHMED@GMAIL.COM", "MADPIXEL", "AQAAAAIAAYagAAAAEN4U/dujMLRzhWSvF5OJeERwVz32lfiBbLCwBixzqIkicUQtRzgEwu8kCgjjb5yskw==", "01121386733", false, 2, "09f9fc49-dc93-419f-9b5b-1b509a811cd9", null, null, false, new DateTime(2025, 11, 30, 17, 54, 14, 49, DateTimeKind.Local).AddTicks(6351), "MadPixel" },
+                    { 2, 0, null, null, null, null, null, "823a1988-639c-43b9-bb81-c6a06f3cd10b", new DateTime(2025, 11, 30, 17, 54, 14, 141, DateTimeKind.Local).AddTicks(6680), "arsany@gmail.com", false, null, false, false, false, null, null, null, "ARSANY@GMAIL.COM", "ARSANY", "AQAAAAIAAYagAAAAEIt2weFIe2pzdU3vJWuo51YwQhJb5ETVa8CKMG+YhCfZHKHcdBJ5lepSbeU1/m7U4g==", "01289938194", false, 2, "201580a4-b807-4384-9d77-7aa397b6a118", null, null, false, new DateTime(2025, 11, 30, 17, 54, 14, 141, DateTimeKind.Local).AddTicks(6684), "Arsany" },
+                    { 3, 0, null, null, null, null, null, "af0dc4ba-4529-469d-964f-9589d9e2e16f", new DateTime(2025, 11, 30, 17, 54, 14, 251, DateTimeKind.Local).AddTicks(7636), "mohamed@gmail.com", false, null, false, false, false, null, null, null, "MOHAMED@GMAIL.COM", "MOHAMED", "AQAAAAIAAYagAAAAEKwe3YtSSCrs+GYc9YNlU0mJSWyxW6IfClA5dn4fOnDzK2BXB3XOBV4EfATaDS6gBQ==", "01012488360", false, 2, "eef6be3b-0e69-47b4-b398-ab57a179b1dd", null, null, false, new DateTime(2025, 11, 30, 17, 54, 14, 251, DateTimeKind.Local).AddTicks(7642), "Mohamed" },
+                    { 4, 0, null, null, null, null, null, "bf1f34db-b52a-4b73-b628-015ebfff6dc3", new DateTime(2025, 11, 30, 17, 54, 14, 369, DateTimeKind.Local).AddTicks(2789), "omar@gmail.com", false, null, false, false, false, null, null, null, "OMAR@GMAIL.COM", "OMAR", "AQAAAAIAAYagAAAAECt1OwkX3rY33mrHkSvQKSJknxQ7EM5jndRoa6458RFtrLSn/eimViFZjlha5bFmsw==", "01111031724", false, 2, "b493f5ff-f502-4b30-9306-851569e525eb", null, null, false, new DateTime(2025, 11, 30, 17, 54, 14, 369, DateTimeKind.Local).AddTicks(2794), "Omar" }
                 });
 
             migrationBuilder.InsertData(
@@ -402,10 +406,10 @@ namespace AutoHaven.Migrations
                 columns: new[] { "UserSubscriptionId", "CurrentStatus", "EndDate", "PlanId", "StartDate", "UserId" },
                 values: new object[,]
                 {
-                    { 1, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(82), 4, new DateTime(2025, 11, 29, 22, 49, 25, 540, DateTimeKind.Local).AddTicks(9944), 1 },
-                    { 2, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(268), 4, new DateTime(2025, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(251), 2 },
-                    { 3, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(311), 4, new DateTime(2025, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(301), 3 },
-                    { 4, 0, new DateTime(2026, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(352), 4, new DateTime(2025, 11, 29, 22, 49, 25, 541, DateTimeKind.Local).AddTicks(341), 4 }
+                    { 1, 0, new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6665), 4, new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6567), 1 },
+                    { 2, 0, new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6736), 4, new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6731), 2 },
+                    { 3, 0, new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6744), 4, new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6740), 3 },
+                    { 4, 0, new DateTime(2026, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6751), 4, new DateTime(2025, 11, 30, 17, 54, 14, 453, DateTimeKind.Local).AddTicks(6748), 4 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -455,6 +459,13 @@ namespace AutoHaven.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_PhoneNumber",
+                table: "AspNetUsers",
+                column: "PhoneNumber",
+                unique: true,
+                filter: "[PhoneNumber] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CarImages_ListingId",

@@ -8,6 +8,7 @@ namespace AutoHaven.IRepository
         IEnumerable<CarViewHistoryModel> Get();
         IEnumerable<CarViewHistoryModel> GetByUserId(int userId);
         IEnumerable<CarViewHistoryModel> GetLatestPerListingForUser(int userId, int skip, int take);
+        public bool HasViewedBefore(int listingId, int? userId, string ipAddress);
         void Insert(CarViewHistoryModel item);
         void Delete(int id);
         void DeleteByUser(int userId);
