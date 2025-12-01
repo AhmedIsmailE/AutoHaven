@@ -243,7 +243,6 @@ namespace AutoHaven.Controllers
                             $"❌ Your account has been banned. Reason: {user.BanReason ?? "No reason provided"}");
                         return View(loginUserViewModel);
                     }
-                    // التحقق من كلمة المرور
                     bool result = await _userManager.CheckPasswordAsync(user, loginUserViewModel.Password);
 
                     if (result)
@@ -268,7 +267,7 @@ namespace AutoHaven.Controllers
                         };
 
                         await _signInManager.SignInWithClaimsAsync(user, isPersistent: loginUserViewModel.RememberMe, claims);
-                        return RedirectToAction("Home");
+                        return RedirectToAction("Home","Home");
                     }
                 }
 
@@ -411,7 +410,7 @@ namespace AutoHaven.Controllers
         //}
         public IActionResult Home()
         {
-            return View("Home");
+            return View("Home","Home");
         }
 
         [Authorize(Policy = "AdminOnly")]
@@ -472,7 +471,24 @@ namespace AutoHaven.Controllers
             ViewBag.TotalRevenueMonthly = totalRevenueMonthly;
             ViewBag.TotalRevenueMonthlyFormatted = totalRevenueMonthly.ToString(); // e.g. $1,200
 
-            return View("AdminDashboard");
+            var pending = await _userManager.Users
+                          .Where(u => !u.IsApproved)
+                          .OrderBy(u => u.CreatedAt)
+                          .Select(u => new AutoHaven.ViewModel.PendingUserViewModel
+                          {
+                              Id = u.Id,
+                              UserName = u.UserName,
+                              Email = u.Email,
+                              PhoneNumber = u.PhoneNumber,
+                              Name = u.Name,
+                              CreatedAt = u.CreatedAt,
+                              Role = u.Role.ToString(),
+                              NationalId = u.NationalId,
+                              IdImagePath = u.IdImagePath
+                          })
+                          .ToListAsync();
+
+            return View("AdminDashboard", pending);
         }
 
 

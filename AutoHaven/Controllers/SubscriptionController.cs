@@ -170,8 +170,8 @@ namespace AutoHaven.Controllers
         }
 
         // Add this Action so the redirect works!
-        //[Authorize]
-        [Authorize(Policy = "InternalOnly")]
+        [Authorize]
+       // [Authorize(Policy = "InternalOnly")]
         public IActionResult PurchaseSuccess()
         {
             // Pass '1' to the view to indicate success (for the green theme)
