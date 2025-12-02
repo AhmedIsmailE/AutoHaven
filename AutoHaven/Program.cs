@@ -1,7 +1,7 @@
 ﻿using AutoHaven.IRepository;
 using AutoHaven.Models;
 using AutoHaven.Repository;
-using AutoHaven.Storage;  // ← ADD THIS
+using AutoHaven.Storage; 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +25,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         //options.LoginPath = "/Account/LoginCustom";
         options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Home/AccessDenied";
+        options.AccessDeniedPath = "Home/AccessDenied";
     });
 
 // 2️ Add Authorization policies

@@ -255,6 +255,8 @@ namespace AutoHaven.Controllers
                 }
 
                 // Delete all listings first
+                //-------------------TO DO DELETE REVIEWS ON THAT LISTING FIRST
+
                 var listings = _carListingRepository.Get().Where(l => l.UserId == id).ToList();
                 foreach (var listing in listings)
                 {
@@ -354,6 +356,7 @@ namespace AutoHaven.Controllers
 
             try
             {
+                //-----------------TO DO DELETE ALL REVIEWS ON THE THAT LISTING FIRST
                 var listing = _carListingRepository.GetById(id);
                 if (listing == null)
                     return NotFound();

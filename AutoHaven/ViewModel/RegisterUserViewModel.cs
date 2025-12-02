@@ -28,6 +28,7 @@ namespace AutoHaven.ViewModel
 
         [Required(ErrorMessage = "Phone number is required")]
         [Phone(ErrorMessage = "Invalid phone number")]
+        [MaxLength(11)]
         public string PhoneNumber { get; set; }
 
         [Required(ErrorMessage = "Please select a role")]

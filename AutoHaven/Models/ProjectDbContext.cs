@@ -77,7 +77,6 @@ namespace AutoHaven.Models
             .WithMany(c => c.Favourites)
             .HasForeignKey(f => f.ListingId)
             .OnDelete(DeleteBehavior.NoAction);
-            // Important: create unique index on NormalizedUserName and NormalizedEmail to match Identity normalization
             modelBuilder.Entity<ApplicationUserModel>()
                 .HasIndex(u => u.NormalizedUserName)
                 .IsUnique()

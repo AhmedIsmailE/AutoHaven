@@ -400,7 +400,7 @@ namespace AutoHaven.Controllers
             TempData["Notification.Message"] = "Access Denied: You do not have permission to access this resource.";
             TempData["Notification.Type"] = "error";
 
-            return View("Home"); 
+            return RedirectToAction("Home", "Home");
         }
         //public IActionResult LoginCustom()
         //{
@@ -408,10 +408,7 @@ namespace AutoHaven.Controllers
         //    TempData["Notification.Type"] = "error";
         //    return View("Login");
         //}
-        public IActionResult Home()
-        {
-            return View("Home","Home");
-        }
+
 
         [Authorize(Policy = "AdminOnly")]
         [HttpGet]

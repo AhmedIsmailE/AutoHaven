@@ -16,7 +16,13 @@ namespace AutoHaven.Controllers
             _carListingRepo = carListingRepo;
             _userSubRepo = userSubRepo;
         }
+        public IActionResult AccessDenied()
+        {
+            TempData["Notification.Message"] = "Access Denied: You do not have permission to access this resource.";
+            TempData["Notification.Type"] = "error";
 
+            return RedirectToAction("Home");
+        }
         public IActionResult Home()
         {
             try
