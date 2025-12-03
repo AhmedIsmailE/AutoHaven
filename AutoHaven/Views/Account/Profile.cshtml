@@ -15,6 +15,96 @@
         <div class="flex items-center gap-6">
             <div class="relative">
                 <img id="avatarPreview" src="@avatarSrc" alt="avatar" class="w-28 h-28 rounded-full object-cover border-2 shadow" />
+                <!-- Modern Circular Crop Modal -->
+                <div id="cropModal"
+                     class="fixed inset-0 bg-black/50 opacity-0 transition-opacity duration-200 flex items-center justify-center hidden z-[9999]">
+
+                    <div id="cropCard" class="transform scale-95 opacity-0 transition-all duration-200 max-w-4xl w-full mx-4 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+                        <!-- Header -->
+                        <div class="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center gap-3">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Crop avatar</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Move and scale the circular area, then save</p>
+                            </div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="md:flex md:items-start md:gap-6 p-5">
+                            <!-- Crop area -->
+                            <div class="flex-1 min-h-[360px] flex items-center justify-center bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
+                                <div id="cropImageWrapper"
+                                     class="relative overflow-hidden"
+                                     style="width:100%; padding:0; margin:0; border:none; background:#000;">
+                                    <img id="cropImage" class="block max-w-none" />
+                                </div>
+
+                            </div>
+
+                            <!-- Controls -->
+                            <!-- Right panel (replace your current right panel with this) -->
+                            <div class="w-full max-w-xs mt-4 md:mt-8 md:-ml-2 flex flex-col">
+                                <div class="flex-1 flex flex-col gap-10">
+                                    <!-- Zoom row -->
+                                    <div class="md:mt-2">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <label class="text-sm text-gray-600 dark:text-gray-300">Zoom</label>
+                                            <!-- optional numeric percent readout -->
+                                            <span id="zoomPercent" class="text-sm text-gray-400">0%</span>
+                                        </div>
+                                        <input id="zoomRange" type="range" min="0" max="100" step="1" value="0" class="w-full h-2 rounded-lg">
+                                    </div>
+
+                                    <!-- Transform -->
+                                    <div class="md:-mt-4">
+                                        <label class="block text-sm text-gray-600 dark:text-gray-300 mb-2">Transform</label>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <button id="rotateLeftBtn" type="button" class="w-full px-3 py-2 rounded-lg border bg-white hover:bg-gray-50 text-sm">
+                                                Rotate -90°
+                                            </button>
+                                            <button id="rotateRightBtn" type="button" class="w-full px-3 py-2 rounded-lg border bg-white hover:bg-gray-50 text-sm">
+                                                Rotate +90°
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Description -->
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 md:-mt-2 leading-relaxed">
+                                        The avatar will be saved as a square image
+                                        <span class="text-xs text-gray-400">(512×512)</span> and shown as a circular profile picture.
+                                    </div>
+                                </div>
+
+                                <!-- Buttons pinned to bottom -->
+                                <div class="mt-4 pt-2 border-t border-gray-100 dark:border-gray-700 md:mt-8 flex items-center gap-3">
+                                    <button id="cropCancelBtn" class="flex-1 px-4 py-2 rounded-full border bg-white hover:bg-gray-50 text-sm font-medium">
+                                        Cancel
+                                    </button>
+                                    <button id="cropSaveBtn" class="flex-1 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-teal-400 text-white font-semibold text-sm">
+                                        Save crop
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Styling for circular visual crop (forces Cropper's view box & face to round) -->
+                <style>
+                    /* make the visible crop box circular */
+                    .cropper-view-box,
+                    .cropper-face {
+                        border-radius: 50% !important;
+                        box-shadow: 0 0 0 1px rgba(59,130,246,0.9) inset; /* subtle ring */
+                        overflow: hidden;
+                    }
+                    /* optionally hide the default corner handles visuals except small dots */
+                    .cropper-line, .cropper-point {
+                        background: transparent !important;
+                    }
+                    /* improve dark overlay look */
+
+                </style>
+
 
                 @if (editMode)
                 {
@@ -33,10 +123,23 @@
                 <h1 class="text-2xl font-bold">@(!string.IsNullOrWhiteSpace(Model?.Name) ? Model.Name : Model?.UserName)</h1>
                 @if (!string.IsNullOrWhiteSpace(Model?.Name))
                 {
-                    <p class="text-sm text-gray-500">@Model?.UserName</p>
+                    <p class="text-sm text-gray-500">Username: @Model?.UserName</p>
                 }
-                <p class="text-sm text-gray-500">@Model?.Email</p>
-                <p class="text-sm text-gray-500">Joined @Model?.CreatedAt.ToString("MMM d, yyyy")</p>
+                <p class="text-sm text-gray-500">Email: @Model?.Email</p>
+                <p class="text-sm text-gray-500">Joined at: @Model?.CreatedAt.ToString("MMM d, yyyy")</p>
+                @if (Model.Role == AutoHaven.Models.ApplicationUserModel.RoleEnum.Provider && Model.SubscriptionTier != null)
+                {
+                    <p class="text-sm text-gray-500">Subscription plan: @Model?.SubscriptionTier</p>
+                    <p class="text-sm text-gray-500">Expires at: @Model?.SubscriptionExpiresAt</p>
+                }
+                else if (Model.Role == AutoHaven.Models.ApplicationUserModel.RoleEnum.Provider)
+                {
+                    <p class="text-sm text-gray-500">Subscription plan: Free</p>
+                }
+                else
+                {
+                    //Empty
+                }
                 <p class="text-sm text-gray-500">Role: <strong>@Model?.Role</strong></p>
             </div>
 
@@ -177,56 +280,344 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Cropper.js CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
 
     <script>
         (function () {
+          // ------------------ Config ------------------
+          const MAX_FILE_BYTES = 2 * 1024 * 1024; // 2MB
+          const OUTPUT_SIZE = 512;                // final saved size (square)
+          const MIN_SAFE_SCALE = 0.01;
+          const PREVIEW_SIZE_FAST = 64;           // still used for fast main preview on change/save
 
-            const avatarInput = document.getElementById('avatarInput');
-            const avatarPreview = document.getElementById('avatarPreview');
-            const MAX_BYTES = 2 * 1024 * 1024;
+          // ------------------ Elements ------------------
+          const avatarInput = document.getElementById('avatarInput');
+          const avatarPreview = document.getElementById('avatarPreview');
 
-            let previousSrc = avatarPreview?.src;
+          const cropModal = document.getElementById('cropModal');
+          const cropCard = document.getElementById('cropCard');
+          const cropImage = document.getElementById('cropImage');
 
-            function showToast(message, type = "error") {
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: type,
-                    title: message,
-                    showConfirmButton: false,
-                    timer: 4000,
-                    timerProgressBar: true
-                });
+          const zoomRange = document.getElementById('zoomRange');
+          const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+          const rotateRightBtn = document.getElementById('rotateRightBtn');
+          const cropSaveBtn = document.getElementById('cropSaveBtn');
+          const cropCancelBtn = document.getElementById('cropCancelBtn');
+          const cropBtnCloseTop = document.getElementById('cropBtnCloseTop');
+
+          if (!avatarInput || !avatarPreview) {
+            console.warn('Cropper: required elements missing. Aborting.');
+            return;
+          }
+
+          // ------------------ State ------------------
+          let cropper = null;
+          let previousSrc = avatarPreview.src || '';
+          let currentFile = null;
+          let lastMainPreviewObjectUrl = null; // object URL used for main preview
+          let baseScale = 1;
+          let desiredMultiplier = 1;
+          let rafScheduled = false;
+
+          // ------------------ Helpers ------------------
+          function showModal() {
+            cropModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+              cropModal.classList.remove('opacity-0');
+              cropModal.classList.add('opacity-100');
+              cropCard.classList.remove('scale-95', 'opacity-0');
+              cropCard.classList.add('scale-100', 'opacity-100');
+            });
+            try { document.body.style.overflow = 'hidden'; } catch {}
+          }
+          function hideModal() {
+            cropCard.classList.add('scale-95', 'opacity-0');
+            cropCard.classList.remove('scale-100', 'opacity-100');
+            cropModal.classList.add('opacity-0');
+            cropModal.classList.remove('opacity-100');
+
+            setTimeout(() => {
+              cropModal.classList.add('hidden');
+              if (cropper) { try { cropper.destroy(); } catch(e) {} cropper = null; }
+              cropImage.src = '';
+              currentFile = null;
+
+              if (lastMainPreviewObjectUrl) {
+                try { URL.revokeObjectURL(lastMainPreviewObjectUrl); } catch(e) {}
+                lastMainPreviewObjectUrl = null;
+              }
+
+              try { document.body.style.overflow = ''; } catch (e) {}
+            }, 220);
+          }
+
+          function setInputFile(input, fileOrBlob) {
+            try {
+              const dt = new DataTransfer();
+              dt.items.add(fileOrBlob);
+              input.files = dt.files;
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+            } catch (e) {
+              console.warn('DataTransfer not supported; cannot set file programmatically.', e);
+            }
+          }
+
+          // ------------------ Fast main preview update using toBlob + createObjectURL ------------------
+          // This updates only the page avatarPreview. Call it on change/pointerup/save (NOT while dragging).
+          function updateMainPreviewFromCropperFast() {
+            if (!cropper || !avatarPreview) return;
+
+            let canvas;
+            try {
+              canvas = cropper.getCroppedCanvas({ width: PREVIEW_SIZE_FAST, height: PREVIEW_SIZE_FAST });
+            } catch (e) {
+              return;
+            }
+            if (!canvas) return;
+
+            canvas.toBlob(function (blob) {
+              if (!blob) return;
+              try {
+                // revoke previous main preview URL
+                if (lastMainPreviewObjectUrl) {
+                  try { URL.revokeObjectURL(lastMainPreviewObjectUrl); } catch (e) {}
+                  lastMainPreviewObjectUrl = null;
+                }
+                const obj = URL.createObjectURL(blob);
+                lastMainPreviewObjectUrl = obj;
+                avatarPreview.src = obj;
+              } catch (err) {
+                // fallback: slow dataURL
+                try { avatarPreview.src = canvas.toDataURL('image/png'); } catch (ex) {}
+              }
+            }, 'image/png', 0.9);
+          }
+
+          // ------------------ rAF-batched zoom (keep interactions snappy) ------------------
+          function scheduleZoomApply() {
+            if (rafScheduled) return;
+            rafScheduled = true;
+            requestAnimationFrame(() => {
+              rafScheduled = false;
+              if (!cropper) return;
+              let targetScale = baseScale * desiredMultiplier;
+              if (targetScale <= 0) targetScale = MIN_SAFE_SCALE;
+              if (targetScale > baseScale * 10) targetScale = baseScale * 10;
+
+              try {
+                cropper.zoomTo(targetScale);
+              } catch (err) {
+                try {
+                  const imgData = cropper.getImageData();
+                  const current = (imgData?.width && imgData?.naturalWidth) ? (imgData.width / imgData.naturalWidth) : baseScale;
+                  cropper.zoom(targetScale - current);
+                } catch (ex) {}
+              }
+              // NO heavy preview work here.
+            });
+          }
+
+          // ------------------ UI wiring ------------------
+          avatarPreview.style.cursor = 'pointer';
+          avatarPreview.addEventListener('click', () => avatarInput.click());
+
+          avatarInput.addEventListener('change', function () {
+            const file = this.files?.[0];
+            if (!file) return;
+            if (file.size > MAX_FILE_BYTES) {
+              alert('Image exceeds 2MB limit.');
+              this.value = '';
+              return;
+            }
+            currentFile = file;
+            previousSrc = avatarPreview.src || '';
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              cropImage.src = e.target.result;
+
+              // optional wrapper sizing if #cropImageWrapper exists
+              try {
+                const wrapper = document.getElementById('cropImageWrapper');
+                if (wrapper) {
+                  cropImage.onload = function () {
+                    const natW = cropImage.naturalWidth || 1;
+                    const natH = cropImage.naturalHeight || 1;
+                    wrapper.style.height = (wrapper.clientWidth / (natW / natH)) + 'px';
+                  };
+                }
+              } catch (e) {}
+
+              showModal();
+
+              if (cropper) { try { cropper.destroy(); } catch(e) {} cropper = null; }
+
+              setTimeout(() => {
+                try {
+        // --------------------- Initialize Cropper (REPLACE your current init) ---------------------
+        cropper = new Cropper(cropImage, {
+          aspectRatio: 1,
+          viewMode: 2,            // ensure image covers container (no gaps)
+          dragMode: 'crop',       // <<< IMPORTANT: dragging moves crop box, not the image
+          autoCropArea: 1,
+          background: false,
+          responsive: true,
+
+          // control what user can move/resize
+          movable: false,         // do NOT allow moving the image itself
+          rotatable: true,
+          scalable: false,
+          zoomable: true,
+
+          // allow the crop box to be moved/resized (this is what you want)
+          cropBoxMovable: true,   // user can drag the crop box (circle)
+          cropBoxResizable: true, // user can resize the crop box
+
+          minContainerWidth: 0,
+          minContainerHeight: 0,
+
+          ready() {
+            // keep your existing baseScale logic
+            try {
+              const imgData = cropper.getImageData();
+              const nat = imgData?.naturalWidth || 1;
+              const disp = imgData?.width || nat;
+              baseScale = Math.max(0.0001, disp / nat);
+            } catch (e) {
+              baseScale = 1;
             }
 
-            if (!avatarInput || !avatarPreview) return;
+            // baseline slider = 0 => original
+            if (zoomRange) zoomRange.value = 0;
+            desiredMultiplier = 1;
 
-            avatarInput.addEventListener('change', function () {
-                const file = this.files?.[0];
-                if (!file) return;
+            try { cropper.zoomTo(baseScale); } catch (err) {
+              try {
+                const imgData = cropper.getImageData();
+                const current = (imgData?.width && imgData?.naturalWidth) ? (imgData.width / imgData.naturalWidth) : baseScale;
+                if (Math.abs(current - baseScale) > 0.001) cropper.zoomTo(baseScale);
+              } catch (ex) {}
+            }
+          },
 
-                // 🔥 Size check using SAME popup as partial view
-                if (file.size > MAX_BYTES) {
-                    showToast("Image exceeds 2MB limit!", "error");
+          crop() {
+            // intentionally empty / cheap preview only
+          }
+        });
 
-                    avatarPreview.src = previousSrc;
-                    this.value = "";
-                    return;
+                } catch (err) {
+                  alert('Failed to initialize cropper for this image.');
+                  hideModal();
                 }
+              }, 60);
+            };
 
-                previousSrc = avatarPreview.src;
+            reader.onerror = function () {
+              alert('Failed to read image file.');
+              this.value = '';
+            };
 
-                const reader = new FileReader();
-                reader.onload = e => avatarPreview.src = e.target.result;
-                reader.readAsDataURL(file);
+            reader.readAsDataURL(file);
+          });
+
+          // ------------------ Zoom slider (0..100 -> multiplier 1..2) ------------------
+          if (zoomRange) {
+            const zoomPercentEl = document.getElementById('zoomPercent');
+            function setZoomPercent(v) {
+              if (!zoomPercentEl) return;
+              zoomPercentEl.textContent = `${Math.round(v)}%`;
+            }
+
+            zoomRange.addEventListener('input', function () {
+              if (!cropper) return;
+              const slider = parseFloat(this.value) || 0;
+              desiredMultiplier = 1 + (slider / 100);
+              setZoomPercent(slider);
+              scheduleZoomApply();
             });
 
-            avatarPreview.style.cursor = 'pointer';
-            avatarPreview.addEventListener('click', () => avatarInput.click());
+            // on change/finish: apply final zoom and update main preview fast
+            zoomRange.addEventListener('change', function () {
+              if (!cropper) return;
+              const slider = parseFloat(this.value) || 0;
+              desiredMultiplier = 1 + (slider / 100);
+              setZoomPercent(slider);
+              scheduleZoomApply();
+              updateMainPreviewFromCropperFast();
+            });
+
+            // pointerup/touchend: update main preview
+            zoomRange.addEventListener('pointerup', () => { updateMainPreviewFromCropperFast(); });
+            zoomRange.addEventListener('touchend', () => { updateMainPreviewFromCropperFast(); });
+          }
+
+          // ------------------ Rotate ------------------
+          if (rotateLeftBtn) rotateLeftBtn.addEventListener('click', () => { if (cropper) { cropper.rotate(-90); updateMainPreviewFromCropperFast(); }});
+          if (rotateRightBtn) rotateRightBtn.addEventListener('click', () => { if (cropper) { cropper.rotate(90); updateMainPreviewFromCropperFast(); }});
+
+          // ------------------ Save ------------------
+          if (cropSaveBtn) {
+            cropSaveBtn.addEventListener('click', () => {
+              if (!cropper) return;
+              let canvas;
+              try {
+                canvas = cropper.getCroppedCanvas({ width: OUTPUT_SIZE, height: OUTPUT_SIZE, imageSmoothingQuality: 'high' });
+              } catch (err) {
+                alert('Failed to create cropped image.');
+                return;
+              }
+              if (!canvas) { alert('Failed to create cropped image.'); return; }
+
+              canvas.toBlob((blob) => {
+                if (!blob) { alert('Failed to process image.'); return; }
+
+                let file;
+                try { file = new File([blob], `avatar_${Date.now()}.png`, { type: 'image/png' }); } catch (e) { file = blob; }
+
+                setInputFile(avatarInput, file);
+
+                // fast main preview update using object URL of the full-size blob
+                try {
+                  if (lastMainPreviewObjectUrl) {
+                    try { URL.revokeObjectURL(lastMainPreviewObjectUrl); } catch (e) {}
+                    lastMainPreviewObjectUrl = null;
+                  }
+                  const obj = URL.createObjectURL(blob);
+                  lastMainPreviewObjectUrl = obj;
+                  avatarPreview.src = obj;
+                } catch (e) {
+                  try { avatarPreview.src = canvas.toDataURL('image/png'); } catch (_) {}
+                }
+
+                hideModal();
+              }, 'image/png', 0.95);
+            });
+          }
+
+          // ------------------ Cancel ------------------
+          function cancelCrop() {
+            try { avatarInput.value = ''; } catch (e) {}
+            avatarPreview.src = previousSrc;
+            hideModal();
+          }
+          if (cropCancelBtn) cropCancelBtn.addEventListener('click', cancelCrop);
+          if (cropBtnCloseTop) cropBtnCloseTop.addEventListener('click', cancelCrop);
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !cropModal.classList.contains('hidden')) cancelCrop();
+          });
 
         })();
     </script>
+
+
+
+
+
+
+
+
 }
 
 @await Html.PartialAsync("_Notification")
