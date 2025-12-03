@@ -178,7 +178,7 @@
             form.append('__RequestVerificationToken', token);
 
             try {
-                const res = await fetch('@Url.Action("ApproveUser", "Account")', {
+                const res = await fetch('@Url.Action("ApproveUser", "Admin")', {
                     method: 'POST',
                     body: form,
                     credentials: 'same-origin'
@@ -222,7 +222,7 @@
             form.append('__RequestVerificationToken', token);
 
             try {
-                const res = await fetch('@Url.Action("RejectUser", "Account")', {
+                const res = await fetch('@Url.Action("RejectUser", "Admin")', {
                     method: 'POST',
                     body: form,
                     credentials: 'same-origin'
