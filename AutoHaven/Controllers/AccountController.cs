@@ -221,7 +221,7 @@ namespace AutoHaven.Controllers
         {
             return View();
         }
-        [HttpPost]
+       
         // ==================== POST: Login (with approval check) ====================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -316,6 +316,20 @@ namespace AutoHaven.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
 
+            try
+            {
+                await _projectDbContext.Entry(user)
+                    .Collection(u => u.UserSubscriptions)
+                    .Query()
+                    .Include(us => us.SubscriptionPlan)
+                    .LoadAsync();
+            }
+
+            catch (Exception x)
+            {
+                //Used for Debugging
+            }
+
             var model = ProfileViewModel.MapToModel(user);
             if (edit == "1") ViewData["EditMode"] = true;
             return View("Profile", model);
@@ -334,13 +348,6 @@ namespace AutoHaven.Controllers
 
             // Keep the UI in edit mode when returning the view
             ViewData["EditMode"] = true;
-
-            if (!ModelState.IsValid)
-            {
-                // keep edit mode and show inline validation only (do NOT set TempData)
-                ViewBag.ForceEdit = true;
-                return View("Profile", model);
-            }
 
             // ----------------------------
             // Uniqueness checks (INLINE only)
@@ -396,7 +403,7 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Failed to set email.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
             }
 
@@ -408,20 +415,20 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Failed to set phone number.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
             }
 
             // Avatar processing (keeps your existing checks and TempData on errors)
             if (avatar != null && avatar.Length > 0)
             {
-                var allowed = new[] { "image/png", "image/jpeg", "image/jpg", "image/gif" };
+                var allowed = new[] { "image/png", "image/jpeg", "image/jpg" };
                 if (!allowed.Contains(avatar.ContentType.ToLower()))
                 {
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Invalid avatar file type.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
 
                 if (avatar.Length > MaxFileBytes)
@@ -429,7 +436,7 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Avatar file too large.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
 
                 try
@@ -446,7 +453,7 @@ namespace AutoHaven.Controllers
                             ViewBag.ForceEdit = true;
                             TempData["Notification.Message"] = "Avatar dimensions too large.";
                             TempData["Notification.Type"] = "error";
-                            return View("Profile", model);
+                            return RedirectToAction(nameof(Profile), new { edit = 1 });
                         }
                     }
                     catch { }
@@ -484,7 +491,7 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Failed to process avatar.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
             }
 
@@ -494,7 +501,7 @@ namespace AutoHaven.Controllers
                 ViewBag.ForceEdit = true;
                 TempData["Notification.Message"] = "Unable to update profile.";
                 TempData["Notification.Type"] = "error";
-                return View("Profile", model);
+                return RedirectToAction(nameof(Profile), new { edit = 1 });
             }
 
             TempData["Notification.Message"] = "Profile updated successfully!";
