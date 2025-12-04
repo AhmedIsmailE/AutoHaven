@@ -658,12 +658,6 @@ namespace AutoHaven.Controllers
             }
         }
 
-        // required usings:
-        // using Microsoft.EntityFrameworkCore;
-        // using AutoHaven.Models;
-        // using AutoHaven.ViewModel;
-        // using System.Linq;
-
         [HttpGet]
         public async Task<IActionResult> MyListings(string q = "",
             string sortBy = "newest",
