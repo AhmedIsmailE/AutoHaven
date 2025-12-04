@@ -84,10 +84,10 @@
                                     </button>
 
                                     <button data-user="@u.Id"
-                                            class="delete-user-btn inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm bg-red-50 text-red-700 border border-red-100"
+                                            class="delete-user-btn inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm bg-red-50 text-red-700 border border-red-100 hover:bg-red-100 transition"
                                             onclick="deleteUser(this)">
                                         <span class="material-symbols-outlined">delete</span>
-                                        Delete Profile
+                                         Delete Profile
                                     </button>
                                 </div>
                             </div>
@@ -235,39 +235,72 @@
             }
         }
 
-        // DELETE user (AJAX -> show toast then reload)
         async function deleteUser(btn) {
-            var userId = btn.getAttribute('data-user');
+            const userId = btn.getAttribute('data-user');
             if (!userId) return;
-            if (!confirm('Delete this user profile? This cannot be undone.')) return;
 
+            const SwalLib = await ensureSwal();
+            if (!SwalLib) return;
+
+            // SweetAlert confirmation popup
+            const confirmResult = await SwalLib.fire({
+                title: "Delete User?",
+                text: "This action cannot be undone.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                confirmButtonText: "Delete",
+                cancelButtonText: "Cancel"
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            // Disable button + loading spinner
             btn.disabled = true;
-            var token = getRequestVerificationToken();
-            var fd = new FormData();
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin">progress_activity</span> Deleting...`;
+
+            const token = getRequestVerificationToken();
+            const fd = new FormData();
             fd.append('userId', userId);
 
             try {
                 const res = await fetch('@Url.Action("DeleteUser", "Admin")', {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: { 'RequestVerificationToken': token },
+                    headers: {
+                        'RequestVerificationToken': token
+                    },
                     body: fd
                 });
-                let data = null; try { data = await res.json(); } catch (e) { }
 
-                if (res.ok && data && data.success) {
-                    const note = data.notification || { message: 'User deleted.', type: 'success' };
-                    await showSwalNotification(note.message, note.type || 'success');
-                    setTimeout(() => { location.reload(); }, 600);
-                } else {
-                    const note = (data && data.notification) ? data.notification : { message: 'Could not delete user.', type: 'error' };
-                    await showSwalNotification(note.message, note.type || 'error');
+                let data = null;
+                try { data = await res.json(); } catch (e) { }
+
+                if (!res.ok || !data?.success) {
+                    const note = data?.notification ?? { message: "Failed to delete user.", type: "error" };
+                    await showSwalNotification(note.message, note.type);
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    return;
                 }
+
+                // SUCCESS → Show toast
+                const note = data.notification ?? { message: "User deleted.", type: "success" };
+                await showSwalNotification(note.message, note.type);
+
+                // Remove the user row from DOM with animation
+                const row = btn.closest('.user-row');
+                if (row) {
+                    row.style.transition = "opacity 350ms, transform 350ms";
+                    row.style.opacity = "0";
+                    row.style.transform = "translateX(-20px)";
+                    setTimeout(() => row.remove(), 380);
+                }
+
             } catch (err) {
                 console.error(err);
-                await showSwalNotification('Network error while deleting user.', 'error');
-            } finally {
-                btn.disabled = false;
+                await showSwalNotification("Network error while deleting user.", "error");
             }
         }
     </script>
