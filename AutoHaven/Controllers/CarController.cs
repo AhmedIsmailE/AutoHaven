@@ -3,6 +3,7 @@ using AutoHaven.Models;
 using AutoHaven.Services;
 using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using static AutoHaven.Models.CarListingModel;
@@ -17,6 +18,7 @@ namespace AutoHaven.Controllers
         private readonly IReviewModelRepository _reviewRepo;
         private readonly IFavouriteModelRepository _favouriteRepo;
         private readonly ICarViewHistoryRepository _historyRepo;
+        private readonly UserManager<ApplicationUserModel> _userManager;
 
         public CarController (
             ICarListingModelRepository carListingRepo,
@@ -24,7 +26,8 @@ namespace AutoHaven.Controllers
             IUserSubscriptionModelRepository userSubscriptionRepo,
             IReviewModelRepository reviewRepo,
             IFavouriteModelRepository favouriteRepo,
-            ICarViewHistoryRepository historyRepo)
+            ICarViewHistoryRepository historyRepo,
+            UserManager<ApplicationUserModel> userManager)
         {
             _carListingRepo = carListingRepo;
             _carRepo = carRepo;
@@ -32,6 +35,7 @@ namespace AutoHaven.Controllers
             _reviewRepo = reviewRepo;
             _favouriteRepo = favouriteRepo;
             _historyRepo = historyRepo;
+            _userManager = userManager;
         }
 
 
@@ -790,103 +794,71 @@ namespace AutoHaven.Controllers
                 return View(new List<CarListingModel>());
             }
         }
-
-
-        // ==================== POST: Add to Favorites ====================
-        [Authorize]
-        [HttpPost]
-        public IActionResult AddToFavorite(int listingId)
-        {
-            try
-            {
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
-                
-                var listing = _carListingRepo.GetById(listingId);
-                if (listing == null)
-                {
-                    TempData["Notification.Message"] = "Listing isn't existed";
-                    TempData["Notification.Type"] = "error";
-                    return RedirectToAction("MyHistory");
-                }
-
-                var already = _favouriteRepo.Get()
-                     .Any(f => f.UserId == userId && f.ListingId == listingId);
-                if (already)
-                {
-                    TempData["Notification.Message"] = "Already in your favourites.";
-                    TempData["Notification.Type"] = "info";
-                    return RedirectToAction("MyHistory");
-                }
-
-                var favorite = new FavouriteModel
-                {
-                    UserId = userId,
-                    ListingId = listingId,
-                    CreatedAt = DateTime.Now
-                };
-
-                _favouriteRepo.Insert(favorite);
-
-                TempData["Notification.Message"] = "Added To Favourites!";
-                TempData["Notification.Type"] = "success";
-                return RedirectToAction("MyHistory");
-            }
-            catch (Exception ex)
-            {
-                TempData["Notification.Message"] = "Error: " + ex.Message;
-                TempData["Notification.Type"] = "error";
-                return RedirectToAction("MyHistory");
-            }
-        }
-
-        // ==================== POST: Remove from Favorites ====================
-        [Authorize]
-        [HttpPost]
-        public IActionResult RemoveFromFavorite(int listingId)
-        {
-            try
-            {
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
-
-                _favouriteRepo.DeleteByUserAndListing(userId, listingId);
-
-                return Ok(new { message = "Removed from favorites", success = true });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message, success = false });
-            }
-        }
-
-        // ==================== GET: User's Favorites ====================
-        [Authorize]
+        //================ Favourites Methods For Details ==================
+        // GET: /Car/IsFavorite/{id}
         [HttpGet]
-        public IActionResult Favorites()
+        public async Task<IActionResult> IsFavorite(int id)
         {
-            try
-            {
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Json(new { isFavorite = false });
 
-                var favorites = _favouriteRepo.Get()
-                    .Where(f => f.UserId == userId)
-                    .Select(f => f.CarListing)
-                    .OrderByDescending(cl => cl.UpdatedAt)
-                    .ToList();
+            // Using repo (synchronous Any is fine here)
+            bool exists = _favouriteRepo.Get().Any(f => f.UserId == user.Id && f.ListingId == id);
 
-                return View(favorites);
-            }
-            catch (Exception ex)
-            {
-                ViewBag.Error = $"Error loading favorites: {ex.Message}";
-                return View(new List<CarListingModel>());
-            }
+            return Json(new { isFavorite = exists });
         }
+
+        // POST: /Car/AddToFavorite/{id}  <- toggle / add
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddToFavorite(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Json(new { isFavorite = false, notification = new { message = "Login Required", type = "error" } });
+
+            // Check existing favourite using repo
+            var existing = _favouriteRepo.Get().FirstOrDefault(f => f.UserId == user.Id && f.ListingId == id);
+
+            if (existing != null)
+            {
+                // Remove (toggle off)
+                _favouriteRepo.Delete(existing.FavouriteId);
+                return Json(new { isFavorite = false });
+            }
+
+            // Add (toggle on)
+            var fav = new FavouriteModel
+            {
+                UserId = user.Id,
+                ListingId = id
+            };
+
+            _favouriteRepo.Insert(fav);
+
+            return Json(new { isFavorite = true, notification = new { message = "Added To Favorite List.", type = "success" } });
+        }
+
+        // Optional explicit Remove endpoint (if you prefer separate endpoints)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveFavorite(int id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized();
+
+            var fav = _favouriteRepo.Get().FirstOrDefault(f => f.UserId == user.Id && f.ListingId == id);
+            if (fav != null)
+            {
+                _favouriteRepo.Delete(fav.FavouriteId);
+            }
+
+            return Ok();
+        }
+
+
 
         // ==================== POST: Add Review ====================
         [Authorize]
