@@ -658,6 +658,112 @@ namespace AutoHaven.Controllers
             }
         }
 
+        // required usings:
+        // using Microsoft.EntityFrameworkCore;
+        // using AutoHaven.Models;
+        // using AutoHaven.ViewModel;
+        // using System.Linq;
+
+        [HttpGet]
+        public async Task<IActionResult> MyListings(string q = "",
+            string sortBy = "newest",
+            int page = 1,
+            int pageSize = 12)
+        {
+            if (page < 1) page = 1;
+            if (pageSize <= 0) pageSize = 12;
+
+            var current = await _userManager.GetUserAsync(User);
+            if (current == null) return RedirectToAction("Login", "Account");
+
+            IQueryable<CarListingModel> query = _projectDbContext.CarListings
+                .AsNoTracking()
+                .Where(l => l.UserId == current.Id)
+                .Include(l => l.Car)
+                .Include(l => l.CarImages)
+                .Include(l => l.Reviews);
+
+            var projected = query.Select(l => new
+            {
+                Listing = l,
+                Price = l.Type == CarListingModel.ListingType.ForSelling ? l.NewPrice : l.RentPrice,
+                // Average() on an empty filtered subquery yields null in SQL; we'll coalesce when ordering
+                AvgRating = _projectDbContext.Reviews
+                             .Where(r => r.ListingId == l.ListingId)       // use your actual FK name
+                             .Select(r => (double?)r.Rating)
+                             .Average()
+            });
+
+            // apply ordering, coalescing AvgRating to 0 when null
+            switch ((sortBy ?? "newest").ToLowerInvariant())
+            {
+                case "price_asc":
+                    projected = projected.OrderBy(x => x.Price).ThenByDescending(x => x.Listing.CreatedAt);
+                    break;
+                case "price_desc":
+                    projected = projected.OrderByDescending(x => x.Price).ThenByDescending(x => x.Listing.CreatedAt);
+                    break;
+                case "most_viewed":
+                    projected = projected.OrderByDescending(x => x.Listing.Views).ThenByDescending(x => x.Listing.CreatedAt);
+                    break;
+                case "highest_rated":
+                    // coalesce null to 0 for ordering
+                    projected = projected.OrderByDescending(x => (x.AvgRating ?? 0)).ThenByDescending(x => x.Listing.CreatedAt);
+                    break;
+                default:
+                    projected = projected.OrderByDescending(x => x.Listing.CreatedAt);
+                    break;
+            }
+
+            var totalCount = await projected.CountAsync();
+
+            var pageListings = await projected
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => x.Listing)
+                .ToListAsync();
+
+            // Map listings to view model
+            var model = pageListings.Select(l =>
+            {
+                var mainImage = l.CarImages?.FirstOrDefault(ci => ci.IsPrimary) ?? l.CarImages?.FirstOrDefault();
+                string imageUrl;
+                if (mainImage == null || string.IsNullOrWhiteSpace(mainImage.Path))
+                {
+                    imageUrl = Url.Content("~/images/default-car.png");
+                }
+                else
+                {
+                    var p = mainImage.Path.Trim();
+                    if (p.StartsWith("http://") || p.StartsWith("https://") || p.StartsWith("/"))
+                        imageUrl = Url.Content(p);
+                    else imageUrl = Url.Content("~/" + p.TrimStart('~', '/'));
+                }
+
+                var price = l.Type == CarListingModel.ListingType.ForSelling ? l.NewPrice : l.RentPrice;
+                var priceLabel = l.Type == CarListingModel.ListingType.ForSelling ? "" : "/day";
+
+                return new MyListingViewModel
+                {
+                    ListingId = l.ListingId,
+                    Title = l.Car != null ? $"{l.Car.Manufacturer} {l.Car.Model} {l.Car.ModelYear}" : $"Listing #{l.ListingId}",
+                    ImageUrl = imageUrl,
+                    Price = price,
+                    PriceLabel = priceLabel,
+                    IsForRent = l.Type == CarListingModel.ListingType.ForRenting,
+                    CreatedAt = l.CreatedAt
+                };
+            }).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            ViewBag.TotalCount = totalCount;
+            ViewBag.SortBy = sortBy;
+            ViewBag.Query = q;
+
+            return View("MyListings", model);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetAvatar()
