@@ -683,43 +683,44 @@ namespace AutoHaven.Controllers
                 .Include(l => l.CarImages)
                 .Include(l => l.Reviews);
 
-            if (!string.IsNullOrWhiteSpace(q))
+            var projected = query.Select(l => new
             {
-                var s = q.Trim().ToLower();
-                query = query.Where(l =>
-                    (l.Car != null && (
-                        (!string.IsNullOrEmpty(l.Car.Manufacturer) && l.Car.Manufacturer.ToLower().Contains(s)) ||
-                        (!string.IsNullOrEmpty(l.Car.Model) && l.Car.Model.ToLower().Contains(s)) ||
-                        l.Car.ModelYear.ToString().Contains(s)
-                    )) ||
-                    (!string.IsNullOrEmpty(l.Description) && l.Description.ToLower().Contains(s))
-                );
-            }
+                Listing = l,
+                Price = l.Type == CarListingModel.ListingType.ForSelling ? l.NewPrice : l.RentPrice,
+                // Average() on an empty filtered subquery yields null in SQL; we'll coalesce when ordering
+                AvgRating = _projectDbContext.Reviews
+                             .Where(r => r.ListingId == l.ListingId)       // use your actual FK name
+                             .Select(r => (double?)r.Rating)
+                             .Average()
+            });
 
+            // apply ordering, coalescing AvgRating to 0 when null
             switch ((sortBy ?? "newest").ToLowerInvariant())
             {
                 case "price_asc":
-                    query = query.OrderBy(l => l.Type == CarListingModel.ListingType.ForSelling ? l.NewPrice : l.RentPrice);
+                    projected = projected.OrderBy(x => x.Price).ThenByDescending(x => x.Listing.CreatedAt);
                     break;
                 case "price_desc":
-                    query = query.OrderByDescending(l => l.Type == CarListingModel.ListingType.ForSelling ? l.NewPrice : l.RentPrice);
+                    projected = projected.OrderByDescending(x => x.Price).ThenByDescending(x => x.Listing.CreatedAt);
                     break;
                 case "most_viewed":
-                    query = query.OrderByDescending(l => l.Views);
+                    projected = projected.OrderByDescending(x => x.Listing.Views).ThenByDescending(x => x.Listing.CreatedAt);
                     break;
                 case "highest_rated":
-                    query = query.OrderByDescending(l => l.Reviews != null && l.Reviews.Any() ? l.Reviews.Average(r => (double?)r.Rating) ?? 0 : 0);
+                    // coalesce null to 0 for ordering
+                    projected = projected.OrderByDescending(x => (x.AvgRating ?? 0)).ThenByDescending(x => x.Listing.CreatedAt);
                     break;
                 default:
-                    query = query.OrderByDescending(l => l.CreatedAt);
+                    projected = projected.OrderByDescending(x => x.Listing.CreatedAt);
                     break;
             }
 
-            var totalCount = await query.CountAsync();
+            var totalCount = await projected.CountAsync();
 
-            var pageListings = await query
+            var pageListings = await projected
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(x => x.Listing)
                 .ToListAsync();
 
             // Map listings to view model
