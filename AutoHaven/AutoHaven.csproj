@@ -26,6 +26,7 @@
     <None Include="IdVerificationModel.mlnet">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Views\Admin\UserListing.cshtml" />
     <None Include="wwwroot\images\AboutImgs\Ahmed.jpg" />
     <None Include="wwwroot\images\AboutImgs\Arsany.jpg" />
     <None Include="wwwroot\images\AboutImgs\Mohamed.jpg" />

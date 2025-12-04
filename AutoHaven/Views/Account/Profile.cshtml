@@ -2,12 +2,18 @@
 @{
     Layout = "_Layout";
     ViewData["Title"] = "My Profile";
-    var editMode = (Context.Request.Query["edit"] == "1");
+
+    // server sets EditMode only when allowed (owner + edit==1)
+    var editMode = (ViewData["EditMode"] as bool?) == true;
+
+    // whether the currently signed-in user is the owner of this profile
+    var isOwner = (ViewBag.IsOwner as bool?) == true;
 
     var avatarSrc = string.IsNullOrWhiteSpace(Model?.AvatarUrl)
-        ? "images/Default/default.jpg"
+        ? Url.Content("~/images/Default/default.jpg")
         : Model.AvatarUrl;
 }
+
 
 <div class="max-w-6xl mx-auto py-6">
     <div asp-validation-summary="All" class="text-red-600"></div>
@@ -144,10 +150,14 @@
             </div>
 
             <div class="ml-auto">
-                @if (!editMode)
-                {
-                    <a href="@Url.Action("Edit", "Account", new { edit = 1 })" class="px-4 py-2 bg-primary text-white rounded-lg">Edit Profile</a>
-                }
+                <div class="ml-auto">
+                    @* Show "Edit Profile" only if this is the owner's profile and not currently in edit mode *@
+                    @if (!editMode && isOwner)
+                    {
+                        <a href="@Url.Action("Profile", "Account", new { edit = 1 })" class="px-4 py-2 bg-primary text-white rounded-lg">Edit Profile</a>
+                    }
+                </div>
+
             </div>
         </div>
 
@@ -179,8 +189,7 @@
                 </div>
             </div>
 
-            @* Account actions area (Delete account) *@
-            @if (User.Identity.IsAuthenticated && (ViewBag.IsOwner ?? true))
+            @if (isOwner)
             {
                 <div class="mt-6 flex justify-end">
                     <form method="post"
@@ -197,7 +206,6 @@
                     </form>
                 </div>
             }
-
 
         }
         else
@@ -279,7 +287,6 @@
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
     <!-- Cropper.js CDN -->
     <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>

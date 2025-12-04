@@ -38,6 +38,7 @@
             @{
                 var isAuthenticated = User?.Identity?.IsAuthenticated == true;
                 string? avatarUrl = null;
+                string profileUrl = Url.Action("Profile", "Account");
 
                 if (isAuthenticated)
                 {
@@ -48,6 +49,9 @@
                         if (appUser != null)
                         {
                             avatarUrl = appUser.AvatarUrl;
+
+                            // ensure profile link contains current user's id
+                            profileUrl = Url.Action("Profile", "Account", new { id = appUser.Id });
                         }
                     }
                     catch
@@ -102,7 +106,7 @@
 
                 @if (isAuthenticated && !string.IsNullOrWhiteSpace(avatarUrl))
                 {
-                    <a href="@Url.Action("Profile", "Account")" title="View profile" class="ml-2">
+                    <a href="@profileUrl" title="View profile" class="ml-2">
                         <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 w-10 h-10 border shadow-sm"
                              style="background-image: url('@avatarUrl');"></div>
                     </a>
