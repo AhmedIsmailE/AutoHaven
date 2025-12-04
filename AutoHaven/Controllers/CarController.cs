@@ -355,7 +355,7 @@ namespace AutoHaven.Controllers
                 // ✅ VALIDATE SUBSCRIPTION
                 UserSubscriptionModel? subscription = null;
 
-                if (!CurrentUserIsAdmin())
+                if (!CurrentUserIsCustomer())
                 {
                     subscription = _userSubscriptionRepo.GetActiveForUser(userId);
                     if (subscription == null)
@@ -365,7 +365,7 @@ namespace AutoHaven.Controllers
                         return RedirectToAction("Index", "Subscription");
                     }
                 }
-
+                
                 System.Diagnostics.Debug.WriteLine($"✨ DEBUG: User {userId} wants to feature: {viewModel.WantsFeatured}");
                 System.Diagnostics.Debug.WriteLine($"📋 Subscription: {subscription.SubscriptionPlan.SubscriptionName}, Featured slots: {subscription.SubscriptionPlan.FeatureSlots}");
 
@@ -1009,6 +1009,11 @@ namespace AutoHaven.Controllers
         {
             var roleClaim = User.FindFirst("Role")?.Value;
             return roleClaim == ApplicationUserModel.RoleEnum.Admin.ToString();
+        }
+        private bool CurrentUserIsCustomer()
+        {
+            var roleClaim = User.FindFirst("Role")?.Value;
+            return roleClaim == ApplicationUserModel.RoleEnum.Customer.ToString();
         }
         // ================== History Actions =======================
         [Authorize]
