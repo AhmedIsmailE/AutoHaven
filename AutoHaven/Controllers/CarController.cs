@@ -3,6 +3,7 @@ using AutoHaven.Models;
 using AutoHaven.Services;
 using AutoHaven.ViewModel;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using static AutoHaven.Models.CarListingModel;
@@ -17,6 +18,7 @@ namespace AutoHaven.Controllers
         private readonly IReviewModelRepository _reviewRepo;
         private readonly IFavouriteModelRepository _favouriteRepo;
         private readonly ICarViewHistoryRepository _historyRepo;
+        private readonly UserManager<ApplicationUserModel> _userManager;
 
         public CarController (
             ICarListingModelRepository carListingRepo,
@@ -24,7 +26,8 @@ namespace AutoHaven.Controllers
             IUserSubscriptionModelRepository userSubscriptionRepo,
             IReviewModelRepository reviewRepo,
             IFavouriteModelRepository favouriteRepo,
-            ICarViewHistoryRepository historyRepo)
+            ICarViewHistoryRepository historyRepo,
+            UserManager<ApplicationUserModel> userManager)
         {
             _carListingRepo = carListingRepo;
             _carRepo = carRepo;
@@ -32,6 +35,7 @@ namespace AutoHaven.Controllers
             _reviewRepo = reviewRepo;
             _favouriteRepo = favouriteRepo;
             _historyRepo = historyRepo;
+            _userManager = userManager;
         }
 
 
@@ -764,129 +768,73 @@ namespace AutoHaven.Controllers
                 TempData["Notification.Type"] = "error";
                 return RedirectToAction(nameof(Index), "Car");
             }
-        }
+        }  
 
-        // ==================== GET: User's Own Listings ====================
-        [Authorize(Policy = "AdminOrProvider")]
+        //================ Favourites Methods For Details ==================
+        // GET: /Car/IsFavorite/{id}
         [HttpGet]
-        public IActionResult MyListings()
+        public async Task<IActionResult> IsFavorite(int id)
         {
-            try
-            {
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Json(new { isFavorite = false });
 
-                var listings = _carListingRepo.Get()
-                    .Where(cl => cl.UserId == userId)
-                    .OrderByDescending(cl => cl.CreatedAt)
-                    .ToList();
+            // Using repo (synchronous Any is fine here)
+            bool exists = _favouriteRepo.Get().Any(f => f.UserId == user.Id && f.ListingId == id);
 
-                return View(listings);
-            }
-            catch (Exception ex)
-            {
-                ViewBag.Error = $"Error loading your listings: {ex.Message}";
-                return View(new List<CarListingModel>());
-            }
+            return Json(new { isFavorite = exists });
         }
 
-
-        // ==================== POST: Add to Favorites ====================
-        [Authorize]
+        // POST: /Car/AddToFavorite/{id}  <- toggle / add
         [HttpPost]
-        public IActionResult AddToFavorite(int listingId)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddToFavorite(int id)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Json(new { isFavorite = false, notification = new { message = "Login Required", type = "error" } });
+
+            // Check existing favourite using repo
+            var existing = _favouriteRepo.Get().FirstOrDefault(f => f.UserId == user.Id && f.ListingId == id);
+
+            if (existing != null)
             {
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
-                
-                var listing = _carListingRepo.GetById(listingId);
-                if (listing == null)
-                {
-                    TempData["Notification.Message"] = "Listing isn't existed";
-                    TempData["Notification.Type"] = "error";
-                    return RedirectToAction("MyHistory");
-                }
-
-                var already = _favouriteRepo.Get()
-                     .Any(f => f.UserId == userId && f.ListingId == listingId);
-                if (already)
-                {
-                    TempData["Notification.Message"] = "Already in your favourites.";
-                    TempData["Notification.Type"] = "info";
-                    return RedirectToAction("MyHistory");
-                }
-
-                var favorite = new FavouriteModel
-                {
-                    UserId = userId,
-                    ListingId = listingId,
-                    CreatedAt = DateTime.Now
-                };
-
-                _favouriteRepo.Insert(favorite);
-
-                TempData["Notification.Message"] = "Added To Favourites!";
-                TempData["Notification.Type"] = "success";
-                return RedirectToAction("MyHistory");
+                // Remove (toggle off)
+                _favouriteRepo.Delete(existing.FavouriteId);
+                return Json(new { isFavorite = false });
             }
-            catch (Exception ex)
+
+            // Add (toggle on)
+            var fav = new FavouriteModel
             {
-                TempData["Notification.Message"] = "Error: " + ex.Message;
-                TempData["Notification.Type"] = "error";
-                return RedirectToAction("MyHistory");
-            }
+                UserId = user.Id,
+                ListingId = id
+            };
+
+            _favouriteRepo.Insert(fav);
+
+            return Json(new { isFavorite = true, notification = new { message = "Added To Favorite List.", type = "success" } });
         }
 
-        // ==================== POST: Remove from Favorites ====================
-        [Authorize]
+        // Optional explicit Remove endpoint (if you prefer separate endpoints)
         [HttpPost]
-        public IActionResult RemoveFromFavorite(int listingId)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveFavorite(int id)
         {
-            try
-            {
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized();
 
-                _favouriteRepo.DeleteByUserAndListing(userId, listingId);
-
-                return Ok(new { message = "Removed from favorites", success = true });
-            }
-            catch (Exception ex)
+            var fav = _favouriteRepo.Get().FirstOrDefault(f => f.UserId == user.Id && f.ListingId == id);
+            if (fav != null)
             {
-                return BadRequest(new { message = ex.Message, success = false });
+                _favouriteRepo.Delete(fav.FavouriteId);
             }
+
+            return Ok();
         }
 
-        // ==================== GET: User's Favorites ====================
-        [Authorize]
-        [HttpGet]
-        public IActionResult Favorites()
-        {
-            try
-            {
-                int userId = GetCurrentUserId();
-                if (userId == 0)
-                    return Unauthorized();
 
-                var favorites = _favouriteRepo.Get()
-                    .Where(f => f.UserId == userId)
-                    .Select(f => f.CarListing)
-                    .OrderByDescending(cl => cl.UpdatedAt)
-                    .ToList();
-
-                return View(favorites);
-            }
-            catch (Exception ex)
-            {
-                ViewBag.Error = $"Error loading favorites: {ex.Message}";
-                return View(new List<CarListingModel>());
-            }
-        }
 
         // ==================== POST: Add Review ====================
         [Authorize]
@@ -1014,148 +962,6 @@ namespace AutoHaven.Controllers
         {
             var roleClaim = User.FindFirst("Role")?.Value;
             return roleClaim == ApplicationUserModel.RoleEnum.Customer.ToString();
-        }
-        // ================== History Actions =======================
-        [Authorize]
-        [HttpGet]
-        public IActionResult MyHistory(string q = "", string sortBy = "newest", int page = 1)
-        {
-            int uid = GetCurrentUserId();
-            if (uid == 0) return Unauthorized();
-
-            const int pageSize = 4;               // <-- max 4 posts per page
-            if (page < 1) page = 1;
-
-            // Get all history rows for user
-            var userHistQuery = _historyRepo.Get()
-                .Where(h => h.UserId == uid)
-                .AsQueryable();
-
-            // Optional search (manufacturer, model, description)
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                var qTrim = q.Trim();
-                userHistQuery = userHistQuery.Where(h =>
-                    (h.CarListing != null && h.CarListing.Car != null &&
-                        ((h.CarListing.Car.Manufacturer ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase) ||
-                         (h.CarListing.Car.Model ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase)))
-                    || ((h.CarListing != null ? h.CarListing.Description : "") ?? "").Contains(qTrim, StringComparison.OrdinalIgnoreCase)
-                );
-            }
-
-            // Group by listing and take latest view per listing
-            var latestPerListing = userHistQuery
-                .GroupBy(h => h.ListingId)
-                .Select(g => g.OrderByDescending(x => x.ViewedAt).FirstOrDefault());
-
-            // Materialize to list so we can sort by computed values (ratings, views, price)
-            var latestList = latestPerListing
-                .Where(x => x != null)
-                .Select(x => x!) // non-null
-                .ToList();
-
-            // Apply sorting
-            IEnumerable<CarViewHistoryModel> ordered = latestList;
-
-            switch ((sortBy ?? "newest").ToLowerInvariant())
-            {
-                case "price_asc":
-                    ordered = latestList.OrderBy(h =>
-                        h.CarListing != null && h.CarListing.Type == CarListingModel.ListingType.ForSelling
-                            ? h.CarListing.NewPrice
-                            : h.CarListing != null ? h.CarListing.RentPrice : decimal.MaxValue);
-                    break;
-
-                case "price_desc":
-                    ordered = latestList.OrderByDescending(h =>
-                        h.CarListing != null && h.CarListing.Type == CarListingModel.ListingType.ForSelling
-                            ? h.CarListing.NewPrice
-                            : h.CarListing != null ? h.CarListing.RentPrice : 0m);
-                    break;
-
-                case "highest_rated":
-                    ordered = latestList.OrderByDescending(h =>
-                        _reviewRepo.Get().Where(r => r.ListingId == h.ListingId).Average(r => (double?)r.Rating) ?? 0);
-                    break;
-
-                case "most_viewed":
-                    ordered = latestList.OrderByDescending(h => h.CarListing?.Views ?? 0);
-                    break;
-
-                case "newest":
-                default:
-                    // newest = most recently viewed
-                    ordered = latestList.OrderByDescending(h => h.ViewedAt);
-                    break;
-            }
-
-            // Pagination
-            var totalCount = ordered.Count();
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-            if (page > totalPages && totalPages > 0) page = totalPages;
-
-            var items = ordered
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
-            // Fill ViewBag for view (the view expects these)
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.TotalCount = totalCount;
-            ViewBag.SortBy = sortBy ?? "newest";
-            ViewBag.SearchTerm = q ?? string.Empty;
-
-            // Optional filter lists (used by your view)
-            var allListings = _carListingRepo.Get().ToList();
-            ViewBag.Makes = allListings.Where(cl => cl.Car != null && !string.IsNullOrEmpty(cl.Car.Manufacturer))
-                                      .Select(cl => cl.Car.Manufacturer).Distinct().OrderBy(x => x).ToList();
-            ViewBag.Years = allListings.Where(cl => cl.Car != null).Select(cl => cl.Car.ModelYear).Distinct().OrderByDescending(y => y).ToList();
-            ViewBag.Transmissions = Enum.GetValues(typeof(CarModel.Transmission)).Cast<CarModel.Transmission>().ToList();
-            ViewBag.Fuels = Enum.GetValues(typeof(CarModel.FuelType)).Cast<CarModel.FuelType>().ToList();
-
-            return View("MyHistory", items);
-        }
-
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult ClearHistory()
-        {
-            int uid = GetCurrentUserId();
-            if (uid == 0) return Unauthorized();
-
-            _historyRepo.DeleteByUser(uid);
-
-            TempData["Notification.Message"] = "History cleared.";
-            TempData["Notification.Type"] = "success";
-            return RedirectToAction(nameof(MyHistory));
-        }
-
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult RemoveFromHistory(int id)
-        {
-            int uid = GetCurrentUserId();
-            if (uid == 0) return Unauthorized();
-
-            var row = _historyRepo.Get().FirstOrDefault(h => h.Id == id && h.UserId == uid);
-            if (row != null)
-            {
-                _historyRepo.Delete(id);
-                TempData["Notification.Message"] = "Removed from history.";
-                TempData["Notification.Type"] = "success";
-            }
-            else
-            {
-                TempData["Notification.Message"] = "History entry not found.";
-                TempData["Notification.Type"] = "error";
-            }
-
-            return RedirectToAction(nameof(MyHistory));
         }
 
 
