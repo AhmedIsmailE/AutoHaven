@@ -419,8 +419,6 @@ namespace AutoHaven.Controllers
         {
             if (listingId <= 0)
             {
-                TempData["Notification.Message"] = "Invalid listing id.";
-                TempData["Notification.Type"] = "error";
                 return BadRequest(new
                 {
                     success = false,
@@ -432,8 +430,6 @@ namespace AutoHaven.Controllers
             var entity = await _projectDbContext.CarListings.FindAsync(listingId);
             if (entity == null)
             {
-                TempData["Notification.Message"] = "Listing not found.";
-                TempData["Notification.Type"] = "error";
                 return NotFound(new
                 {
                     success = false,
@@ -450,8 +446,6 @@ namespace AutoHaven.Controllers
                 await _projectDbContext.SaveChangesAsync();
 
                 var msg = entity.IsFeatured ? "Listing marked as featured." : "Listing removed from featured.";
-                TempData["Notification.Message"] = msg;
-                TempData["Notification.Type"] = "success";
 
                 return Json(new
                 {
@@ -462,8 +456,6 @@ namespace AutoHaven.Controllers
             }
             catch (Exception ex)
             {
-                TempData["Notification.Message"] = "Failed to toggle featured state.";
-                TempData["Notification.Type"] = "error";
                 return StatusCode(500, new
                 {
                     success = false,
@@ -487,9 +479,7 @@ namespace AutoHaven.Controllers
         {
             if (listingId <= 0)
             {
-                TempData["Notification.Message"] = "Invalid listing id.";
-                TempData["Notification.Type"] = "error";
-                return BadRequest(new { success = false, message = "Invalid listing id" });
+                return BadRequest(new { success = false, notification = new { message = "Invalid listing id.", type = "error" } });
             }
 
             // load the listing with all children we care about
@@ -501,9 +491,7 @@ namespace AutoHaven.Controllers
 
             if (entity == null)
             {
-                TempData["Notification.Message"] = "Listing not found.";
-                TempData["Notification.Type"] = "error";
-                return NotFound(new { success = false, message = "Listing not found" });
+                return NotFound(new { success = false, notification = new { message = "Listing not found.", type = "error" } });
             }
 
             using var t = await _projectDbContext.Database.BeginTransactionAsync();
@@ -553,18 +541,14 @@ namespace AutoHaven.Controllers
                 await t.CommitAsync();
 
                 // TempData for SwiftTail2
-                TempData["Notification.Message"] = "Listing deleted.";
-                TempData["Notification.Type"] = "success";
 
-                return Json(new { success = true });
+                return Json(new { success = true ,notification = new { message = "Listing deleted.", type = "success" } });
             }
             catch (Exception ex)
             {
                 await t.RollbackAsync();
                 // log the exception (ex)
-                TempData["Notification.Message"] = "Failed to delete listing.";
-                TempData["Notification.Type"] = "error";
-                return StatusCode(500, new { success = false, message = "Failed to delete listing", details = ex.Message });
+                return StatusCode(500, new { success = false, notification = new { message = "Failed to delete listing", type = "error" } });
             }
         }
 
@@ -739,8 +723,6 @@ namespace AutoHaven.Controllers
                 await _projectDbContext.SaveChangesAsync();
 
                 var msg = user.IsBanned ? "User banned." : "User unbanned.";
-                TempData["Notification.Message"] = msg;
-                TempData["Notification.Type"] = "success";
 
                 return Json(new
                 {
@@ -751,9 +733,6 @@ namespace AutoHaven.Controllers
             }
             catch (Exception ex)
             {
-                // log ex
-                TempData["Notification.Message"] = "Failed to update user.";
-                TempData["Notification.Type"] = "error";
                 return StatusCode(500, new { success = false, notification = new { message = "Failed to update user.", type = "error" }, details = ex.Message });
             }
         }
@@ -764,8 +743,6 @@ namespace AutoHaven.Controllers
         {
             if (userId <= 0)
             {
-                TempData["Notification.Message"] = "Invalid user id.";
-                TempData["Notification.Type"] = "error";
                 return BadRequest(new { success = false, notification = new { message = "Invalid user id.", type = "error" } });
             }
 
@@ -785,16 +762,12 @@ namespace AutoHaven.Controllers
 
             if (user == null)
             {
-                TempData["Notification.Message"] = "User not found.";
-                TempData["Notification.Type"] = "error";
                 return NotFound(new { success = false, notification = new { message = "User not found.", type = "error" } });
             }
 
             // Prevent deleting admin accounts accidentally
             if (user.Role == ApplicationUserModel.RoleEnum.Admin)
             {
-                TempData["Notification.Message"] = "Cannot delete admin account.";
-                TempData["Notification.Type"] = "error";
                 return BadRequest(new { success = false, notification = new { message = "Cannot delete admin account.", type = "error" } });
             }
 
@@ -881,17 +854,11 @@ namespace AutoHaven.Controllers
 
                 await _projectDbContext.SaveChangesAsync();
                 await tx.CommitAsync();
-
-                TempData["Notification.Message"] = "User deleted.";
-                TempData["Notification.Type"] = "success";
-
                 return Json(new { success = true, notification = new { message = "User deleted.", type = "success" } });
             }
             catch (Exception ex)
             {
                 await tx.RollbackAsync();
-                TempData["Notification.Message"] = "Failed to delete user.";
-                TempData["Notification.Type"] = "error";
                 return StatusCode(500, new { success = false, notification = new { message = "Failed to delete user.", type = "error" }, details = ex.Message });
             }
         }
