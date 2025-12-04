@@ -78,6 +78,9 @@ namespace AutoHaven.ViewModel
         // ✅ NEW: Featured option
         public bool WantsFeatured { get; set; } = false;
 
+        [Display(Name = "Listing Status")]
+        public State CurrentState { get; set; } = State.Available;
+
         // ===== VALIDATION HELPER PROPERTY =====
         // This property will be checked in the controller to ensure the correct price is filled.
         public bool IsValid()

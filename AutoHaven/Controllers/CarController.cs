@@ -312,6 +312,22 @@ namespace AutoHaven.Controllers
         [HttpGet]
         public IActionResult Create()
         {
+            int userId = GetCurrentUserId();
+            if (userId == 0)
+                return RedirectToAction("Login", "Account");
+
+            // Admins bypass subscription check
+            if (!CurrentUserIsAdmin())
+            {
+                var subscription = _userSubscriptionRepo.GetActiveForUser(userId);
+                if (subscription == null)
+                {
+                    TempData["Notification.Message"] = "You need an active subscription to create listings.";
+                    TempData["Notification.Type"] = "error";
+                    return RedirectToAction("Index", "Subscription");
+                }
+            }
+
             return View(new CreateCarListingViewModel());
         }
 
@@ -337,12 +353,17 @@ namespace AutoHaven.Controllers
                     return Unauthorized();
 
                 // ✅ VALIDATE SUBSCRIPTION
-                var subscription = _userSubscriptionRepo.GetActiveForUser(userId);
+                UserSubscriptionModel? subscription = null;
 
-                if (subscription == null)
+                if (!CurrentUserIsAdmin())
                 {
-                    ModelState.AddModelError("", "❌ You need an active subscription to list cars. Please purchase a plan.");
-                    return View(viewModel);
+                    subscription = _userSubscriptionRepo.GetActiveForUser(userId);
+                    if (subscription == null)
+                    {
+                        TempData["Notification.Message"] = "You need an active subscription to list cars. Please purchase a plan.";
+                        TempData["Notification.Type"] = "error";
+                        return RedirectToAction("Index", "Subscription");
+                    }
                 }
 
                 System.Diagnostics.Debug.WriteLine($"✨ DEBUG: User {userId} wants to feature: {viewModel.WantsFeatured}");
@@ -414,7 +435,11 @@ namespace AutoHaven.Controllers
                     .Where(f => f != null && f.Length > 0)
                     .Take(7)
                     .ToList() ?? new List<IFormFile>();
-
+                if (!validImages.Any())
+                {
+                    ModelState.AddModelError("", "At least one photo is required to publish a listing.");
+                    return View(viewModel);
+                }
                 _carListingRepo.Insert(listing, validImages);
 
                 System.Diagnostics.Debug.WriteLine($"✅ Listing saved with ID {listing.ListingId}, Featured={listing.IsFeatured}");
@@ -472,7 +497,8 @@ namespace AutoHaven.Controllers
                     NewPrice = listing.NewPrice,
                     RentPrice = listing.RentPrice,
                     Description = listing.Description,
-                    WantsFeatured = listing.IsFeatured
+                    WantsFeatured = listing.IsFeatured,
+                    CurrentState = listing.CurrentState
                 };
 
                 ViewBag.ListingId = id;
@@ -490,9 +516,18 @@ namespace AutoHaven.Controllers
         [Authorize(Policy = "AdminOrProvider")]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Route("Car/Update/{id}")]  // ✅ ADD EXPLICIT ROUTE
         public IActionResult Update(int id, CreateCarListingViewModel viewModel,
                 IEnumerable<IFormFile> imageFiles, string imageIdsToKeep)
         {
+            System.Diagnostics.Debug.WriteLine($"🔄 UPDATE called for listing ID: {id}");
+            System.Diagnostics.Debug.WriteLine($"📊 CurrentState from form: {viewModel.CurrentState}");
+
+
+            if (string.IsNullOrEmpty(imageIdsToKeep))
+            {
+                ModelState.Remove("imageIdsToKeep");
+            }
             if (!viewModel.IsValid())
             {
                 ModelState.AddModelError("", "Please enter a valid price for the selected listing type.");
@@ -503,6 +538,12 @@ namespace AutoHaven.Controllers
 
             if (!ModelState.IsValid)
             {
+                System.Diagnostics.Debug.WriteLine("❌ ModelState is invalid");
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    System.Diagnostics.Debug.WriteLine($"   Error: {error.ErrorMessage}");
+                }
+
                 ViewBag.ListingId = id;
                 ViewBag.CurrentImages = _carListingRepo.GetById(id)?.CarImages ?? new List<CarImageModel>();
                 return View("Create", viewModel);
@@ -512,13 +553,21 @@ namespace AutoHaven.Controllers
             {
                 var listing = _carListingRepo.GetById(id);
                 if (listing == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Listing {id} not found");
                     return NotFound("Listing not found.");
+                }
 
                 int userId = GetCurrentUserId();
-                if (listing.UserId != userId)
-                    return Forbid("You don't have permission to edit this listing.");
 
-                // ✅ SIMPLIFIED - Parse imageIdsToKeep from comma-separated string to int[]
+                // Allow admin to edit any listing, providers can only edit their own
+                if (!CurrentUserIsAdmin() && listing.UserId != userId)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ User {userId} not authorized to edit listing {id}");
+                    return Forbid("You don't have permission to edit this listing.");
+                }
+
+                // ✅ Parse imageIdsToKeep from comma-separated string to int[]
                 int[] imageIdsArray = new int[0];
 
                 if (!string.IsNullOrEmpty(imageIdsToKeep))
@@ -539,7 +588,7 @@ namespace AutoHaven.Controllers
 
                 System.Diagnostics.Debug.WriteLine($"📋 Image IDs to keep: {(imageIdsArray.Length > 0 ? string.Join(", ", imageIdsArray) : "NONE")}");
 
-                // Update car info
+                // ✅ Update car info
                 listing.Car.Manufacturer = viewModel.Manufacturer;
                 listing.Car.Model = viewModel.Model;
                 listing.Car.ModelYear = viewModel.ModelYear;
@@ -549,7 +598,7 @@ namespace AutoHaven.Controllers
                 listing.Car.Power = viewModel.Power;
                 listing.Car.Doors = viewModel.Doors;
 
-                // Update listing info
+                // ✅ Update listing info
                 listing.Type = viewModel.ListingType;
                 listing.NewPrice = viewModel.NewPrice ?? 0;
                 listing.RentPrice = viewModel.RentPrice ?? 0;
@@ -557,14 +606,41 @@ namespace AutoHaven.Controllers
                 listing.Color = viewModel.Color ?? string.Empty;
                 listing.UpdatedAt = DateTime.Now;
                 listing.IsFeatured = viewModel.WantsFeatured;
+                listing.CurrentState = viewModel.CurrentState;  // ✅ UPDATE STATUS
+
+                System.Diagnostics.Debug.WriteLine($"💾 Updating listing: Featured={listing.IsFeatured}, State={listing.CurrentState}");
 
                 // Handle images
                 var newImages = imageFiles?
                     .Where(f => f != null && f.Length > 0)
                     .Take(7)
-                    .ToList();
+                    .ToList() ?? new List<IFormFile>();
 
+                int keptOldCount = listing.CarImages?
+                    .Count(ci => imageIdsArray.Contains(ci.CarImageId)) ?? 0;
+
+                bool hasNewImages = newImages.Any();
+
+                // RULE: Must keep at least 1 image or upload new ones
+                if (!hasNewImages && keptOldCount == 0)
+                {
+                    ModelState.AddModelError("", "You must keep at least one existing photo or upload a new one.");
+                    ViewBag.ListingId = id;
+                    ViewBag.CurrentImages = listing.CarImages;
+                    return View("Create", viewModel);
+                }
+                if (!hasNewImages && keptOldCount == 0)
+                {
+                    ModelState.AddModelError("", "You must keep at least one existing photo or upload a new one.");
+                    ViewBag.ListingId = id;
+                    ViewBag.CurrentImages = listing.CarImages;
+                    return View("Create", viewModel);
+                }
+
+                // ✅ CALL REPOSITORY UPDATE
                 _carListingRepo.Update(listing, imageIdsArray, newImages);
+
+                System.Diagnostics.Debug.WriteLine($"✅ Listing {id} updated successfully!");
 
                 TempData["Notification.Message"] = "Listing updated successfully!";
                 TempData["Notification.Type"] = "success";
@@ -572,7 +648,7 @@ namespace AutoHaven.Controllers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("UPDATE ERROR: " + ex.ToString());
+                System.Diagnostics.Debug.WriteLine("❌ UPDATE ERROR: " + ex.ToString());
                 ModelState.AddModelError("", $"Error updating listing: {ex.Message}");
 
                 ViewBag.ListingId = id;
@@ -928,6 +1004,11 @@ namespace AutoHaven.Controllers
                 return id;
 
             return 0;
+        }
+        private bool CurrentUserIsAdmin()
+        {
+            var roleClaim = User.FindFirst("Role")?.Value;
+            return roleClaim == ApplicationUserModel.RoleEnum.Admin.ToString();
         }
         // ================== History Actions =======================
         [Authorize]
