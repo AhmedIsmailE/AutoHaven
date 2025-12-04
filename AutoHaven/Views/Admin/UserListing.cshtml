@@ -25,16 +25,21 @@
     @Html.AntiForgeryToken()
 
     <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light overflow-hidden shadow-sm">
+
         <div class="px-6 py-4 border-b border-border-light hidden md:flex items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">
             <div class="w-28">Avatar</div>
             <div class="flex-1">User</div>
             <div class="w-48 text-right">Actions</div>
         </div>
 
-        <div>
+        <!-- LIST CONTAINER: JS will replace the inner HTML when last user removed -->
+        <div id="usersListContainer">
             @if (Model.Users == null || !Model.Users.Any())
             {
-                <div class="p-6 text-center text-sm text-charcoal/70">No users found.</div>
+                <div class="p-12 text-center">
+                    <div class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">No users found</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Try changing your search or filters to find users.</div>
+                </div>
             }
             else
             {
@@ -56,7 +61,6 @@
                                     <div class="text-xs text-text-light-secondary dark:text-text-dark-secondary mt-1">Email: @u.Email</div>
                                     <div class="text-xs text-text-light-secondary dark:text-text-dark-secondary mt-1">Joined At: @u.JoinedAt</div>
                                 </div>
-
                             </div>
 
                             <div class="mt-3 flex items-center justify-between">
@@ -87,7 +91,7 @@
                                             class="delete-user-btn inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm bg-red-50 text-red-700 border border-red-100"
                                             onclick="deleteUser(this)">
                                         <span class="material-symbols-outlined">delete</span>
-                                        Delete Profile
+                                        Delete
                                     </button>
                                 </div>
                             </div>
@@ -97,26 +101,31 @@
             }
         </div>
 
-        <!-- pagination footer -->
+        <!-- pagination footer (with IDs so JS can update) -->
+        @{
+            var total = Model.TotalCount;
+            var pageSize = Model.PageSize;
+            var page = Model.Page < 1 ? 1 : Model.Page;
+            var start = total == 0 ? 0 : ((page - 1) * pageSize) + 1;
+            var end = total == 0 ? 0 : start + (Model.Users?.Count ?? 0) - 1;
+            var totalPages = (int)Math.Ceiling(total / (double)pageSize);
+            var prev = page <= 1 ? 1 : page - 1;
+            var next = page >= totalPages ? totalPages : page + 1;
+        }
         <div class="px-6 py-4 flex items-center justify-between text-sm">
-            <div class="text-text-light-secondary dark:text-text-dark-secondary">
-                Showing @((Model.Page - 1) * Model.PageSize + (Model.Users?.Any() == true ? 1 : 0)) - @((Model.Page - 1) * Model.PageSize + (Model.Users?.Count ?? 0)) of @Model.TotalCount users
+            <div id="usersRange" class="text-text-light-secondary dark:text-text-dark-secondary">
+                Showing @start - @end of @total users
             </div>
 
             <div class="flex items-center gap-2">
-                @{
-                    var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
-                    var prev = Model.Page <= 1 ? 1 : Model.Page - 1;
-                    var next = Model.Page >= totalPages ? totalPages : Model.Page + 1;
-                }
-                <a href="@Url.Action("UserListing", new { page = prev, search = Model.Search })"
+                <a id="usersPrev" href="@Url.Action("UserListing", new { page = prev, search = Model.Search })"
                    class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-border-light bg-surface-light">
                     <span class="material-symbols-outlined">chevron_left</span>
                 </a>
 
-                <div class="px-3">Page @Model.Page of @totalPages</div>
+                <div id="usersPageInfo" class="px-3">Page @Model.Page of @totalPages</div>
 
-                <a href="@Url.Action("UserListing", new { page = next, search = Model.Search })"
+                <a id="usersNext" href="@Url.Action("UserListing", new { page = next, search = Model.Search })"
                    class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-border-light bg-surface-light">
                     <span class="material-symbols-outlined">chevron_right</span>
                 </a>
@@ -127,7 +136,7 @@
 
 @section Scripts {
     <script>
-        // SweetAlert2 loader + helper (same as before)
+        // SweetAlert2 loader + helper
         function ensureSwal() {
             return new Promise((resolve) => {
                 if (window.Swal) return resolve(window.Swal);
@@ -235,15 +244,94 @@
             }
         }
 
-        // DELETE user (AJAX -> show toast then reload)
-        async function deleteUser(btn) {
-            var userId = btn.getAttribute('data-user');
-            if (!userId) return;
-            if (!confirm('Delete this user profile? This cannot be undone.')) return;
+        // ------------------ Helper to update footer and show empty state ------------------
+        function handleUserRemovedFromUI(userId) {
+            // remove the row if not already removed
+            const row = document.querySelector('.user-row[data-user="' + userId + '"]');
+            if (row) row.remove();
 
+            // Elements we will update
+            const rangeEl = document.getElementById('usersRange');
+            const pageInfoEl = document.getElementById('usersPageInfo');
+            const prevEl = document.getElementById('usersPrev');
+            const nextEl = document.getElementById('usersNext');
+            const container = document.getElementById('usersListContainer');
+
+            // Try parsing current values
+            let total = 0, start = 0, end = 0, page = 1, pageSize = @Model.PageSize;
+            if (rangeEl && rangeEl.textContent) {
+                const m = rangeEl.textContent.match(/Showing\s+(\d+)\s*-\s*(\d+)\s*of\s*(\d+)/i);
+                if (m) { start = parseInt(m[1]); end = parseInt(m[2]); total = parseInt(m[3]); }
+            }
+
+            if (pageInfoEl && pageInfoEl.textContent) {
+                const m = pageInfoEl.textContent.match(/Page\s+(\d+)\s+of\s+(\d+)/i);
+                if (m) page = parseInt(m[1]);
+            }
+
+            // If parse failed, derive from number of rows and server page size
+            if (!total) {
+                const rows = document.querySelectorAll('.user-row');
+                total = rows.length;
+            }
+
+            // decrement total (we just removed one)
+            total = Math.max(0, total - 1);
+
+            const totalPages = Math.max(1, Math.ceil(total / (pageSize || 1)));
+            if (page > totalPages) page = totalPages;
+
+            const newStart = total === 0 ? 0 : ((page - 1) * pageSize) + 1;
+            const newEnd = total === 0 ? 0 : Math.min(total, newStart + pageSize - 1);
+
+            // update text nodes
+            if (rangeEl) rangeEl.textContent = `Showing ${newStart} - ${newEnd} of ${total} users`;
+            if (pageInfoEl) pageInfoEl.textContent = `Page ${page} of ${totalPages}`;
+
+            // update prev / next urls (optional - helps navigation if user stays on page)
+            if (prevEl) prevEl.href = '@Url.Action("UserListing")' + `?page=${Math.max(1, page - 1)}&search=@(Uri.EscapeDataString(Model.Search ?? ""))`;
+            if (nextEl) nextEl.href = '@Url.Action("UserListing")' + `?page=${Math.min(totalPages, page + 1)}&search=@(Uri.EscapeDataString(Model.Search ?? ""))`;
+
+            // if no users remain, render the friendly empty state
+            if (total === 0 && container) {
+                container.innerHTML = `
+                    <div class="p-12 text-center">
+                        <div class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">No users found</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Try changing your search or filters to find users.</div>
+                    </div>`;
+                // hide prev/next controls
+                if (prevEl) prevEl.style.display = 'none';
+                if (nextEl) nextEl.style.display = 'none';
+            }
+        }
+
+        // DELETE user (AJAX + SweetAlert + UI updates)
+        async function deleteUser(btn) {
+            const userId = btn.getAttribute('data-user');
+            if (!userId) return;
+
+            const SwalLib = await ensureSwal();
+            if (!SwalLib) return;
+
+            const confirmResult = await SwalLib.fire({
+                title: "Delete User?",
+                text: "This action cannot be undone.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                confirmButtonText: "Delete",
+                cancelButtonText: "Cancel"
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            // Save original button html so we can restore on failure
+            const originalHtml = btn.innerHTML;
             btn.disabled = true;
-            var token = getRequestVerificationToken();
-            var fd = new FormData();
+            btn.innerHTML = `<span class="material-symbols-outlined animate-spin">progress_activity</span> Deleting...`;
+
+            const token = getRequestVerificationToken();
+            const fd = new FormData();
             fd.append('userId', userId);
 
             try {
@@ -253,22 +341,40 @@
                     headers: { 'RequestVerificationToken': token },
                     body: fd
                 });
-                let data = null; try { data = await res.json(); } catch (e) { }
 
-                if (res.ok && data && data.success) {
-                    const note = data.notification || { message: 'User deleted.', type: 'success' };
-                    await showSwalNotification(note.message, note.type || 'success');
-                    setTimeout(() => { location.reload(); }, 600);
-                } else {
-                    const note = (data && data.notification) ? data.notification : { message: 'Could not delete user.', type: 'error' };
-                    await showSwalNotification(note.message, note.type || 'error');
+                let data = null;
+                try { data = await res.json(); } catch (e) { }
+
+                if (!res.ok || !data?.success) {
+                    const note = data?.notification ?? { message: "Failed to delete user.", type: "error" };
+                    await showSwalNotification(note.message, note.type);
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    return;
                 }
+
+                // Success: show toast and remove row + update footer
+                const note = data.notification ?? { message: "User deleted.", type: "success" };
+                await showSwalNotification(note.message, note.type);
+
+                const row = btn.closest('.user-row');
+                if (row) {
+                    row.style.transition = "opacity 350ms, transform 350ms";
+                    row.style.opacity = "0";
+                    row.style.transform = "translateX(-20px)";
+                    setTimeout(() => { row.remove(); handleUserRemovedFromUI(userId); }, 380);
+                } else {
+                    // no row found, still update counts
+                    handleUserRemovedFromUI(userId);
+                }
+
             } catch (err) {
                 console.error(err);
-                await showSwalNotification('Network error while deleting user.', 'error');
-            } finally {
+                await showSwalNotification("Network error while deleting user.", "error");
                 btn.disabled = false;
+                btn.innerHTML = originalHtml;
             }
         }
+
     </script>
 }
