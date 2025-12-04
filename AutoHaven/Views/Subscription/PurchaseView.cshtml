@@ -1,13 +1,11 @@
-﻿@model int
+﻿
 @{
-    bool isSuccess = Model == 1;
-    string title = isSuccess ? "Payment Successful!" : "Payment Failed!";
-    string message = isSuccess
-        ? "Your subscription has been activated successfully."
-        : "Unfortunately, your payment could not be processed.";
-    string bgColor = isSuccess ? "#d1fae5" : "#fee2e2";   // light green / light red
-    string textColor = isSuccess ? "#065f46" : "#991b1b"; // dark green / dark red
-    string icon = isSuccess ? "bi-check-circle-fill" : "bi-x-circle-fill";
+
+    string title = "Payment Successful!" ;
+    string message = "Your subscription has been activated successfully.";
+    string bgColor ="#d1fae5";  
+    string textColor = "#065f46"; 
+    string icon ="bi-check-circle-fill" ;
 }
 
 <div style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
@@ -28,7 +26,7 @@
                 Redirecting in <span id="counter" class="fw-bold">10</span> seconds...
             </p>
 
-            <button class="btn btn-dark mt-3" onclick="window.location.href='/'">
+            <button style="text-decoration:underline" class="btn btn-dark mt-3" onclick="window.location.href='/'">
                 Go Now
             </button>
 
