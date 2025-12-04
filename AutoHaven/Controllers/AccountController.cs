@@ -17,8 +17,8 @@ namespace AutoHaven.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly ProjectDbContext _projectDbContext;
         private readonly IFavouriteModelRepository _favouriteRepo;
-        private readonly ICarListingModelRepository _carListingRepo;
         private readonly IReviewModelRepository _reviewRepo;
+        private readonly ICarListingModelRepository _carListingRepo;
         private readonly ICarViewHistoryRepository _historyRepo;
         private const long MaxFileBytes = 2 * 1024 * 1024;
         private const int MaxWidth = 1024;
@@ -221,7 +221,7 @@ namespace AutoHaven.Controllers
         {
             return View();
         }
-        [HttpPost]
+       
         // ==================== POST: Login (with approval check) ====================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -279,109 +279,7 @@ namespace AutoHaven.Controllers
             return View(loginUserViewModel);
         }
 
-        //======================Approving Admin Part=============================
 
-        [HttpGet]
-        [Authorize(Policy = "AdminOnly")]
-        public async Task<IActionResult> PendingAccounts()
-        {
-            var pending = await _userManager.Users
-                .Where(u => !u.IsApproved)
-                .OrderBy(u => u.CreatedAt)
-                .Select(u => new {
-                    u.Id,
-                    u.UserName,
-                    u.Email,
-                    u.PhoneNumber,
-                    u.Name,
-                    u.CreatedAt,
-                    u.Role,
-                    u.NationalId,
-                    u.IdImagePath
-                })
-                .ToListAsync();
-
-            // Return partial view HTML (we'll create _PendingAccountsTable)
-            return PartialView("_PendingAccountsTable", pending);
-        }
-
-        [Authorize(Policy = "AdminOnly")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ApproveUser([FromForm] int id)
-        {
-            var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user == null) return NotFound(new { success = false, message = "User not found.", type = "error" });
-
-            user.IsApproved = true;
-            user.UpdatedAt = DateTime.Now;
-            var up = await _userManager.UpdateAsync(user);
-            if (!up.Succeeded)
-            {
-                var errors = string.Join("; ", up.Errors.Select(e => e.Description));
-                return BadRequest(new { success = false, message = "Failed to approve user: " + errors, type = "error" });
-            }
-
-            // optional: send email/notification
-
-            return Ok(new { success = true, message = "User approved successfully.", type = "success" });
-        }
-
-        [Authorize(Policy = "AdminOnly")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectUser([FromForm] int id)
-        {
-            var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user == null) return NotFound(new { success = false, message = "User not found.", type = "error" });
-
-            using var tx = await _projectDbContext.Database.BeginTransactionAsync();
-            try
-            {
-                var uid = user.Id;
-
-                try
-                {
-                    var favs = _favouriteRepo.Get().Where(f => f.UserId == uid).ToList();
-                    foreach (var f in favs) _favouriteRepo.Delete(f.FavouriteId);
-                }
-                catch { }
-
-                try { _historyRepo.DeleteByUser(uid); } catch { }
-
-                try
-                {
-                    var reviews = _reviewRepo.Get().Where(r => r.UserId == uid).ToList();
-                    foreach (var r in reviews) _reviewRepo.Delete(r.ReviewId);
-                }
-                catch { }
-
-                try
-                {
-                    var listings = _carListingRepo.Get().Where(c => c.UserId == uid).ToList();
-                    foreach (var l in listings) _carListingRepo.Delete(l.ListingId);
-                }
-                catch { }
-
-                await _projectDbContext.SaveChangesAsync();
-
-                var delRes = await _userManager.DeleteAsync(user);
-                if (!delRes.Succeeded)
-                {
-                    await tx.RollbackAsync();
-                    var err = string.Join("; ", delRes.Errors.Select(e => e.Description));
-                    return BadRequest(new { success = false, message = "Failed to delete user: " + err, type = "error" });
-                }
-
-                await tx.CommitAsync();
-                return Ok(new { success = true, message = "User rejected and removed.", type = "success" });
-            }
-            catch (Exception ex)
-            {
-                try { await tx.RollbackAsync(); } catch { }
-                return StatusCode(500, new { success = false, message = "Error: " + ex.Message, type = "error" });
-            }
-        }
 
 
         public async Task<IActionResult> Logout()
@@ -410,86 +308,6 @@ namespace AutoHaven.Controllers
         //}
 
 
-        [Authorize(Policy = "AdminOnly")]
-        [HttpGet]
-        public async Task<IActionResult> Admin()
-        {
-            // 1) Cars counts
-            var carsForSale = await _projectDbContext.CarListings
-                .CountAsync(c => c.Type == CarListingModel.ListingType.ForSelling);
-
-            var carsForRent = await _projectDbContext.CarListings
-                .CountAsync(c => c.Type == CarListingModel.ListingType.ForRenting);
-
-            // 2) Users count (exclude app-level Admins)
-            var totalUsers = await _userManager.Users
-                .Where(u => u.Role != ApplicationUserModel.RoleEnum.Admin)
-                .CountAsync();
-
-            // 3) Total revenue FOR PROVIDERS ONLY: sum PricePerMonth for subscriptions whose user is Provider
-            decimal totalRevenueMonthly = 0m;
-            try
-            {
-                // LINQ query: join subscriptions -> plans -> users, filter by Provider role, sum plan.PricePerMonth
-                totalRevenueMonthly = await (
-                    from us in _projectDbContext.UserSubscriptions
-                    join sp in _projectDbContext.SubscriptionPlans on us.PlanId equals sp.SubscriptionPlanId
-                    join u in _userManager.Users on us.UserId equals u.Id
-                    where u.Role == ApplicationUserModel.RoleEnum.Provider
-                    select sp.PricePerMonth
-                ).SumAsync();
-            }
-            catch (Exception)
-            {
-                // Fallback: materialize the projection then sum (slower but reliable)
-                try
-                {
-                    var prices = await (
-                        from us in _projectDbContext.UserSubscriptions
-                        join sp in _projectDbContext.SubscriptionPlans on us.PlanId equals sp.SubscriptionPlanId
-                        join u in _userManager.Users on us.UserId equals u.Id
-                        where u.Role == ApplicationUserModel.RoleEnum.Provider
-                        select sp.PricePerMonth
-                    ).ToListAsync();
-
-                    totalRevenueMonthly = prices.Sum();
-                }
-                catch
-                {
-                    // if everything fails, keep 0 and optionally log
-                    totalRevenueMonthly = 0m;
-                }
-            }
-
-            // 4) expose to view
-            ViewBag.CarsForSale = carsForSale;
-            ViewBag.CarsForRent = carsForRent;
-            ViewBag.TotalUsers = totalUsers;
-            ViewBag.TotalRevenueMonthly = totalRevenueMonthly;
-            ViewBag.TotalRevenueMonthlyFormatted = totalRevenueMonthly.ToString(); // e.g. $1,200
-
-            var pending = await _userManager.Users
-                          .Where(u => !u.IsApproved)
-                          .OrderBy(u => u.CreatedAt)
-                          .Select(u => new AutoHaven.ViewModel.PendingUserViewModel
-                          {
-                              Id = u.Id,
-                              UserName = u.UserName,
-                              Email = u.Email,
-                              PhoneNumber = u.PhoneNumber,
-                              Name = u.Name,
-                              CreatedAt = u.CreatedAt,
-                              Role = u.Role.ToString(),
-                              NationalId = u.NationalId,
-                              IdImagePath = u.IdImagePath
-                          })
-                          .ToListAsync();
-
-            return View("AdminDashboard", pending);
-        }
-
-
-
 
         [Authorize]
         [HttpGet]
@@ -497,6 +315,20 @@ namespace AutoHaven.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return RedirectToAction("Login", "Account");
+
+            try
+            {
+                await _projectDbContext.Entry(user)
+                    .Collection(u => u.UserSubscriptions)
+                    .Query()
+                    .Include(us => us.SubscriptionPlan)
+                    .LoadAsync();
+            }
+
+            catch (Exception x)
+            {
+                //Used for Debugging
+            }
 
             var model = ProfileViewModel.MapToModel(user);
             if (edit == "1") ViewData["EditMode"] = true;
@@ -516,13 +348,6 @@ namespace AutoHaven.Controllers
 
             // Keep the UI in edit mode when returning the view
             ViewData["EditMode"] = true;
-
-            if (!ModelState.IsValid)
-            {
-                // keep edit mode and show inline validation only (do NOT set TempData)
-                ViewBag.ForceEdit = true;
-                return View("Profile", model);
-            }
 
             // ----------------------------
             // Uniqueness checks (INLINE only)
@@ -578,7 +403,7 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Failed to set email.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
             }
 
@@ -590,20 +415,20 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Failed to set phone number.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
             }
 
             // Avatar processing (keeps your existing checks and TempData on errors)
             if (avatar != null && avatar.Length > 0)
             {
-                var allowed = new[] { "image/png", "image/jpeg", "image/jpg", "image/gif" };
+                var allowed = new[] { "image/png", "image/jpeg", "image/jpg" };
                 if (!allowed.Contains(avatar.ContentType.ToLower()))
                 {
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Invalid avatar file type.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
 
                 if (avatar.Length > MaxFileBytes)
@@ -611,7 +436,7 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Avatar file too large.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
 
                 try
@@ -628,7 +453,7 @@ namespace AutoHaven.Controllers
                             ViewBag.ForceEdit = true;
                             TempData["Notification.Message"] = "Avatar dimensions too large.";
                             TempData["Notification.Type"] = "error";
-                            return View("Profile", model);
+                            return RedirectToAction(nameof(Profile), new { edit = 1 });
                         }
                     }
                     catch { }
@@ -666,7 +491,7 @@ namespace AutoHaven.Controllers
                     ViewBag.ForceEdit = true;
                     TempData["Notification.Message"] = "Failed to process avatar.";
                     TempData["Notification.Type"] = "error";
-                    return View("Profile", model);
+                    return RedirectToAction(nameof(Profile), new { edit = 1 });
                 }
             }
 
@@ -676,7 +501,7 @@ namespace AutoHaven.Controllers
                 ViewBag.ForceEdit = true;
                 TempData["Notification.Message"] = "Unable to update profile.";
                 TempData["Notification.Type"] = "error";
-                return View("Profile", model);
+                return RedirectToAction(nameof(Profile), new { edit = 1 });
             }
 
             TempData["Notification.Message"] = "Profile updated successfully!";
