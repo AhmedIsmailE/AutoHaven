@@ -1,0 +1,148 @@
+﻿@model IEnumerable<AutoHaven.ViewModel.MyListingViewModel>
+@using AutoHaven.ViewModel
+@{
+    ViewData["Title"] = "My Listings";
+
+    var page = (ViewBag.CurrentPage as int?) ?? 1;
+    var totalPages = (ViewBag.TotalPages as int?) ?? 1;
+    var totalCount = (ViewBag.TotalCount as int?) ?? 0;
+
+    var q = (ViewContext.HttpContext.Request.Query["q"].ToString() ?? string.Empty).Trim();
+    var sortBy = (ViewContext.HttpContext.Request.Query["sortBy"].ToString() ?? (ViewBag.SortBy as string) ?? "newest");
+
+    string DefaultImageUrl() => Url.Content("~/images/default-car.png");
+
+    string ResolveImage(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return DefaultImageUrl();
+        var url = path.Trim();
+        if (url.StartsWith("http://") || url.StartsWith("https://") || url.StartsWith("/")) return Url.Content(url);
+        return Url.Content("~/" + url.TrimStart('~', '/'));
+    }
+
+    var sb = new System.Text.StringBuilder();
+    void addOpt(string val, string text)
+    {
+        sb.Append("<option value=\"").Append(System.Net.WebUtility.HtmlEncode(val)).Append("\"");
+        if (string.Equals(sortBy, val, StringComparison.OrdinalIgnoreCase)) sb.Append(" selected");
+        sb.Append(">").Append(System.Net.WebUtility.HtmlEncode(text)).Append("</option>");
+    }
+
+    addOpt("newest", "Newest Listed");
+    addOpt("price_asc", "Price (Low to High)");
+    addOpt("price_desc", "Price (High to Low)");
+    addOpt("highest_rated", "Highest Rated");
+    addOpt("most_viewed", "Most Viewed");
+
+    var optionsHtml = sb.ToString();
+}
+
+<div class="w-full max-w-6xl mx-auto px-4 py-10">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">My Listings</h1>
+            <p class="text-sm text-gray-500 mt-1">
+                @if (totalCount > 0)
+                {
+                    <text>You have @totalCount listing@(totalCount == 1 ? "" : "s").</text>
+                }
+                else
+                {
+                    <text>You haven't created any listings yet.</text>
+                }
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <form method="get" asp-action="MyListings" asp-controller="Account" class="flex items-center gap-2">
+                <input type="hidden" name="q" value="@q" />
+                <select name="sortBy" id="sortByListings" onchange="this.form.submit();"
+                        class="form-select text-sm rounded-lg border border-gray-200 bg-white text-gray-800 focus:ring-blue-600">
+                    @Html.Raw(optionsHtml)
+                </select>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model?.Any() ?? true)
+    {
+        <div class="max-w-2xl mx-auto flex flex-col items-center justify-center text-center gap-4 py-20">
+            <div class="flex items-center justify-center h-20 w-20 rounded-full bg-gray-100 text-gray-400">
+                <span class="material-symbols-outlined text-4xl">inventory_2</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 mb-2">No listings yet</h2>
+                <p class="text-sm text-gray-500 max-w-md mx-auto">
+                    Create a listing to see it listed here.
+                </p>
+            </div>
+            <a href="@Url.Action("Create", "Car")" class="mt-3 inline-flex items-center rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700">Create Listing</a>
+        </div>
+    }
+    else
+    {
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach (var item in Model)
+            {
+                <div class="group flex flex-col rounded-2xl bg-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border border-gray-100">
+                    <div class="relative h-48 w-full overflow-hidden rounded-t-2xl bg-gray-100">
+                        <img src="@(ResolveImage(item.ImageUrl))" alt="@item.Title" class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <div class="absolute left-3 top-3 z-20">
+                            <span class="inline-block text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm bg-white/20 border border-blue-400 text-blue-700">
+                                @(item.TypeLabel)
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-1 flex-col px-4 pt-4 pb-4">
+                        <h3 class="text-base font-semibold text-gray-900 line-clamp-2">@item.Title</h3>
+                        <p class="mt-1 text-xs text-gray-500">Published: @item.CreatedAt.ToLocalTime().ToString("g")</p>
+
+                        <div class="mt-4 flex items-end justify-between gap-2">
+                            <div>
+                                <p class="text-lg font-extrabold text-gray-900">
+                                    @item.Price.ToString("C0")
+                                    @if (!string.IsNullOrEmpty(item.PriceLabel))
+                                    {
+                                        <span class="text-sm font-medium text-gray-500">@item.PriceLabel</span>
+                                    }
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <a asp-action="Details" asp-controller="Car" asp-route-id="@item.ListingId"
+                                   class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs font-semibold text-gray-700 hover:border-blue-500 hover:text-blue-600">
+                                    View details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="mt-8 flex justify-center items-center gap-3">
+            <nav class="inline-flex items-center gap-2" aria-label="Pagination">
+                <a class="px-3 py-2 rounded-md border border-gray-200 bg-white" asp-action="MyListings" asp-route-page="@(page > 1 ? page - 1 : 1)" asp-route-q="@q" asp-route-sortBy="@sortBy">‹</a>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    if (i == page)
+                    {
+                        <span class="px-3 py-2 rounded-md bg-blue-600 text-white">@i</span>
+                    }
+                    else if (i <= 3 || i > totalPages - 3 || (i >= page - 1 && i <= page + 1))
+                    {
+                        <a class="px-3 py-2 rounded-md border border-gray-200 bg-white" asp-action="MyListings" asp-route-page="@i" asp-route-q="@q" asp-route-sortBy="@sortBy">@i</a>
+                    }
+                    else if (i == 4 && page > 4)
+                    {
+                        <span class="px-3 py-2">…</span>
+                    }
+                }
+
+                <a class="px-3 py-2 rounded-md border border-gray-200 bg-white" asp-action="MyListings" asp-route-page="@(page<totalPages? page + 1 : totalPages)" asp-route-q="@q" asp-route-sortBy="@sortBy">›</a>
+            </nav>
+        </div>
+    }
+</div>

@@ -335,7 +335,7 @@
                 else
                 {
                     <!-- Owner Actions -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm sticky top-8 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm top-8 mb-6">
                         <h3 class="text-xl font-bold text-[#0d121b] dark:text-white mb-6">Listing Actions</h3>
 
                         <a href="@Url.Action("Edit", "Car", new { id = Model.ListingId })"
@@ -392,7 +392,7 @@
         </div>
     </div>
 </div>
-
+<form id="antiForgeryForm" style="display:none">@Html.AntiForgeryToken()</form>
 <!-- Review Modal -->
 @if (User.Identity.IsAuthenticated)
 {
@@ -441,120 +441,168 @@
 
 @section Scripts {
     <script>
-        // Initialize favorite button state
-        document.addEventListener('DOMContentLoaded', function () {
-            checkFavoriteStatus();
-        });
-
-        function changeMainImage(imagePath) {
-            document.getElementById('mainImage').src = imagePath;
+        // ------------------ SweetAlert loader ------------------
+        function ensureSwal() {
+            return new Promise((resolve) => {
+                if (window.Swal) return resolve(window.Swal);
+                const existing = document.querySelector('script[data-swal-cdn]');
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(window.Swal));
+                    existing.addEventListener('error', () => resolve(null));
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+                s.setAttribute('data-swal-cdn', '1');
+                s.onload = () => resolve(window.Swal);
+                s.onerror = () => resolve(null);
+                document.head.appendChild(s);
+            });
         }
 
-        function checkFavoriteStatus() {
-            const listingId = @Model.ListingId;
-            fetch(`/Car/IsFavorite/${listingId}`)
-                .then(r => r.json())
-                .then(data => {
-                    const btn = document.getElementById('favoriteBtn');
-                    const text = document.getElementById('favBtnText');
-                    if (data.isFavorite) {
-                        btn.classList.add('bg-red-100', 'dark:bg-red-900/30', 'text-red-600', 'dark:text-red-400');
-                        btn.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-                        text.textContent = 'Favorited';
-                    } else {
-                        btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-                        text.textContent = 'Add to Favorites';
-                    }
-                });
+        async function showSwalNotification(message, type) {
+            if (!message) return;
+            const SwalLib = await ensureSwal();
+            if (!SwalLib) { alert(message); return; }
+            SwalLib.fire({
+                toast: true,
+                position: 'top-end',
+                icon: type || 'info',
+                title: message,
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true
+            });
         }
 
-        function toggleFavorite() {
+        // ------------------ Anti-forgery helper ------------------
+        function getRequestVerificationToken() {
+            const tokenInput = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+            if (tokenInput) return tokenInput.value;
+
+            const matches = document.cookie.match(new RegExp('(^| )__RequestVerificationToken=([^;]+)'));
+            return matches ? decodeURIComponent(matches[2]) : null;
+        }
+
+        // ------------------ CHECK FAVORITE STATUS ------------------
+        async function checkFavoriteStatus() {
+            try {
+                const listingId = @Model.ListingId;
+                const res = await fetch(`/Car/IsFavorite/${listingId}`);
+                const data = await res.json();
+
+                const btn = document.getElementById('favoriteBtn');
+                const text = document.getElementById('favBtnText');
+                if (!btn || !text) return;
+
+                if (data.isFavorite) {
+                    activateFavoriteUI();
+                } else {
+                    deactivateFavoriteUI();
+                }
+            } catch (err) {
+                console.error('checkFavoriteStatus error:', err);
+            }
+        }
+
+        // ------------------ FAVORITE UI HELPERS ------------------
+        function activateFavoriteUI() {
             const btn = document.getElementById('favoriteBtn');
             const text = document.getElementById('favBtnText');
-            const listingId = @Model.ListingId;
+            btn.classList.add('bg-red-100','dark:bg-red-900/30','text-red-600','dark:text-red-400');
+            btn.classList.remove('bg-gray-100','dark:bg-gray-700','text-gray-700','dark:text-gray-300');
+            text.textContent = "Favorited";
+        }
 
-            fetch(`/Car/ToggleFavorite/${listingId}`, { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.isFavorite) {
-                        btn.classList.add('bg-red-100', 'dark:bg-red-900/30', 'text-red-600', 'dark:text-red-400');
-                        btn.classList.remove('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-                        text.textContent = 'Favorited';
-                    } else {
-                        btn.classList.remove('bg-red-100', 'dark:bg-red-900/30', 'text-red-600', 'dark:text-red-400');
-                        btn.classList.add('bg-gray-100', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
-                        text.textContent = 'Add to Favorites';
+        function deactivateFavoriteUI() {
+            const btn = document.getElementById('favoriteBtn');
+            const text = document.getElementById('favBtnText');
+            btn.classList.remove('bg-red-100','dark:bg-red-900/30','text-red-600','dark:text-red-400');
+            btn.classList.add('bg-gray-100','dark:bg-gray-700','text-gray-700','dark:text-gray-300');
+            text.textContent = "Add to Favorites";
+        }
+
+        // ------------------ TOGGLE FAVORITE (Controller: AddToFavorite) ------------------
+        async function toggleFavorite() {
+            try {
+                const listingId = @Model.ListingId;
+                const token = getRequestVerificationToken();
+
+                const res = await fetch(`/Car/AddToFavorite/${listingId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'RequestVerificationToken': token
                     }
                 });
-        }
 
-        function openReviewModal() {
-            document.getElementById('reviewModal').classList.remove('hidden');
-        }
-
-        function closeReviewModal() {
-            document.getElementById('reviewModal').classList.add('hidden');
-        }
-
-        function setRating(rating) {
-            document.getElementById('rating').value = rating;
-            document.querySelectorAll('.star-rating').forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.add('text-yellow-400');
-                    star.classList.remove('text-gray-300');
-                } else {
-                    star.classList.remove('text-yellow-400');
-                    star.classList.add('text-gray-300');
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        showSwalNotification("Please log in to add favorites", "error");
+                        window.location.href = "/Account/Login";
+                    }
+                    return;
                 }
-            });
-        }
 
-        function deleteReview(reviewId, listingId) {
-            if (confirm('Delete this review?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '@Url.Action("DeleteReview", "Review")';
-                form.innerHTML = `
-        @Html.AntiForgeryToken()
-                                    <input type="hidden" name="reviewId" value="${reviewId}" />
-                                    <input type="hidden" name="listingId" value="${listingId}" />
-                                `;
-                document.body.appendChild(form);
-                form.submit();
+                const data = await res.json();
+
+                if (data.isFavorite) {
+                    activateFavoriteUI();
+                    if (data.notification)
+                        showSwalNotification(data.notification.message, data.notification.type);
+                } else {
+                    deactivateFavoriteUI();
+                    showSwalNotification("Removed from favorites", "info");
+                }
+
+            } catch (err) {
+                console.error("toggleFavorite error:", err);
+                showSwalNotification("Could not update favorite. Try again.", "error");
             }
         }
-    </script>
-    <script>
-        function toggleEdit(id) {
-            document.getElementById("edit-form-" + id).classList.toggle("hidden");
-        }
 
-        function deleteReview(reviewId, listingId) {
-            if (confirm('Delete this review?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '@Url.Action("DeleteReview", "Review")';
-                form.innerHTML = `
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="reviewId" value="${reviewId}" />
-                    <input type="hidden" name="listingId" value="${listingId}" />
-                `;
-                document.body.appendChild(form);
-                form.submit();
+        // ------------------ REMOVE FAVORITE EXPLICITLY ------------------
+        async function removeFavorite() {
+            try {
+                const listingId = @Model.ListingId;
+                const token = getRequestVerificationToken();
+
+                const res = await fetch(`/Car/RemoveFavorite/${listingId}`, {
+                    method: "POST",
+                    headers: {
+                        'Accept': 'application/json',
+                        'RequestVerificationToken': token
+                    }
+                });
+
+                if (!res.ok) {
+                    showSwalNotification("Could not remove favorite", "error");
+                    return;
+                }
+
+                deactivateFavoriteUI();
+                showSwalNotification("Removed from favorites", "success");
+
+            } catch (err) {
+                console.error("removeFavorite error:", err);
             }
         }
-                function setEditRating(reviewId, rating) {
-            document.getElementById("edit-rating-" + reviewId).value = rating;
-            const stars = document.querySelectorAll("#edit-stars-" + reviewId + " .star-edit");
-            stars.forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.add("text-yellow-400");
-                    star.classList.remove("text-gray-300");
-                } else {
-                    star.classList.remove("text-yellow-400");
-                    star.classList.add("text-gray-300");
-                }
-            });
-        }
+
+        // ------------------ ON PAGE LOAD ------------------
+        document.addEventListener("DOMContentLoaded", () => {
+            checkFavoriteStatus();
+
+            const btn = document.getElementById("favoriteBtn");
+            if (btn) {
+                btn.removeAttribute("onclick");
+                btn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    toggleFavorite();
+                });
+            }
+        });
     </script>
 }
+
+
+
