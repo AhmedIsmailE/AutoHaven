@@ -9,6 +9,7 @@ using System.Text.Json.Nodes;
 
 namespace AutoHaven.Controllers
 {
+    
     public class SubscriptionController : Controller
     {
         private readonly UserManager<ApplicationUserModel> _userManager;
@@ -159,6 +160,7 @@ namespace AutoHaven.Controllers
                             {
                                 // Save to Database here
                                 _userSubscriptionRepo.Create(userId, planId);
+                                TempData["Purchased"] = true;
                                 return new JsonResult("success");
                             }
                         }
@@ -169,13 +171,18 @@ namespace AutoHaven.Controllers
             return new JsonResult("error");
         }
 
-        // Add this Action so the redirect works!
         [Authorize]
-       // [Authorize(Policy = "InternalOnly")]
         public IActionResult PurchaseSuccess()
         {
-            // Pass '1' to the view to indicate success (for the green theme)
-            return View("PurchaseView", 1);
+            bool allowed = TempData.Peek("Purchased") as bool? == true;
+
+            if (allowed)
+            {
+                TempData["Purchased"] = false;
+                return View("PurchaseView");
+            }
+
+            return RedirectToAction("Home", "Home");
         }
         [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
@@ -184,7 +191,6 @@ namespace AutoHaven.Controllers
             var subscriptions = _subscriptionPlanRepo.Get().Skip(1).ToList();
             return View("IndexView",subscriptions);
         }
-        //[Authorize]
         [Authorize(Policy = "AdminOrProvider")]
         [HttpGet]
         public IActionResult Payment(int planId)
@@ -195,20 +201,5 @@ namespace AutoHaven.Controllers
             ViewBag.PaypalClientId = PaypalClientId;
             return View("PaymentView",plan);
         }
-        //[Authorize]
-        //[HttpPost]
-        //public IActionResult ConfirmPayment([FromBody] JsonObject data)
-        //{
-        //    var planId = int.Parse(data["planId"]!.ToString());
-        //    var userId = int.Parse(_userManager.GetUserId(User));
-        //    if (userId == null)
-        //    {
-        //        return RedirectToAction("Login", "Account");
-        //    }
-        //    _userSubscriptionRepo.Create(userId,planId);
-
-        //    return Json(new { success = true });
-        //}
-
         }
 }

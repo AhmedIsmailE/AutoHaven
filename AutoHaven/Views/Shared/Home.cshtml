@@ -1,6 +1,8 @@
 ﻿@model List<AutoHaven.Models.CarListingModel>
 
+
 @{
+    var role = User.FindFirst("Role")?.Value;
     ViewBag.Title = "AutoHaven - Premium Car Renting & Selling";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -478,10 +480,13 @@
                             <span class="material-symbols-outlined">directions_car</span>
                             <span>Start Browsing</span>
                         </a>
-                        <a href="@Url.Action("Index", "Subscription")" class="flex max-w-[300px] mx-auto sm:mx-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-white dark:bg-gray-800 text-primary dark:text-white text-base font-bold gap-2 border-2 border-primary dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
-                            <span class="material-symbols-outlined">sell</span>
-                            <span>Browse Subscription</span>
-                        </a>
+                        @if (role == "Provider" || role == "Admin")
+                        {
+                            <a href="@Url.Action("Index", "Subscription")" class="flex max-w-[300px] mx-auto sm:mx-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-8 bg-white dark:bg-gray-800 text-primary dark:text-white text-base font-bold gap-2 border-2 border-primary dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                                <span class="material-symbols-outlined">sell</span>
+                                <span>Browse Subscription</span>
+                            </a>
+                        }
                     </div>
                 </div>
             </section>

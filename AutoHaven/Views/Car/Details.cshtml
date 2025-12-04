@@ -293,7 +293,7 @@
                 <!-- Contact Seller -->
                 @if (!isOwner)
                 {
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm sticky top-8 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm top-8 mb-6">
                         <h3 class="text-xl font-bold text-[#0d121b] dark:text-white mb-6">Contact Seller</h3>
 
                         <!-- Phone -->
@@ -305,7 +305,7 @@
                         </div>
 
                         <!-- Contact Button - WhatsApp -->
-                        <a href="https://wa.me/@(Model.User?.PhoneNumber)?text=Hello%20I%20am%20interested%20in%20your%20car%20(@Model.Car.Manufacturer%20@Model.Car.Model)"
+                        <a href="@($"https://wa.me/{Model.User?.PhoneNumber}?text=Hello I am interested in your Offer for The {Model.Car.Manufacturer} {Model.Car.Model}")"
                            target="_blank"
                            class="w-full bg-primary hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 mb-3">
                             <span class="material-symbols-outlined">mail</span>
