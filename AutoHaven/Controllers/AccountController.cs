@@ -311,29 +311,70 @@ namespace AutoHaven.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> Profile(string? edit)
+        public async Task<IActionResult> Profile(int? id, string? edit)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login", "Account");
+            // current logged-in user (may be null if anonymous)
+            var currentUser = await _userManager.GetUserAsync(User);
 
+            ApplicationUserModel userToShow = null;
+
+            if (id.HasValue && id.Value > 0)
+            {
+                // try load the requested user by id
+                userToShow = await _projectDbContext.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Id == id.Value);
+
+                if (userToShow == null)
+                    return NotFound(); // requested user does not exist
+            }
+            else
+            {
+                // no id => show the current user's profile
+                if (currentUser == null) return RedirectToAction("Login", "Account");
+                // load tracked current user from DB to include nav props later
+                userToShow = await _projectDbContext.Users
+                    .FirstOrDefaultAsync(u => u.Id == currentUser.Id);
+
+                if (userToShow == null) return RedirectToAction("Login", "Account");
+            }
+
+            // Determine if the viewer is the owner of the profile
+            var isOwner = currentUser != null && (currentUser.Id == userToShow.Id);
+
+            // Optionally: allow admins to view other profiles (they already can).
+            // But only owner should be allowed to edit.
+            ViewBag.IsOwner = isOwner;
+
+            // If edit== "1" AND viewer is owner then enable edit mode
+            ViewData["EditMode"] = (edit == "1" && isOwner);
+
+            // Load subscriptions (if you need them in the model) - attempt to load related data
             try
             {
-                await _projectDbContext.Entry(user)
+                // if userToShow is tracked, use Entry; otherwise attach and load
+                var entry = _projectDbContext.Entry(userToShow);
+                if (entry.State == EntityState.Detached)
+                {
+                    _projectDbContext.Users.Attach(userToShow);
+                }
+
+                await _projectDbContext.Entry(userToShow)
                     .Collection(u => u.UserSubscriptions)
                     .Query()
                     .Include(us => us.SubscriptionPlan)
                     .LoadAsync();
             }
-
-            catch (Exception x)
+            catch (Exception)
             {
-                //Used for Debugging
+                // ignore - keep page working even if load fails
             }
 
-            var model = ProfileViewModel.MapToModel(user);
-            if (edit == "1") ViewData["EditMode"] = true;
+            var model = ProfileViewModel.MapToModel(userToShow);
+
             return View("Profile", model);
         }
+
 
         [HttpGet]
         public IActionResult Edit() => RedirectToAction(nameof(Profile), new { edit = 1 });

@@ -1,0 +1,274 @@
+﻿@model AutoHaven.ViewModel.AdminUsersViewModel
+
+@{
+    ViewData["Title"] = "Users Management";
+}
+
+<div class="max-w-7xl mx-auto">
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold">Users Management</h1>
+            <p class="text-sm text-charcoal/80">View, ban/unban and delete user profiles.</p>
+        </div>
+    </div>
+
+    <form id="filtersForm" method="get" class="grid grid-cols-12 gap-3 mb-6 items-center">
+        <div class="col-span-12 md:col-span-8">
+            <input id="filterSearch" name="search" value="@Model.Search"
+                   placeholder="Search by name, email, company..."
+                   class="w-full rounded-lg border border-border-light px-4 py-3 bg-surface-light dark:bg-surface-dark focus:outline-none" />
+        </div>
+
+        <input type="hidden" name="page" id="filtersPageInput" value="@Model.Page" />
+    </form>
+
+    @Html.AntiForgeryToken()
+
+    <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-border-light hidden md:flex items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">
+            <div class="w-28">Avatar</div>
+            <div class="flex-1">User</div>
+            <div class="w-48 text-right">Actions</div>
+        </div>
+
+        <div>
+            @if (Model.Users == null || !Model.Users.Any())
+            {
+                <div class="p-6 text-center text-sm text-charcoal/70">No users found.</div>
+            }
+            else
+            {
+                @foreach (var u in Model.Users)
+                {
+                    <div class="px-6 py-4 border-b border-border-light flex flex-col md:flex-row items-start md:items-center gap-3 user-row" data-user="@u.Id">
+                        <div class="w-full md:w-28 flex-shrink-0">
+                            <img src="@(string.IsNullOrEmpty(u.AvatarUrl) ? Url.Content("~/images/Default/default.jpg") : u.AvatarUrl)"
+                                 alt="avatar"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.src='@Url.Content("~/images/Default/default.jpg")';"
+                                 class="w-16 h-16 object-cover rounded-md shadow-sm" />
+                        </div>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between">
+                                <div class="min-w-0">
+                                    <div class="font-semibold text-charcoal truncate">@u.Name</div>
+                                    <div class="text-xs text-text-light-secondary dark:text-text-dark-secondary mt-1">Email: @u.Email</div>
+                                    <div class="text-xs text-text-light-secondary dark:text-text-dark-secondary mt-1">Joined At: @u.JoinedAt</div>
+                                </div>
+
+                            </div>
+
+                            <div class="mt-3 flex items-center justify-between">
+                                <div>
+                                    @{
+                                        var statusClass = u.IsBanned ? "bg-[#ffe6e6] text-[#d63a3a]" : "bg-[#e6fff1] text-[#2a9d66]";
+                                        var statusText = u.IsBanned ? "Banned" : "Active";
+                                    }
+                                    <span class="inline-flex items-center text-xs font-medium px-3 py-1 rounded-full @statusClass">
+                                        @statusText
+                                    </span>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <a asp-controller="Account" asp-action="Profile" asp-route-id="@u.Id"
+                                       class="inline-flex items-center gap-2 border border-border-light rounded-lg px-3 py-1.5 text-sm">
+                                        <span class="material-symbols-outlined text-sm">visibility</span>View Profile
+                                    </a>
+
+                                    <button data-user="@u.Id"
+                                            class="ban-btn inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm border border-border-light @(u.IsBanned ? "bg-yellow-50 ring-1 ring-yellow-200" : "bg-transparent")"
+                                            onclick="banUser(this)">
+                                        <span class="material-symbols-outlined">block</span>
+                                        @(u.IsBanned ? "Unban" : "Ban")
+                                    </button>
+
+                                    <button data-user="@u.Id"
+                                            class="delete-user-btn inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm bg-red-50 text-red-700 border border-red-100"
+                                            onclick="deleteUser(this)">
+                                        <span class="material-symbols-outlined">delete</span>
+                                        Delete Profile
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- pagination footer -->
+        <div class="px-6 py-4 flex items-center justify-between text-sm">
+            <div class="text-text-light-secondary dark:text-text-dark-secondary">
+                Showing @((Model.Page - 1) * Model.PageSize + (Model.Users?.Any() == true ? 1 : 0)) - @((Model.Page - 1) * Model.PageSize + (Model.Users?.Count ?? 0)) of @Model.TotalCount users
+            </div>
+
+            <div class="flex items-center gap-2">
+                @{
+                    var totalPages = (int)Math.Ceiling(Model.TotalCount / (double)Model.PageSize);
+                    var prev = Model.Page <= 1 ? 1 : Model.Page - 1;
+                    var next = Model.Page >= totalPages ? totalPages : Model.Page + 1;
+                }
+                <a href="@Url.Action("UserListing", new { page = prev, search = Model.Search })"
+                   class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-border-light bg-surface-light">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </a>
+
+                <div class="px-3">Page @Model.Page of @totalPages</div>
+
+                <a href="@Url.Action("UserListing", new { page = next, search = Model.Search })"
+                   class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-border-light bg-surface-light">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // SweetAlert2 loader + helper (same as before)
+        function ensureSwal() {
+            return new Promise((resolve) => {
+                if (window.Swal) return resolve(window.Swal);
+                const existing = document.querySelector('script[data-swal-cdn]');
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(window.Swal));
+                    existing.addEventListener('error', () => resolve(null));
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+                s.setAttribute('data-swal-cdn', '1');
+                s.onload = () => resolve(window.Swal);
+                s.onerror = () => resolve(null);
+                document.head.appendChild(s);
+            });
+        }
+
+        async function showSwalNotification(message, type) {
+            if (!message) return;
+            const SwalLib = await ensureSwal();
+            if (!SwalLib) { alert(message); return; }
+            SwalLib.fire({ toast: true, position: 'top-end', icon: type || 'info', title: message, showConfirmButton: false, timer: 3500, timerProgressBar: true });
+        }
+
+        // helper to get anti-forgery token
+        function getRequestVerificationToken() {
+            var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenInput ? tokenInput.value : '';
+        }
+
+        // submit filters form and reset to page 1
+        function submitFilters() {
+            var form = document.getElementById('filtersForm');
+            if (!form) return;
+            var pageInput = document.getElementById('filtersPageInput');
+            if (!pageInput) {
+                pageInput = document.createElement('input');
+                pageInput.type = 'hidden';
+                pageInput.name = 'page';
+                pageInput.id = 'filtersPageInput';
+                form.appendChild(pageInput);
+            }
+            pageInput.value = '1';
+            form.submit();
+        }
+
+        // attach change listeners to search input
+        (function () {
+            var sInput = document.getElementById('filterSearch');
+            if (sInput) {
+                sInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') { e.preventDefault(); submitFilters(); }
+                });
+            }
+        })();
+
+        // BAN / UNBAN user (AJAX)
+        async function banUser(btn) {
+            var userId = btn.getAttribute('data-user');
+            if (!userId) return;
+            const confirmMsg = btn.textContent.trim().startsWith('Unban') ? 'Unban this user?' : 'Ban this user?';
+            if (!confirm(confirmMsg)) return;
+
+            btn.disabled = true;
+            var token = getRequestVerificationToken();
+            var fd = new FormData();
+            fd.append('userId', userId);
+
+            try {
+                const res = await fetch('@Url.Action("BanUser", "Admin")', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'RequestVerificationToken': token },
+                    body: fd
+                });
+                let data = null; try { data = await res.json(); } catch (e) { }
+
+                if (res.ok && data && data.success) {
+                    // update UI (row)
+                    var row = btn.closest('.user-row');
+                    if (row) {
+                        var badge = row.querySelector('span.inline-flex');
+                        if (badge) {
+                            badge.textContent = data.isBanned ? 'Banned' : 'Active';
+                            badge.classList.remove('bg-[#e6fff1]','text-[#2a9d66]','bg-[#ffe6e6]','text-[#d63a3a]');
+                            if (data.isBanned) badge.classList.add('bg-[#ffe6e6]','text-[#d63a3a]'); else badge.classList.add('bg-[#e6fff1]','text-[#2a9d66]');
+                        }
+                        btn.innerHTML = `<span class="material-symbols-outlined">block</span>${data.isBanned ? ' Unban' : ' Ban'}`;
+                        btn.classList.toggle('bg-yellow-50', data.isBanned);
+                        btn.classList.toggle('ring-1', data.isBanned);
+                        btn.classList.toggle('ring-yellow-200', data.isBanned);
+                    }
+                    const note = data.notification || { message: data.isBanned ? 'User banned.' : 'User unbanned.', type: 'success' };
+                    await showSwalNotification(note.message, note.type || 'success');
+                } else {
+                    const note = (data && data.notification) ? data.notification : { message: 'Could not update user status.', type: 'error' };
+                    await showSwalNotification(note.message, note.type || 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                await showSwalNotification('Network error while updating user status.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // DELETE user (AJAX -> show toast then reload)
+        async function deleteUser(btn) {
+            var userId = btn.getAttribute('data-user');
+            if (!userId) return;
+            if (!confirm('Delete this user profile? This cannot be undone.')) return;
+
+            btn.disabled = true;
+            var token = getRequestVerificationToken();
+            var fd = new FormData();
+            fd.append('userId', userId);
+
+            try {
+                const res = await fetch('@Url.Action("DeleteUser", "Admin")', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'RequestVerificationToken': token },
+                    body: fd
+                });
+                let data = null; try { data = await res.json(); } catch (e) { }
+
+                if (res.ok && data && data.success) {
+                    const note = data.notification || { message: 'User deleted.', type: 'success' };
+                    await showSwalNotification(note.message, note.type || 'success');
+                    setTimeout(() => { location.reload(); }, 600);
+                } else {
+                    const note = (data && data.notification) ? data.notification : { message: 'Could not delete user.', type: 'error' };
+                    await showSwalNotification(note.message, note.type || 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                await showSwalNotification('Network error while deleting user.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+}
