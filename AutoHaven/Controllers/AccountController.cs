@@ -240,7 +240,7 @@ namespace AutoHaven.Controllers
                     if (user.IsBanned)
                     {
                         ModelState.AddModelError(string.Empty,
-                            $"❌ Your account has been banned. Reason: {user.BanReason ?? "No reason provided"}");
+                            $"❌ Your account has been banned.");
                         return View(loginUserViewModel);
                     }
                     bool result = await _userManager.CheckPasswordAsync(user, loginUserViewModel.Password);

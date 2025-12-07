@@ -375,9 +375,7 @@ namespace AutoHaven.Controllers
 
                 // ✅ CHECK CAR LISTING COUNT
                 var carCount = _carListingRepo.Get()
-                    .Count(cl => cl.UserId == userId &&
-                                 cl.CurrentState != CarListingModel.State.Sold &&
-                                 cl.CurrentState != CarListingModel.State.Rented);
+                    .Count(cl => cl.UserId == userId);
 
                 if (carCount >= subscription.SubscriptionPlan.MaxCarListing)
                 {
